@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
+    // Vercel Services do not provide the /_next/image optimizer (it returns 404), so on
+    // Vercel images are served straight from public/ via the CDN. Locally Next optimizes.
+    unoptimized: !!process.env.VERCEL,
   },
   async rewrites() {
     if (!proxyToBackend) return [];

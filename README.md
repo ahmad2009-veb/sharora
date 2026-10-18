@@ -91,7 +91,7 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 | `NEXT_PUBLIC_SITE_URL` | frontend | `https://sharora.tj` (или `https://<project>.vercel.app`) | вручную |
 | `NEXT_PUBLIC_API_URL` | frontend | — | **не задавать**: пусто = относительные `/api` |
 
-`DEFAULT_ADMIN_*`, `BACKEND_URL`, `MEDIA_DIR` в Vercel не нужны.
+`DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` (Secret) нужны только сборке для первого сида. `BACKEND_URL` задаёт binding, `MEDIA_DIR` в Vercel не нужен.
 
 ### Шаги
 
@@ -99,19 +99,7 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 2. **Postgres.** Project → Storage → Create Database → **Neon** → подключите к Production (и Preview, лучше отдельную базу). Интеграция добавит `DATABASE_URL` (pooled) и `DATABASE_URL_UNPOOLED` (прямое соединение — для миграций).
 3. **Blob.** Project → Storage → Create → **Blob** → Public → подключите к проекту. Появится `BLOB_READ_WRITE_TOKEN`.
 4. **Остальные переменные** из таблицы: Project → Settings → Environment Variables.
-5. **Миграции и сид — один раз со своего компьютера.** Скопируйте `DATABASE_URL_UNPOOLED` (Storage → база → `.env.local`, или `vercel env pull`):
-
-   ```bash
-   cd backend
-   export DATABASE_URL='postgresql://…(DATABASE_URL_UNPOOLED)…'
-   export DEFAULT_ADMIN_USERNAME=admin
-   export DEFAULT_ADMIN_PASSWORD='надёжный-пароль'
-   .venv/bin/alembic upgrade head
-   .venv/bin/python seed.py --if-empty      # блоки, квартиры, настройки и первый менеджер
-   unset DATABASE_URL DEFAULT_ADMIN_PASSWORD
-   ```
-
-   Переменные окружения важнее `backend/.env`, поэтому локальная SQLite не затрагивается. **Не запускайте `seed.py` без `--if-empty`** на продакшене — он очищает квартиры и заявки. После новых миграций повторяйте только `alembic upgrade head`.
+5. **Миграции и сид — в сборке.** `buildCommand` сервиса `backend` (`python -m scripts.deploy_setup`) при каждой **production**-сборке выполняет `alembic upgrade head` и `seed.py --if-empty` по `DATABASE_URL_UNPOOLED` (или `DATABASE_URL`). Сид срабатывает только на пустой базе и создаёт менеджера из `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` (добавьте их в Vercel как Secret). Preview-сборки базу не трогают: она общая с production. Ошибка миграции валит сборку — сайт остаётся на предыдущем деплое.
 6. **Деплой.** Каждый push в `main` деплоит Production, остальные ветки — Preview. Повторный деплой: Deployments → … → Redeploy (нужен после изменения переменных).
 7. **Проверка.** `https://<домен>/api/health` → `{"status":"ok"}`, затем `/admin/login`. Свой домен: Project → Settings → Domains, затем обновите `NEXT_PUBLIC_SITE_URL` и Redeploy.
 

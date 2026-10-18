@@ -139,7 +139,7 @@ def seed(db: Session, rng: random.Random) -> None:
         db.add(
             AdminUser(
                 username=cfg.default_admin_username,
-                password_hash=hash_password(cfg.default_admin_password),
+                password_hash=hash_password(cfg.require_admin_password()),
             )
         )
     db.commit()

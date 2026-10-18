@@ -36,7 +36,7 @@ def ensure_bootstrap_data() -> None:
             db.add(
                 AdminUser(
                     username=settings.default_admin_username,
-                    password_hash=hash_password(settings.default_admin_password),
+                    password_hash=hash_password(settings.require_admin_password()),
                 )
             )
         db.commit()
@@ -44,7 +44,9 @@ def ensure_bootstrap_data() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    ensure_bootstrap_data()
+    # On Vercel the schema, admin and data are created once from a workstation (see README).
+    if not settings.vercel:
+        ensure_bootstrap_data()
     yield
 
 

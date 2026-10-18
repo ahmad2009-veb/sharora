@@ -3,9 +3,11 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-// The browser talks to FastAPI through these rewrites, so the admin JWT cookie
-// stays first-party and no CORS round-trips are needed in production.
+// The browser always calls same-origin /api and /media, so the admin JWT cookie stays
+// first-party. On Vercel the top-level rewrites in /vercel.json send those paths to the
+// FastAPI service before Next.js sees them; locally and in Docker Next proxies them here.
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
+const proxyToBackend = !process.env.VERCEL;
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -14,6 +16,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   async rewrites() {
+    if (!proxyToBackend) return [];
     return [
       { source: "/api/:path*", destination: `${backendUrl}/api/:path*` },
       { source: "/media/:path*", destination: `${backendUrl}/media/:path*` },

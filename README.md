@@ -60,13 +60,62 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 | `CORS_ORIGINS` | backend | Разрешённые origin через запятую (нужно только при прямых запросах к API) |
 | `COOKIE_SECURE` | backend | `true` за HTTPS |
 | `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` | backend | Первый менеджер; пароль **обязателен** (≥ 8 символов) |
-| `MEDIA_DIR`, `MEDIA_URL`, `MAX_UPLOAD_MB` | backend | Хранение загрузок |
+| `MEDIA_DIR`, `MEDIA_URL`, `MAX_UPLOAD_MB` | backend | Хранение загрузок (локально / Docker) |
+| `BLOB_READ_WRITE_TOKEN` | backend | Если задан — загрузки идут в Vercel Blob, в БД сохраняется URL файла |
+| `VERCEL` | backend | Ставит сам Vercel: без бутстрапа при старте, `NullPool`, только Blob |
 | `BACKEND_URL` | frontend (build) | Куда проксировать `/api` и `/media` |
 | `NEXT_PUBLIC_API_URL` | frontend | Пусто = через прокси; иначе прямой URL API |
 | `NEXT_PUBLIC_SITE_URL` | frontend | Канонический URL для metadata, OG и `sitemap.xml` |
 | `POSTGRES_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SITE_URL` | корневой `.env` (Docker Compose) | Пароль БД, первый менеджер, URL сайта |
 
-Шаблоны: `.env.example` (Compose), `backend/.env.example`, `frontend/.env.example`. Без `JWT_SECRET` и `DEFAULT_ADMIN_PASSWORD` backend не запустится — встроенных значений по умолчанию нет. Файлы `.env*` (кроме `*.example`) в git не попадают.
+Шаблоны: `.env.example` (Compose), `backend/.env.example`, `frontend/.env.example`. Без `JWT_SECRET` backend не запустится, а без `DEFAULT_ADMIN_PASSWORD` не создаст первого менеджера — встроенных значений по умолчанию нет. Файлы `.env*` (кроме `*.example`) в git не попадают.
+
+## Деплой на Vercel (один проект, два сервиса)
+
+`vercel.json` описывает [Vercel Services](https://vercel.com/docs/services): `frontend` (Next.js) и `backend` (FastAPI, `app.main:app`) на одном домене. `/api/*` и `/media/*` уходят в backend (путь не меняется, FastAPI видит `/api/...`), всё остальное — во frontend. Браузер ходит на относительные `/api`, поэтому JWT-cookie админки first-party; Rewrites из `next.config.ts` на Vercel отключены; binding передаёт frontend внутренний адрес backend в `BACKEND_URL` — на случай будущих серверных запросов (сейчас их нет).
+
+На Vercel (`VERCEL=1`) backend при старте **не** создаёт таблицы, админа и данные, держит соединения через `NullPool` (пулинг делает Neon) и сохраняет загрузки только в Blob. Заглушки планов из `backend/media/` входят в бандл и отдаются по `/media/...`.
+
+### Переменные окружения в Vercel
+
+Переменные проекта общие для обоих сервисов.
+
+| Переменная | Сервис | Пример | Откуда |
+|---|---|---|---|
+| `DATABASE_URL` | backend | `postgresql://user:pass@ep-xxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require` | добавит интеграция Neon (pooled) |
+| `JWT_SECRET` | backend | вывод `openssl rand -hex 32` | вручную, Sensitive |
+| `COOKIE_SECURE` | backend | `true` | вручную |
+| `BLOB_READ_WRITE_TOKEN` | backend | `vercel_blob_rw_…` | добавит Blob store |
+| `MAX_UPLOAD_MB` | backend | `4` | вручную (лимит тела запроса Vercel — 4,5 МБ) |
+| `CORS_ORIGINS` | backend | `https://sharora.tj` | вручную; при одном домене не обязателен |
+| `NEXT_PUBLIC_SITE_URL` | frontend | `https://sharora.tj` (или `https://<project>.vercel.app`) | вручную |
+| `NEXT_PUBLIC_API_URL` | frontend | — | **не задавать**: пусто = относительные `/api` |
+
+`DEFAULT_ADMIN_*`, `BACKEND_URL`, `MEDIA_DIR` в Vercel не нужны.
+
+### Шаги
+
+1. **Проект.** vercel.com → Add New → Project → импортируйте репозиторий `sharora`. Root Directory — корень репозитория, Framework Preset — **Services** (CLI: `vercel project update --framework services`).
+2. **Postgres.** Project → Storage → Create Database → **Neon** → подключите к Production (и Preview, лучше отдельную базу). Интеграция добавит `DATABASE_URL` (pooled) и `DATABASE_URL_UNPOOLED` (прямое соединение — для миграций).
+3. **Blob.** Project → Storage → Create → **Blob** → Public → подключите к проекту. Появится `BLOB_READ_WRITE_TOKEN`.
+4. **Остальные переменные** из таблицы: Project → Settings → Environment Variables.
+5. **Миграции и сид — один раз со своего компьютера.** Скопируйте `DATABASE_URL_UNPOOLED` (Storage → база → `.env.local`, или `vercel env pull`):
+
+   ```bash
+   cd backend
+   export DATABASE_URL='postgresql://…(DATABASE_URL_UNPOOLED)…'
+   export DEFAULT_ADMIN_USERNAME=admin
+   export DEFAULT_ADMIN_PASSWORD='надёжный-пароль'
+   .venv/bin/alembic upgrade head
+   .venv/bin/python seed.py --if-empty      # блоки, квартиры, настройки и первый менеджер
+   unset DATABASE_URL DEFAULT_ADMIN_PASSWORD
+   ```
+
+   Переменные окружения важнее `backend/.env`, поэтому локальная SQLite не затрагивается. **Не запускайте `seed.py` без `--if-empty`** на продакшене — он очищает квартиры и заявки. После новых миграций повторяйте только `alembic upgrade head`.
+6. **Деплой.** Каждый push в `main` деплоит Production, остальные ветки — Preview. Повторный деплой: Deployments → … → Redeploy (нужен после изменения переменных).
+7. **Проверка.** `https://<домен>/api/health` → `{"status":"ok"}`, затем `/admin/login`. Свой домен: Project → Settings → Domains, затем обновите `NEXT_PUBLIC_SITE_URL` и Redeploy.
+
+Ограничения: rate-limit заявок (`5/minute`) хранится в памяти инстанса и на serverless работает приблизительно.
 
 ## Вход в админку
 
@@ -119,6 +168,7 @@ sharora/
     tests/
   tools/generate_public_placeholders.py    заглушки hero/интерьеров/документов
   docker-compose.yml
+  vercel.json                              Vercel Services: frontend + backend, публичные rewrites
 ```
 
 ### URL-состояние выбора квартиры

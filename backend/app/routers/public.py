@@ -4,6 +4,7 @@ from slowapi.util import get_remote_address
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import get_settings
 from app.core.database import get_db
 from app.models import Block, CalculatorSettings, Floor, Lead, Unit, UnitStatus
 from app.schemas.block import BlockOut
@@ -15,8 +16,21 @@ from app.schemas.unit import UnitDetail, UnitListItem
 from app.services.aggregates import block_counts, floor_counts, get_block_or_none, global_stats
 from app.services.converters import to_unit_detail
 
+settings = get_settings()
+
 router = APIRouter(prefix="/api", tags=["public"])
-limiter = Limiter(key_func=get_remote_address)
+
+
+def client_ip(request: Request) -> str:
+    # Behind Vercel's proxy the socket peer is shared; Vercel overwrites X-Forwarded-For.
+    if settings.vercel:
+        forwarded = request.headers.get("x-forwarded-for", "")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=client_ip)
 
 
 @router.get("/stats", response_model=StatsOut)

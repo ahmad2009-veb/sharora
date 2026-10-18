@@ -11,3 +11,4 @@ psycopg[binary]==3.3.6
 slowapi==0.1.10
 python-dotenv==1.2.4
 pillow==13.0.0
+httpx==0.28.1

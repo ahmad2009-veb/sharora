@@ -1,0 +1,441 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Sharora design tokens
+   One palette, one radius scale, one shadow system. Components only
+   reference these tokens — never raw hex values.
+   ------------------------------------------------------------------ */
+
+@theme {
+  /* Navy & champagne-gold palette (Sharora Residence design) */
+  --color-ink: #131b2e;
+  --color-night: #0a0f1c;
+  --color-navy: #1c2641;
+  --color-gold: #ffdea4;
+  --color-gold-soft: #e8c176;
+  --color-gold-deep: #94732f;
+  --color-on-gold: #261900;
+  --color-sand: #f6f3ee;
+  --color-sand-deep: #ebe8e3;
+  --color-cream: #fcf9f4;
+  --color-white: #ffffff;
+  --color-muted: #55596a;
+  /* Secondary text on navy: #8b92a9 keeps ≥ 4.5:1 on ink. */
+  --color-mist: #8b92a9;
+  --color-line: #e5e2dd;
+  --color-periwinkle: #dae2ff;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-manrope), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --text-h1: clamp(2.6rem, 0.6rem + 6.4vw, 6.25rem);
+  --text-h1--line-height: 0.98;
+  --text-h1--letter-spacing: -0.035em;
+  --text-h2: clamp(2rem, 1.25rem + 2.4vw, 3rem);
+  --text-h2--line-height: 1.08;
+  --text-h2--letter-spacing: -0.025em;
+  --text-h3: 1.25rem;
+  --text-h3--line-height: 1.3;
+  --text-body: clamp(1rem, 0.96rem + 0.15vw, 1.0625rem);
+  --text-body--line-height: 1.65;
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1.3;
+  --text-eyebrow--letter-spacing: 0.2em;
+
+  --radius-card: 24px;
+  --radius-panel: 32px;
+  --radius-control: 14px;
+
+  --shadow-soft: 0 1px 2px rgb(19 27 46 / 0.04), 0 8px 24px rgb(19 27 46 / 0.06);
+  --shadow-lift: 0 2px 6px rgb(19 27 46 / 0.06), 0 22px 50px rgb(19 27 46 / 0.16);
+  --shadow-deep: 0 25px 60px -15px rgb(5 8 18 / 0.55);
+  --shadow-glow: 0 0 32px rgb(255 222 164 / 0.35);
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Unit status colours — the single source for cards, floor plan polygons, legend and admin.
+   line: 2px borders / plan strokes · fill: pale background · text: status label */
+:root {
+  --status-free-line: #16a34a;
+  --status-free-fill: #dcfce7;
+  --status-free-text: #15803d;
+  --status-reserved-line: #f59e0b;
+  --status-reserved-fill: #fef3c7;
+  --status-reserved-text: #b45309;
+  --status-sold-line: #dc2626;
+  --status-sold-fill: #fee2e2;
+  --status-sold-text: #b91c1c;
+}
+
+@theme inline {
+  --color-status-free-line: var(--status-free-line);
+  --color-status-free-fill: var(--status-free-fill);
+  --color-status-free-text: var(--status-free-text);
+  --color-status-reserved-line: var(--status-reserved-line);
+  --color-status-reserved-fill: var(--status-reserved-fill);
+  --color-status-reserved-text: var(--status-reserved-text);
+  --color-status-sold-line: var(--status-sold-line);
+  --color-status-sold-fill: var(--status-sold-fill);
+  --color-status-sold-text: var(--status-sold-text);
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 1360px;
+  margin-inline: auto;
+  padding-inline: 16px;
+  @media (width >= 48rem) {
+    padding-inline: 24px;
+  }
+}
+
+@utility section-y {
+  padding-block: 80px;
+  @media (width >= 64rem) {
+    padding-block: 128px;
+  }
+}
+
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: var(--text-eyebrow);
+  font-weight: 700;
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  html.lenis {
+    scroll-behavior: auto;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+  body {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--color-gold-soft);
+    color: var(--color-ink);
+  }
+  [id] {
+    scroll-margin-top: 88px;
+  }
+}
+
+/* Thin, unobtrusive scrollbars for horizontal pickers */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
+
+/* ------------------------------------------------------------------
+   Lenis (base rules from lenis/dist/lenis.css, minus its iframe
+   pointer-events rule which would disable the map embed)
+   ------------------------------------------------------------------ */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* ------------------------------------------------------------------
+   Preloader (see components/motion/Preloader.tsx) — total 1.25 s
+   ------------------------------------------------------------------ */
+@property --pl-progress {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--color-ink);
+  animation: pl-lift 0.45s cubic-bezier(0.76, 0, 0.24, 1) 0.8s forwards;
+}
+html:not([data-preloader="on"]) .preloader {
+  display: none;
+}
+.preloader__inner {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  animation: pl-fade 0.3s ease 0.8s forwards;
+}
+.preloader__logo {
+  width: min(260px, 60vw);
+  overflow: visible;
+}
+.pl-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: pl-draw 0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.pl-draw-group .pl-draw:nth-child(2) { animation-delay: 0.06s; }
+.pl-draw-group .pl-draw:nth-child(3) { animation-delay: 0.12s; }
+.pl-draw-group .pl-draw:nth-child(4) { animation-delay: 0.18s; }
+.pl-draw-group .pl-draw:nth-child(5) { animation-delay: 0.24s; }
+.pl-text {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  fill: var(--color-gold);
+  fill-opacity: 0;
+  stroke: var(--color-gold);
+  stroke-width: 0.8;
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  animation:
+    pl-text-draw 0.55s ease 0.1s forwards,
+    pl-text-fill 0.3s ease 0.5s forwards;
+}
+.pl-spark {
+  opacity: 0;
+  filter: drop-shadow(0 0 6px #ffd27a) drop-shadow(0 0 14px #e8c176);
+  animation: pl-spark 0.45s cubic-bezier(0.45, 0, 0.2, 1) 0.42s forwards;
+}
+.pl-count {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: color-mix(in oklab, var(--color-sand) 60%, transparent);
+  font-variant-numeric: tabular-nums;
+  counter-reset: pl var(--pl-progress);
+  animation: pl-count 0.8s cubic-bezier(0.3, 0, 0.2, 1) forwards;
+}
+.pl-count::after {
+  content: counter(pl) "%";
+}
+@keyframes pl-draw { to { stroke-dashoffset: 0; } }
+@keyframes pl-text-draw { to { stroke-dashoffset: 0; } }
+@keyframes pl-text-fill { to { fill-opacity: 1; stroke-opacity: 0.4; } }
+@keyframes pl-spark {
+  0% { opacity: 0; transform: translateX(0); }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(136px); }
+}
+@keyframes pl-count { to { --pl-progress: 100; } }
+@keyframes pl-fade { to { opacity: 0; transform: translateY(-12px); } }
+@keyframes pl-lift { to { transform: translateY(-100%); visibility: hidden; } }
+
+/* ------------------------------------------------------------------
+   Dark-section atmosphere: drifting gold light + film grain
+   ------------------------------------------------------------------ */
+.atmosphere {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.atmosphere::before {
+  content: "";
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  left: -15vmax;
+  top: -30vmax;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 222 164 / 0.16), rgb(255 222 164 / 0.04) 55%, transparent);
+  animation: atmo-drift 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: atmo-grain 0.9s steps(5) infinite;
+}
+@keyframes atmo-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(45vw, 20vh, 0) scale(1.15); }
+  100% { transform: translate3d(70vw, 45vh, 0) scale(0.95); }
+}
+@keyframes atmo-grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-6%, 4%); }
+  40% { transform: translate(5%, -7%); }
+  60% { transform: translate(-3%, 8%); }
+  80% { transform: translate(7%, 2%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Gold → white display gradient for headings on dark */
+@utility text-gold-gradient {
+  background-image: linear-gradient(100deg, #ffdea4 0%, #fff6e4 38%, #ffffff 55%, #e8c176 100%);
+  background-size: 200% 100%;
+  animation: gold-sheen 9s ease-in-out infinite alternate;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Gold shine sweep on primary buttons */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.7) 50%, transparent 70%);
+  transform: translateX(-120%);
+}
+.btn-shine:hover::after {
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateX(120%);
+}
+
+/* Custom cursor (desktop only, enabled by components/motion/Cursor.tsx) */
+html.has-cursor,
+html.has-cursor * {
+  cursor: none !important;
+}
+html.has-cursor :is(input, textarea, select, [contenteditable="true"]) {
+  cursor: text !important;
+}
+html.has-cursor select {
+  cursor: pointer !important;
+}
+
+@keyframes loader {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atmosphere::before,
+  .atmosphere::after {
+    animation: none;
+  }
+}
+
+@keyframes gold-sheen {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+/* Frosted navy glass used for floating panels on dark imagery */
+@utility glass-dark {
+  background: rgb(10 15 28 / 0.62);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 20px 50px rgb(0 0 0 / 0.35);
+}
+@utility glass-light {
+  background: rgb(255 255 255 / 0.86);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* Hairline gold frame that lights up on hover (cards on dark) */
+@utility ring-gold-hover {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  transition: box-shadow 0.4s var(--ease-out-soft), transform 0.4s var(--ease-out-soft), background-color 0.4s;
+  &:hover {
+    box-shadow: inset 0 0 0 1px rgb(255 222 164 / 0.35), 0 24px 60px rgb(0 0 0 / 0.35);
+  }
+}
+
+/* Dark OpenStreetMap: invert the tiles and shift hue back so water stays blue */
+.map-dark {
+  filter: invert(0.92) hue-rotate(185deg) saturate(0.55) brightness(0.92) contrast(0.95);
+}
+
+/* Slow Ken Burns for hero imagery */
+@keyframes kenburns {
+  from { transform: scale(1.06) translate3d(0, 0, 0); }
+  to { transform: scale(1.16) translate3d(-1.5%, -1%, 0); }
+}
+.kenburns {
+  animation: kenburns 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes beacon {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+.beacon::before,
+.beacon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: rgb(255 222 164 / 0.55);
+  animation: beacon 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.beacon::after {
+  animation-delay: 1.2s;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns,
+  .beacon::before,
+  .beacon::after,
+  .text-gold-gradient {
+    animation: none;
+  }
+}
+
+/* Phones: modals float above the mobile tab bar (which stays on top so «Заявка» works). */
+@media (width < 64rem) {
+  html[data-tabbar] .tabbar-offset {
+    padding: 12px 12px calc(max(16px, env(safe-area-inset-bottom)) + 84px);
+  }
+  html[data-tabbar] .tabbar-offset > [role="dialog"] {
+    max-height: calc(100dvh - 112px - env(safe-area-inset-bottom));
+    border-radius: var(--radius-panel);
+  }
+}

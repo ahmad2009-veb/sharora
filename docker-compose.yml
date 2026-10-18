@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sharora
+      POSTGRES_USER: sharora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sharora -d sharora"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://sharora:${POSTGRES_PASSWORD}@db:5432/sharora
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      DEFAULT_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      DEFAULT_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+    volumes:
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        BACKEND_URL: http://backend:8000
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:3000}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
+  media:

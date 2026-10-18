@@ -1,0 +1,87 @@
+{
+  "common": {
+    "retry": "Такрор кардан",
+    "close": "Пӯшидан",
+    "previous": "Қаблӣ",
+    "next": "Навбатӣ",
+    "loading": "Боркунӣ…",
+    "currency": "смн",
+    "toHome": "Ба саҳифаи асосӣ"
+  },
+  "status": {
+    "free": "Озод",
+    "reserved": "Банд",
+    "sold": "Фурӯхта шуд"
+  },
+  "apartments": {
+    "eyebrow": "Хонаҳо",
+    "title": "Интихоби хона",
+    "calculator": "Ҳисобкунак",
+    "stepBlock": "Блок",
+    "stepFloor": "Ошёна",
+    "stepUnit": "Хона",
+    "commercial": "Тиҷоратӣ",
+    "floorPlan": "Нақшаи ошёна",
+    "rooms": "Ҳуҷраҳо",
+    "area": "Масоҳат",
+    "onlyFree": "Танҳо озод",
+    "priceFrom": "Хонаҳои озод аз",
+    "selectedFloor": "Интихоб шуд",
+    "brokerTitle": "Менеҷери шахсӣ",
+    "brokerCta": "Занги бозгашт",
+    "sort": "Тартиб",
+    "price": "Нарх"
+  },
+  "unit": {
+    "block": "Блок",
+    "floor": "Ошёна",
+    "area": "Масоҳат",
+    "price": "Нарх",
+    "status": "Ҳолат",
+    "layout": "Нақша",
+    "call": "Занг задан",
+    "request": "Дархост гузоштан",
+    "share": "Мубодила",
+    "interior": "Тарҳи дохилӣ",
+    "bookTitle": "Дархост барои хона"
+  },
+  "lead": {
+    "name": "Номи шумо",
+    "phone": "Телефон",
+    "submit": "Фиристодани дархост",
+    "consent": "Бо пахш кардани тугма, шумо ба коркарди маълумоти шахсӣ розӣ мешавед."
+  },
+  "calculator": {
+    "title": "Ҳисобкунаки насия",
+    "area": "Масоҳати хона",
+    "monthsShort": "моҳ",
+    "result": "Ҳисоби ниҳоӣ",
+    "leadSubmit": "Фиристодан"
+  },
+  "home": {
+    "loading3d": "Боркунии модели 3D",
+    "blockTooltipNoData": "{block} — дидани хонаҳо"
+  },
+  "mobileNav": {
+    "label": "Навигатсия",
+    "home": "Асосӣ",
+    "apartments": "Хонаҳо",
+    "more": "Бештар",
+    "about": "Дар бораи лоиҳа",
+    "features": "Бартариятҳо",
+    "interior": "Тарҳи дохилӣ",
+    "documents": "Ҳуҷҷатҳои лоиҳа",
+    "calculator": "Ҳисобкунаки насия",
+    "location": "Ҷойгиршавӣ дар харита",
+    "contacts": "Тамос",
+    "feedback": "Пешниҳод ё шикоят",
+    "language": "Забон",
+    "managers": "Воридшавӣ барои менеҷерон",
+    "contact": "Дархост",
+    "contactTitle": "Дархост гузоштан",
+    "contactText": "Роҳи қулайи тамосро интихоб кунед — мо ба зудӣ ҷавоб медиҳем",
+    "telegram": "Навиштан ба Telegram",
+    "whatsapp": "Навиштан ба WhatsApp",
+    "call": "Занг задан"
+  }
+}

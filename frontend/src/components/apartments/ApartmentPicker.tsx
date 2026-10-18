@@ -1,0 +1,342 @@
+"use client";
+
+import { Calculator, Headset, Layers, Phone, SearchX } from "lucide-react";
+import Image from "next/image";
+import { useLocale, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+
+import { Button, buttonClasses } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { site, tr } from "@/content/site";
+import type { Locale } from "@/i18n/routing";
+import type { UnitListItem } from "@/lib/types";
+
+import { BlockSelector } from "./BlockSelector";
+import { CalculatorModal } from "./CalculatorModal";
+import { CallbackModal } from "./CallbackModal";
+import { ErrorState } from "./ErrorState";
+import { Filters } from "./Filters";
+import { FloorList } from "./FloorList";
+import { FloorPlan } from "./FloorPlan";
+import { unitTotal } from "./price";
+import { useBlocks, useFloors, useFloorUnits } from "./queries";
+import { StatsBar } from "./StatsBar";
+import { UnitCard } from "./UnitCard";
+import { UnitModal } from "./UnitModal";
+import { useApartmentParams } from "./useApartmentParams";
+
+type Sort = "number" | "areaAsc" | "areaDesc" | "price";
+
+export function ApartmentPicker() {
+  const t = useTranslations("apartments");
+  const locale = useLocale() as Locale;
+  const [params, update] = useApartmentParams();
+  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [calcOpen, setCalcOpen] = useState(false);
+  const [callbackOpen, setCallbackOpen] = useState(false);
+  const [sort, setSort] = useState<Sort>("number");
+  const searchParams = useSearchParams();
+
+  // Deep link from the mobile «Ещё» menu: /apartments?calc=1 opens the calculator.
+  useEffect(() => {
+    if (searchParams.get("calc") !== "1") return;
+    setCalcOpen(true);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("calc");
+    window.history.replaceState(null, "", url);
+  }, [searchParams]);
+
+  const blocks = useBlocks();
+  const blockLetter =
+    blocks.data?.find((b) => b.letter === params.block)?.letter ??
+    blocks.data?.find((b) => b.free_count > 0)?.letter ??
+    blocks.data?.[0]?.letter ??
+    null;
+
+  const floors = useFloors(blockLetter);
+  const floor =
+    floors.data?.find((f) => f.number === params.floor) ??
+    floors.data?.find((f) => f.kind === "residential" && f.free_count > 0) ??
+    floors.data?.[0] ??
+    null;
+
+  const floorUnits = useFloorUnits(floor?.id ?? null);
+  const units = useMemo(() => floorUnits.data?.units ?? [], [floorUnits.data]);
+
+  // Area slider bounds follow the current floor.
+  const areaBounds = useMemo<[number, number]>(() => {
+    if (!units.length) return [30, 120];
+    const areas = units.map((u) => u.area);
+    const lo = Math.floor(Math.min(...areas));
+    const hi = Math.ceil(Math.max(...areas));
+    return lo === hi ? [lo - 1, hi + 1] : [lo, hi];
+  }, [units]);
+  const area: [number, number] = [
+    Math.max(areaBounds[0], Math.min(params.minArea ?? areaBounds[0], areaBounds[1])),
+    Math.min(areaBounds[1], Math.max(params.maxArea ?? areaBounds[1], areaBounds[0])),
+  ];
+  const filtersActive =
+    params.rooms !== null || params.minArea !== null || params.maxArea !== null || params.free;
+
+  const matches = (u: UnitListItem) =>
+    (!params.free || u.status === "free") &&
+    (params.rooms === null || u.kind === "commercial" || u.rooms === params.rooms) &&
+    u.area >= area[0] &&
+    u.area <= area[1];
+  const visible = units.filter(matches).sort((a, b) => {
+    if (sort === "areaAsc") return a.area - b.area;
+    if (sort === "areaDesc") return b.area - a.area;
+    if (sort === "price")
+      return (
+        (unitTotal(a) ?? Number.POSITIVE_INFINITY) - (unitTotal(b) ?? Number.POSITIVE_INFINITY)
+      );
+    return a.number - b.number;
+  });
+  const counts = {
+    free: units.filter((u) => u.status === "free").length,
+    reserved: units.filter((u) => u.status === "reserved").length,
+    sold: units.filter((u) => u.status === "sold").length,
+  };
+
+  const selectedUnit = units.find((u) => u.number === params.apt) ?? null;
+  const resetFilters = () => update({ rooms: null, minArea: null, maxArea: null, free: false });
+  const select = (u: UnitListItem) =>
+    update({ block: blockLetter, floor: floor?.number, apt: u.number });
+
+  return (
+    <>
+      <section aria-labelledby="apartments-title" className="relative bg-ink pt-20 text-white">
+        <div aria-hidden className="atmosphere" />
+        <div className="relative container-page pt-10 pb-8 md:pt-14">
+          <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p className="flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-gold/15 px-3 py-1 eyebrow text-gold">
+                  {t("eyebrow")}
+                </span>
+                <span className="size-1 rounded-full bg-mist/60" />
+                <span className="text-sm text-mist">{tr(site.contact.address, locale)}</span>
+              </p>
+              <div className="mt-4 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+                <h1
+                  id="apartments-title"
+                  className="font-display text-h2 font-extrabold tracking-tight md:text-[3.25rem] md:leading-[1.05]"
+                >
+                  {t("title")}
+                </h1>
+                {blockLetter && floor && (
+                  <span className="font-display text-xl font-bold text-gold md:text-2xl">
+                    {t("stepBlock")} {blockLetter} · {floor.label}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 xl:items-end">
+              <StatsBar />
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => setCalcOpen(true)}>
+                  <Calculator className="size-4" aria-hidden />
+                  {t("calculator")}
+                </Button>
+                <a href={site.contact.phoneHref} className={buttonClasses("inverse", "md")}>
+                  <Phone className="size-4 text-gold" aria-hidden />
+                  {site.contact.phoneDisplay}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {!blocks.isError && (
+            <div className="mt-8">
+              <BlockSelector
+                blocks={blocks.data}
+                loading={blocks.isPending}
+                value={blockLetter}
+                onChange={(letter) => update({ block: letter, floor: null, apt: null })}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="bg-sand">
+        <div className="container-page py-8 md:py-10">
+          {blocks.isError ? (
+            <ErrorState onRetry={() => blocks.refetch()} />
+          ) : (
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[272px_minmax(0,1fr)]">
+              <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
+                {floors.isError ? (
+                  <ErrorState onRetry={() => floors.refetch()} />
+                ) : (
+                  <FloorList
+                    floors={floors.data}
+                    loading={floors.isPending}
+                    value={floor?.number ?? null}
+                    onChange={(n) => update({ block: blockLetter, floor: n, apt: null })}
+                  />
+                )}
+
+                <div className="hidden overflow-hidden rounded-card bg-white p-4 shadow-soft lg:block">
+                  <div className="flex items-center justify-between">
+                    <span className="eyebrow text-muted">
+                      {t("stepBlock")} {blockLetter}
+                    </span>
+                    <Layers className="size-4 text-gold-deep" aria-hidden />
+                  </div>
+                  <div className="relative mt-3 h-52 overflow-hidden rounded-2xl bg-ink">
+                    <Image
+                      src="/renders/tower.jpg"
+                      alt=""
+                      fill
+                      sizes="240px"
+                      className="object-cover opacity-90"
+                    />
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 bg-gradient-to-t from-ink via-transparent to-transparent"
+                    />
+                    {floor && (
+                      <span className="absolute right-2 bottom-2 left-2 rounded-xl px-3 py-2 text-[11px] font-bold tracking-wider text-gold uppercase glass-dark">
+                        {t("selectedFloor")}: {floor.label}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="hidden rounded-card bg-ink p-5 text-white shadow-soft lg:block">
+                  <p className="flex items-center gap-2 font-display font-extrabold">
+                    <Headset className="size-5 text-gold" aria-hidden />
+                    {t("brokerTitle")}
+                  </p>
+                  <p className="mt-2 text-sm text-mist">{t("brokerText")}</p>
+                  <Button className="mt-4 w-full" size="sm" onClick={() => setCallbackOpen(true)}>
+                    {t("brokerCta")}
+                  </Button>
+                </div>
+              </aside>
+
+              <section aria-labelledby="units-title" className="min-w-0 space-y-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <h2
+                      id="units-title"
+                      className="font-display text-2xl font-extrabold tracking-tight md:text-3xl"
+                    >
+                      {floor ? t("unitsOn", { floor: floor.label }) : t("stepUnit")}
+                    </h2>
+                    {units.length > 0 && (
+                      <p className="mt-1 text-[15px] text-muted">{t("floorSummary", counts)}</p>
+                    )}
+                  </div>
+                  <label className="flex items-center gap-3 self-start md:self-auto">
+                    <span className="eyebrow text-muted">{t("sort")}</span>
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as Sort)}
+                      className="h-10 cursor-pointer rounded-full bg-white px-4 text-sm font-semibold shadow-soft ring-1 ring-ink/[0.06] focus:ring-2 focus:ring-gold focus:outline-none"
+                    >
+                      <option value="number">{t("sortNumber")}</option>
+                      <option value="areaAsc">{t("sortAreaAsc")}</option>
+                      <option value="areaDesc">{t("sortAreaDesc")}</option>
+                      <option value="price">{t("sortPrice")}</option>
+                    </select>
+                  </label>
+                </div>
+
+                {floor?.kind !== "commercial" && (
+                  <Filters
+                    rooms={params.rooms}
+                    onRooms={(rooms) => update({ rooms })}
+                    area={area}
+                    areaBounds={areaBounds}
+                    onArea={([lo, hi]) =>
+                      update({
+                        minArea: lo === areaBounds[0] ? null : lo,
+                        maxArea: hi === areaBounds[1] ? null : hi,
+                      })
+                    }
+                    onlyFree={params.free}
+                    onOnlyFree={(free) => update({ free })}
+                    onReset={resetFilters}
+                    active={filtersActive}
+                  />
+                )}
+
+                {floorUnits.isError ? (
+                  <ErrorState onRetry={() => floorUnits.refetch()} />
+                ) : floorUnits.isPending || !floorUnits.data ? (
+                  <div aria-busy="true" className="space-y-6">
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <Skeleton key={i} className="h-[360px] rounded-card" />
+                      ))}
+                    </div>
+                    <Skeleton className="aspect-[16/10] w-full rounded-card" />
+                  </div>
+                ) : (
+                  <>
+                    {visible.length === 0 ? (
+                      <div className="flex flex-col items-center rounded-card bg-white px-6 py-14 text-center shadow-soft">
+                        <span className="grid size-14 place-items-center rounded-full bg-sand text-muted">
+                          <SearchX className="size-7" aria-hidden />
+                        </span>
+                        <p className="mt-5 font-display text-xl font-extrabold">
+                          {t("emptyTitle")}
+                        </p>
+                        <p className="mt-1 text-[15px] text-muted">{t("emptyText")}</p>
+                        <Button variant="secondary" className="mt-6" onClick={resetFilters}>
+                          {t("resetFilters")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <ul className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
+                        {visible.map((u) => (
+                          <li key={u.id}>
+                            <UnitCard
+                              unit={u}
+                              blockLetter={blockLetter ?? ""}
+                              hovered={hoveredId === u.id}
+                              onHover={setHoveredId}
+                              onSelect={select}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <FloorPlan
+                      planImage={floorUnits.data.plan_image}
+                      floorLabel={`${t("stepBlock")} ${blockLetter} · ${floorUnits.data.label}`}
+                      units={units}
+                      matches={matches}
+                      hoveredId={hoveredId}
+                      onHover={setHoveredId}
+                      onSelect={select}
+                    />
+                  </>
+                )}
+              </section>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <UnitModal
+        unitId={selectedUnit?.id ?? null}
+        onClose={() => update({ apt: null })}
+        onCalculator={() => setCalcOpen(true)}
+      />
+      <CalculatorModal
+        open={calcOpen}
+        onClose={() => setCalcOpen(false)}
+        initialArea={selectedUnit?.area}
+        initialPrice={selectedUnit?.price_per_m2}
+        unitId={selectedUnit?.id ?? null}
+        unitLabel={selectedUnit ? `${t("stepBlock")} ${blockLetter} · ${selectedUnit.name}` : null}
+      />
+      <CallbackModal open={callbackOpen} onClose={() => setCallbackOpen(false)} />
+    </>
+  );
+}

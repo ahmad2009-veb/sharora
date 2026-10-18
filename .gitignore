@@ -1,0 +1,38 @@
+# dependencies / builds
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# databases
+*.db
+*.sqlite3
+
+# uploaded media (generated seed placeholders are committed)
+backend/media/**/*
+!backend/media/*/
+!backend/media/floors/plan_*.png
+!backend/media/units/layout_*.png
+!backend/media/units/blueprint_*.png
+
+# secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

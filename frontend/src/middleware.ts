@@ -21,5 +21,7 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Vercel Services reject Edge Function output, so run middleware on Node.js.
+  runtime: "nodejs",
   matcher: ["/((?!api|media|_next|_vercel|.*\\..*).*)"],
 };

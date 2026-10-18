@@ -61,7 +61,7 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 | `COOKIE_SECURE` | backend | `true` за HTTPS |
 | `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` | backend | Первый менеджер; пароль **обязателен** (≥ 8 символов) |
 | `MEDIA_DIR`, `MEDIA_URL`, `MAX_UPLOAD_MB` | backend | Хранение загрузок (локально / Docker) |
-| `BLOB_READ_WRITE_TOKEN` | backend | Если задан — загрузки идут в Vercel Blob, в БД сохраняется URL файла |
+| `BLOB_READ_WRITE_TOKEN` / `BLOB_STORE_ID` | backend | Если задан один из них — загрузки идут в Vercel Blob (токен или OIDC), в БД сохраняется URL файла |
 | `VERCEL` | backend | Ставит сам Vercel: без бутстрапа при старте, `NullPool`, только Blob |
 | `BACKEND_URL` | frontend (build) | Куда проксировать `/api` и `/media` |
 | `NEXT_PUBLIC_API_URL` | frontend | Пусто = через прокси; иначе прямой URL API |
@@ -85,7 +85,7 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 | `DATABASE_URL` | backend | `postgresql://user:pass@ep-xxx-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require` | добавит интеграция Neon (pooled) |
 | `JWT_SECRET` | backend | вывод `openssl rand -hex 32` | вручную, Sensitive |
 | `COOKIE_SECURE` | backend | `true` | вручную |
-| `BLOB_READ_WRITE_TOKEN` | backend | `vercel_blob_rw_…` | добавит Blob store |
+| `BLOB_STORE_ID` (или `BLOB_READ_WRITE_TOKEN`) | backend | `store_…` | добавит Blob store; со `BLOB_STORE_ID` backend авторизуется OIDC-токеном Vercel |
 | `MAX_UPLOAD_MB` | backend | `4` | вручную (лимит тела запроса Vercel — 4,5 МБ) |
 | `CORS_ORIGINS` | backend | `https://sharora.tj` | вручную; при одном домене не обязателен |
 | `NEXT_PUBLIC_SITE_URL` | frontend | `https://sharora.tj` (или `https://<project>.vercel.app`) | вручную |

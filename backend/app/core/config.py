@@ -23,8 +23,11 @@ class Settings(BaseSettings):
     media_dir: str = "./media"
     media_url: str = "/media"
     max_upload_mb: int = 10
-    # When set, uploads go to Vercel Blob and the public Blob URL is stored in the DB.
+    # Vercel Blob: a read-write token, or OIDC (BLOB_STORE_ID + the per-request OIDC token) as
+    # set up by newer Blob stores. Either one sends uploads to Blob; the Blob URL goes to the DB.
     blob_read_write_token: str = ""
+    blob_store_id: str = ""
+    vercel_oidc_token: str = ""
 
     # Only needed where the first admin is created (local/Docker startup, seed.py).
     default_admin_username: str = "admin"
@@ -55,6 +58,10 @@ class Settings(BaseSettings):
     @property
     def is_postgres(self) -> bool:
         return self.database_url.startswith("postgresql")
+
+    @property
+    def uses_blob(self) -> bool:
+        return bool(self.blob_read_write_token or self.blob_store_id)
 
     def require_admin_password(self) -> str:
         if len(self.default_admin_password) < 8:

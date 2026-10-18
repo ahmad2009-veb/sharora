@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, joinedload
 
@@ -347,10 +347,12 @@ def list_sales(
 
 
 @protected.post("/upload")
-def upload_image(subdir: str = "units", file: UploadFile = File(...)) -> dict[str, str]:
+def upload_image(
+    request: Request, subdir: str = "units", file: UploadFile = File(...)
+) -> dict[str, str]:
     if subdir not in UPLOAD_SUBDIRS:
         raise HTTPException(status_code=400, detail="Недопустимая папка загрузки")
-    return {"url": save_upload(file, subdir)}
+    return {"url": save_upload(file, subdir, request.headers.get("x-vercel-oidc-token"))}
 
 
 # ---------- leads ----------

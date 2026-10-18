@@ -57,6 +57,33 @@ def test_upload_goes_to_blob_when_token_set(
     assert call["headers"]["x-content-type"] == "image/png"
 
 
+def test_upload_to_blob_with_oidc_store(
+    admin_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[dict[str, Any]] = []
+
+    def fake_put(url: str, **kwargs: Any) -> httpx.Response:
+        calls.append(kwargs)
+        return httpx.Response(
+            200,
+            json={"url": "https://x.public.blob.vercel-storage.com/units/a.png"},
+            request=httpx.Request("PUT", url),
+        )
+
+    monkeypatch.setattr(media.settings, "blob_store_id", "store_Abc123")
+    monkeypatch.setattr(media.httpx, "put", fake_put)
+
+    res = admin_client.post(
+        "/api/admin/upload?subdir=units",
+        files={"file": ("p.png", png_bytes(), "image/png")},
+        headers={"x-vercel-oidc-token": "oidc-jwt"},
+    )
+    assert res.status_code == 200
+    (call,) = calls
+    assert call["headers"]["authorization"] == "Bearer oidc-jwt"
+    assert call["headers"]["x-vercel-blob-store-id"] == "Abc123"
+
+
 def test_upload_on_vercel_without_token_fails_clearly(
     admin_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -65,7 +92,7 @@ def test_upload_on_vercel_without_token_fails_clearly(
         "/api/admin/upload?subdir=floors", files={"file": ("p.png", png_bytes(), "image/png")}
     )
     assert res.status_code == 500
-    assert "BLOB_READ_WRITE_TOKEN" in res.json()["detail"]
+    assert "BLOB_STORE_ID" in res.json()["detail"]
 
 
 def test_rate_limit_key_uses_forwarded_ip_on_vercel(monkeypatch: pytest.MonkeyPatch) -> None:

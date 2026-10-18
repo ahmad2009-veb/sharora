@@ -36,3 +36,6 @@ backend/media/**/*
 .DS_Store
 .idea/
 .vscode/
+.vercel
+.env*
+!.env.example

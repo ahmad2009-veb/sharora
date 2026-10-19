@@ -167,11 +167,13 @@ sharora/
 
 ### API
 
-Данные покупателей (таблица `sales`, миграция `0002`) отдаются только админским API — публичные эндпоинты их не содержат (проверяется тестом `test_public_api_never_exposes_buyer`).
+Данные покупателей (таблица `sales`, миграция `0002`) и графики платежей (`installment_payments`, миграция `0004`) отдаются только админским API — публичные эндпоинты их не содержат (проверяется тестом `test_public_api_never_exposes_buyer`).
+
+Рассрочка: остаток (стоимость − первоначальный взнос, плюс наценка %) делится на равные платежи в целых сомони, разница от округления — в последнем платеже; даты — то же число каждого месяца (31-е → последний день короткого месяца). Расчёт — одна функция `app/services/installments.py::build_schedule` (тесты `tests/test_installments.py`); превью в модалке продажи повторяет её в `frontend/src/lib/installments.ts` — меняйте обе. «Просрочено» не хранится, а считается при чтении по дате Таджикистана (UTC+5). При изменении условий продажи строки с оплатой сохраняются (частично оплаченная закрывается на внесённой сумме), остальные формируются заново. «Полная оплата» требует взнос = стоимости; старые продажи без графика стали «полной оплатой» и отображаются как раньше.
 
 Публичные (`/api`): `GET /stats`, `GET /blocks`, `GET /blocks/{letter}/floors`, `GET /floors/{id}/units`, `GET /units/{id}`, `GET /units?block=&floor=&rooms=&min_area=&max_area=&status=`, `GET /settings`, `POST /leads` (телефон `+992XXXXXXXXX`, лимит 5 заявок в минуту с IP).
 
-Админ (`/api/admin`, JWT в httpOnly-cookie): `POST /login`, `POST /logout`, `GET /me`, CRUD `/blocks`, `/floors`, `/units`, `PATCH /units/{id}/status` (нельзя поставить «Продано» — только через `/sell`; при снятии с продажи запись покупателя уходит в архив), `POST /units/{id}/sell`, `GET /units/{id}/sale`, `PATCH /sales/{id}`, `GET /sales?search=&block=&date_from=&date_to=&archived=`, `POST /upload?subdir=floors|units|blocks` (только JPG/PNG/WebP, проверка через Pillow), `GET/PATCH /leads`, `PATCH /settings`. Полная схема — <http://localhost:8000/docs>.
+Админ (`/api/admin`, JWT в httpOnly-cookie): `POST /login`, `POST /logout`, `GET /me`, CRUD `/blocks`, `/floors`, `/units`, `PATCH /units/{id}/status` (нельзя поставить «Продано» — только через `/sell`; при снятии с продажи запись покупателя уходит в архив), `POST /units/{id}/sell`, `GET /units/{id}/sale`, `PATCH /sales/{id}` (изменение условий пересчитывает неоплаченную часть графика), `GET /sales?search=&block=&date_from=&date_to=&archived=&overdue=`, `GET /sales/{id}/schedule`, `GET /sales/{id}/export.xlsx|docx`, `POST /payments/{id}/pay` (сумма добавляется к оплаченному, частичная оплата разрешена), `POST /payments/{id}/reset`, `GET /payments/overdue`, `POST /upload?subdir=floors|units|blocks` (только JPG/PNG/WebP, проверка через Pillow), `GET/PATCH /leads`, `PATCH /settings`. Полная схема — <http://localhost:8000/docs>.
 
 ---
 

@@ -77,6 +77,13 @@ export function AdminDashboard() {
     enabled: me.isSuccess,
   });
   const stats = useQuery({ queryKey: ["stats"], queryFn: api.stats, enabled: me.isSuccess });
+  const overdue = useQuery({
+    queryKey: ["admin", "overdue"],
+    queryFn: adminApi.overdue,
+    enabled: me.isSuccess,
+  });
+  // «Просроченные платежи» on the dashboard opens the sales list pre-filtered.
+  const [salesOverdue, setSalesOverdue] = useState(false);
 
   useEffect(() => {
     if (me.error instanceof ApiError && me.error.status === 401) router.replace("/admin/login");
@@ -138,7 +145,10 @@ export function AdminDashboard() {
                 key={value}
                 type="button"
                 aria-current={active ? "page" : undefined}
-                onClick={() => setTab(value)}
+                onClick={() => {
+                  setSalesOverdue(false);
+                  setTab(value);
+                }}
                 className={cn(
                   "flex h-12 shrink-0 items-center gap-3 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-all",
                   active
@@ -148,6 +158,14 @@ export function AdminDashboard() {
               >
                 <Icon className="size-5" aria-hidden />
                 {label}
+                {value === "sales" && !!overdue.data?.count && (
+                  <span
+                    title="Просроченные платежи"
+                    className="ml-auto rounded-full bg-status-sold-text px-2 py-0.5 text-xs font-bold text-white tabular-nums"
+                  >
+                    {overdue.data.count}
+                  </span>
+                )}
                 {value === "leads" && !!newLeads.data?.length && (
                   <span className="ml-auto rounded-full bg-gold px-2 py-0.5 text-xs font-bold text-on-gold tabular-nums">
                     {newLeads.data.length}
@@ -216,9 +234,20 @@ export function AdminDashboard() {
               {current.title}
             </h1>
           </div>
-          {tab === "units" && <UnitsPanel newLeads={newLeads.data?.length} />}
+          {tab === "units" && (
+            <UnitsPanel
+              newLeads={newLeads.data?.length}
+              overdue={overdue.data}
+              onOverdueClick={() => {
+                setSalesOverdue(true);
+                setTab("sales");
+              }}
+            />
+          )}
           {tab === "floors" && <FloorsPanel />}
-          {tab === "sales" && <SalesPanel />}
+          {tab === "sales" && (
+            <SalesPanel key={String(salesOverdue)} initialOverdue={salesOverdue} />
+          )}
           {tab === "leads" && <LeadsPanel />}
           {tab === "settings" && <SettingsPanel />}
         </div>

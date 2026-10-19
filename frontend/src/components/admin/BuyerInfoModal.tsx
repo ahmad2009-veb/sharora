@@ -1,7 +1,17 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Archive, Check, Copy, Pencil, Phone, UserPlus, UserRound } from "lucide-react";
+import {
+  Archive,
+  CalendarClock,
+  Check,
+  Copy,
+  Pencil,
+  Phone,
+  TableProperties,
+  UserPlus,
+  UserRound,
+} from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -10,8 +20,10 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { adminApi, ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatPhone } from "@/lib/format";
+import { monthsLabel } from "@/lib/installments";
 import type { Sale } from "@/lib/types";
 
+import { PaymentScheduleModal } from "./PaymentScheduleModal";
 import { SaleFormModal, unitSubtitle, type SaleUnit } from "./SaleFormModal";
 
 const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long" });
@@ -44,6 +56,7 @@ export function BuyerInfoModal({
   onClose: () => void;
 }) {
   const [editing, setEditing] = useState<{ unit: SaleUnit; sale: Sale | null } | null>(null);
+  const [scheduleId, setScheduleId] = useState<number | null>(null);
   const unitId = target?.unit?.id ?? null;
 
   const fetched = useQuery({
@@ -59,7 +72,7 @@ export function BuyerInfoModal({
   return (
     <>
       <Modal
-        open={target !== null && editing === null}
+        open={target !== null && editing === null && scheduleId === null}
         onClose={onClose}
         title="Информация о покупателе"
         description={unit ? unitSubtitle(unit) : undefined}
@@ -96,10 +109,13 @@ export function BuyerInfoModal({
           <SaleDetails
             sale={sale}
             onEdit={() => unit && setEditing({ unit, sale })}
+            onSchedule={() => setScheduleId(sale.id)}
             onClose={onClose}
           />
         )}
       </Modal>
+
+      <PaymentScheduleModal saleId={scheduleId} onClose={() => setScheduleId(null)} />
 
       <SaleFormModal
         unit={editing?.unit ?? null}
@@ -118,17 +134,21 @@ export function BuyerInfoModal({
 function SaleDetails({
   sale,
   onEdit,
+  onSchedule,
   onClose,
 }: {
   sale: Sale;
   onEdit: () => void;
+  onSchedule: () => void;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
-  const paidPct =
-    sale.total_price && sale.total_price > 0
-      ? Math.min(100, (sale.amount_paid / sale.total_price) * 100)
-      : null;
+  // Against everything the buyer owes: price, or down payment + schedule (with markup).
+  const owed =
+    sale.payment_type === "installment"
+      ? sale.down_payment + sale.financed_amount
+      : sale.total_price;
+  const paidPct = owed && owed > 0 ? Math.min(100, (sale.paid_total / owed) * 100) : null;
 
   async function copy() {
     try {
@@ -185,7 +205,7 @@ function SaleDetails({
 
       <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-line">
         {[
-          ["Оплачено", formatMoney(sale.amount_paid), "text-status-free-text"],
+          ["Оплачено", formatMoney(sale.paid_total), "text-status-free-text"],
           ["Стоимость", sale.total_price === null ? "—" : formatMoney(sale.total_price), ""],
           [
             "Остаток",
@@ -211,11 +231,46 @@ function SaleDetails({
         </div>
       )}
 
+      {sale.overdue_count > 0 && (
+        <p className="flex items-center gap-2 rounded-xl bg-status-sold-fill px-4 py-2.5 text-sm font-semibold text-status-sold-text">
+          <CalendarClock className="size-4" aria-hidden />
+          Просрочено платежей: {sale.overdue_count} на {formatMoney(sale.overdue_amount)}
+        </p>
+      )}
+
       <dl className="space-y-2.5 text-[15px]">
         <div className="flex justify-between gap-4">
           <dt className="text-muted">Дата продажи</dt>
           <dd className="font-semibold">{dateFormat.format(day(sale.sale_date))}</dd>
         </div>
+        <div className="flex justify-between gap-4">
+          <dt className="text-muted">Способ оплаты</dt>
+          <dd className="font-semibold">
+            {sale.payment_type === "installment"
+              ? `Рассрочка, ${monthsLabel(sale.term_months ?? 0)}`
+              : "Полная оплата"}
+          </dd>
+        </div>
+        {sale.monthly_payment !== null && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted">Ежемесячный платёж</dt>
+            <dd className="font-semibold tabular-nums">{formatMoney(sale.monthly_payment)}</dd>
+          </div>
+        )}
+        {sale.next_payment_date && (
+          <div className="flex justify-between gap-4">
+            <dt className="text-muted">Следующий платёж</dt>
+            <dd
+              className={cn(
+                "font-semibold tabular-nums",
+                sale.overdue_count > 0 && "text-status-sold-text",
+              )}
+            >
+              {dateFormat.format(day(sale.next_payment_date))} ·{" "}
+              {formatMoney(sale.next_payment_amount ?? 0)}
+            </dd>
+          </div>
+        )}
         {sale.comment && (
           <div>
             <dt className="text-muted">Комментарий</dt>
@@ -235,9 +290,13 @@ function SaleDetails({
         )}
       </p>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex flex-wrap justify-end gap-3">
         <Button variant="ghost" onClick={onClose}>
           Закрыть
+        </Button>
+        <Button variant="secondary" onClick={onSchedule}>
+          <TableProperties className="size-4" aria-hidden />
+          График платежей
         </Button>
         {!sale.is_archived && (
           <Button variant="dark" onClick={onEdit}>

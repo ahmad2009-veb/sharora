@@ -9,6 +9,7 @@ from app.core.database import Base
 
 if TYPE_CHECKING:
     from app.models.admin_user import AdminUser
+    from app.models.installment import InstallmentPayment
     from app.models.unit import Unit
 
 
@@ -27,9 +28,18 @@ class Sale(Base):
     )
     buyer_name: Mapped[str] = mapped_column(String(160), nullable=False)
     buyer_phone: Mapped[str] = mapped_column(String(32), nullable=False)
-    amount_paid: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    # Paid at signing. Legacy rows (before schedules) may lack total_price.
+    down_payment: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
     total_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2), nullable=True)
     sale_date: Mapped[date] = mapped_column(Date, nullable=False)
+    payment_type: Mapped[str] = mapped_column(
+        String(16), default="full", server_default="full", nullable=False
+    )  # full | installment
+    term_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    markup_percent: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2), default=0, server_default="0", nullable=False
+    )
+    first_payment_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_by: Mapped[int | None] = mapped_column(
         ForeignKey("admin_users.id", ondelete="SET NULL"), nullable=True
@@ -44,3 +54,9 @@ class Sale(Base):
 
     unit: Mapped["Unit | None"] = relationship("Unit", back_populates="sales")
     author: Mapped["AdminUser | None"] = relationship("AdminUser")
+    payments: Mapped[list["InstallmentPayment"]] = relationship(
+        "InstallmentPayment",
+        back_populates="sale",
+        cascade="all, delete-orphan",
+        order_by="InstallmentPayment.number",
+    )

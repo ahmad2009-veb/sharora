@@ -1,24 +1,54 @@
 from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 from sqlalchemy import or_, select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_admin
 from app.core.security import ACCESS_TOKEN_COOKIE_NAME, create_access_token, verify_password
-from app.models import AdminUser, Block, CalculatorSettings, Floor, Lead, Sale, Unit, UnitStatus
+from app.models import (
+    AdminUser,
+    Block,
+    CalculatorSettings,
+    Floor,
+    InstallmentPayment,
+    Lead,
+    Sale,
+    Unit,
+    UnitStatus,
+)
 from app.schemas.auth import AdminMeOut, LoginRequest
 from app.schemas.block import BlockCreate, BlockOut, BlockUpdate
 from app.schemas.floor import FloorCreate, FloorOut, FloorUpdate
 from app.schemas.lead import LeadAdminOut, LeadUpdate
-from app.schemas.sale import SaleCreate, SaleOut, SaleUpdate
+from app.schemas.sale import (
+    TERM_FIELDS,
+    OverdueSummary,
+    PaymentIn,
+    SaleCreate,
+    SaleOut,
+    SaleUpdate,
+    ScheduleOut,
+    payments_out,
+)
 from app.schemas.settings import SettingsOut, SettingsUpdate
 from app.schemas.unit import UnitAdminOut, UnitCreate, UnitStatusUpdate, UnitUpdate
 from app.services.aggregates import BlockCounts, block_counts
 from app.services.converters import to_unit_detail
+from app.services.installments import (
+    PaidRow,
+    ScheduleError,
+    add_months,
+    build_schedule,
+    check_terms,
+    financed_amount,
+    today_tj,
+)
 from app.services.media import UPLOAD_SUBDIRS, save_upload
+from app.services.schedule_export import export_filename, schedule_docx, schedule_xlsx
 
 settings = get_settings()
 
@@ -60,18 +90,74 @@ def _apply_status(db: Session, unit: Unit, new_status: UnitStatus) -> None:
     unit.status = new_status
 
 
+SALE_OPTIONS = (
+    joinedload(Sale.unit).joinedload(Unit.floor).joinedload(Floor.block),
+    joinedload(Sale.author),
+    selectinload(Sale.payments),
+)
+
+
 def _load_sale(db: Session, sale_id: int) -> Sale:
     sale = db.execute(
-        select(Sale)
-        .options(
-            joinedload(Sale.unit).joinedload(Unit.floor).joinedload(Floor.block),
-            joinedload(Sale.author),
-        )
-        .where(Sale.id == sale_id)
+        select(Sale).options(*SALE_OPTIONS).where(Sale.id == sale_id)
     ).scalar_one_or_none()
     if sale is None:
         raise HTTPException(status_code=404, detail="Продажа не найдена")
     return sale
+
+
+def _sale_out(db: Session, sale_id: int) -> SaleOut:
+    db.expire_all()  # payments may have been replaced in this request
+    return SaleOut.from_sale(_load_sale(db, sale_id), today_tj())
+
+
+def _schedule_out(db: Session, sale_id: int) -> ScheduleOut:
+    db.expire_all()
+    sale = _load_sale(db, sale_id)
+    today = today_tj()
+    return ScheduleOut(
+        sale=SaleOut.from_sale(sale, today), payments=payments_out(sale.payments, today)
+    )
+
+
+def _rebuild_schedule(sale: Sale) -> None:
+    """Regenerates the unpaid part of the schedule from the sale's terms.
+
+    Rows with money on them are kept (a partly paid row is closed at the amount paid);
+    everything else is replaced.
+    """
+    paid = [p for p in sale.payments if p.paid_amount > 0]
+    if sale.payment_type != "installment":
+        if paid:
+            raise HTTPException(
+                status_code=422,
+                detail="По графику уже есть оплаты — смените срок вместо полной оплаты",
+            )
+        sale.payments = []
+        sale.term_months = None
+        sale.first_payment_date = None
+        sale.markup_percent = Decimal(0)
+        return
+    assert sale.total_price is not None and sale.term_months is not None  # check_terms
+    if sale.first_payment_date is None:
+        sale.first_payment_date = add_months(sale.sale_date, 1)
+    try:
+        rows = build_schedule(
+            financed_amount(sale.total_price, sale.down_payment, sale.markup_percent),
+            sale.term_months,
+            sale.first_payment_date,
+            [PaidRow(p.due_date, p.paid_amount) for p in paid],
+        )
+    except ScheduleError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from None
+    for payment, row in zip(paid, rows, strict=False):
+        payment.number = row.number
+        payment.amount = row.amount
+        payment.status = "paid"
+    sale.payments = paid + [
+        InstallmentPayment(number=r.number, due_date=r.due_date, amount=r.amount)
+        for r in rows[len(paid) :]
+    ]
 
 
 def _block_out(db: Session, block: Block) -> BlockOut:
@@ -284,10 +370,11 @@ def sell_unit(
         raise HTTPException(status_code=409, detail="Квартира уже продана")
     # A unit marked «sold» before buyer tracking existed may get its buyer attached here.
     sale = Sale(unit_id=unit.id, created_by=admin.id, **payload.model_dump())
+    _rebuild_schedule(sale)
     db.add(sale)
     unit.status = UnitStatus.sold
-    db.commit()  # one transaction: the sale and the status change land together
-    return SaleOut.from_sale(_load_sale(db, sale.id))
+    db.commit()  # one transaction: the sale, its schedule and the status change land together
+    return _sale_out(db, sale.id)
 
 
 @protected.get("/units/{unit_id}/sale", response_model=SaleOut)
@@ -296,26 +383,142 @@ def get_unit_sale(unit_id: int, db: Session = Depends(get_db)) -> SaleOut:
     sale = _active_sale(db, unit_id)
     if sale is None:
         raise HTTPException(status_code=404, detail="Данные покупателя не найдены")
-    return SaleOut.from_sale(_load_sale(db, sale.id))
+    return _sale_out(db, sale.id)
 
 
 @protected.patch("/sales/{sale_id}", response_model=SaleOut)
 def update_sale(sale_id: int, payload: SaleUpdate, db: Session = Depends(get_db)) -> SaleOut:
+    """Edits buyer data; changed payment terms regenerate the unpaid part of the schedule."""
     sale = _load_sale(db, sale_id)
+    if sale.is_archived:
+        raise HTTPException(status_code=409, detail="Продажа в архиве")
     data = payload.model_dump(exclude_unset=True)
-    for required in ("buyer_name", "buyer_phone", "amount_paid", "sale_date"):
+    for required in ("buyer_name", "buyer_phone", "down_payment", "sale_date", "payment_type"):
         if required in data and data[required] is None:
             raise HTTPException(status_code=422, detail="Заполните обязательные поля")
-    paid = data.get("amount_paid", sale.amount_paid)
-    total = data.get("total_price", sale.total_price)
-    if total is not None and paid > total:
-        raise HTTPException(
-            status_code=422, detail="Сумма оплаты не может превышать общую стоимость"
-        )
+    if data.get("markup_percent", 0) is None:
+        data["markup_percent"] = Decimal(0)
+    terms_changed = any(
+        field in data and data[field] != getattr(sale, field) for field in TERM_FIELDS
+    )
     for field, value in data.items():
         setattr(sale, field, value)
+    if terms_changed:
+        try:
+            check_terms(
+                total=sale.total_price,
+                down=sale.down_payment,
+                payment_type=sale.payment_type,
+                term_months=sale.term_months,
+                sale_date=sale.sale_date,
+                first_payment_date=sale.first_payment_date,
+            )
+        except ScheduleError as e:
+            raise HTTPException(status_code=422, detail=str(e)) from None
+        _rebuild_schedule(sale)
+    elif sale.first_payment_date is not None and sale.first_payment_date < sale.sale_date:
+        raise HTTPException(
+            status_code=422, detail="Дата первого платежа не может быть раньше даты продажи"
+        )
     db.commit()
-    return SaleOut.from_sale(_load_sale(db, sale_id))
+    return _sale_out(db, sale_id)
+
+
+@protected.get("/sales/{sale_id}/schedule", response_model=ScheduleOut)
+def get_schedule(sale_id: int, db: Session = Depends(get_db)) -> ScheduleOut:
+    _load_sale(db, sale_id)
+    return _schedule_out(db, sale_id)
+
+
+def _sale_payment(db: Session, payment_id: int) -> InstallmentPayment:
+    payment = db.get(InstallmentPayment, payment_id)
+    if payment is None:
+        raise HTTPException(status_code=404, detail="Платёж не найден")
+    if payment.sale.is_archived:
+        raise HTTPException(status_code=409, detail="Продажа в архиве")
+    return payment
+
+
+@protected.post("/payments/{payment_id}/pay", response_model=ScheduleOut)
+def pay_installment(
+    payment_id: int, payload: PaymentIn, db: Session = Depends(get_db)
+) -> ScheduleOut:
+    """Records money received for one row; partial amounts add up until the row is paid."""
+    payment = _sale_payment(db, payment_id)
+    outstanding = payment.amount - payment.paid_amount
+    if outstanding <= 0:
+        raise HTTPException(status_code=409, detail="Платёж уже оплачен")
+    if payload.amount > outstanding:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Сумма больше остатка по платежу ({outstanding:,.0f} смн)".replace(",", " "),
+        )
+    if payload.paid_date > today_tj():
+        raise HTTPException(status_code=422, detail="Дата оплаты не может быть в будущем")
+    payment.paid_amount += payload.amount
+    payment.paid_date = payload.paid_date
+    payment.status = "paid" if payment.paid_amount >= payment.amount else "pending"
+    db.commit()
+    return _schedule_out(db, payment.sale_id)
+
+
+@protected.post("/payments/{payment_id}/reset", response_model=ScheduleOut)
+def reset_installment(payment_id: int, db: Session = Depends(get_db)) -> ScheduleOut:
+    """Undoes a mistaken entry: the row becomes unpaid again."""
+    payment = _sale_payment(db, payment_id)
+    payment.paid_amount = Decimal(0)
+    payment.paid_date = None
+    payment.status = "pending"
+    db.commit()
+    return _schedule_out(db, payment.sale_id)
+
+
+@protected.get("/payments/overdue", response_model=OverdueSummary)
+def overdue_summary(db: Session = Depends(get_db)) -> OverdueSummary:
+    rows = db.execute(
+        select(
+            InstallmentPayment.sale_id, InstallmentPayment.amount, InstallmentPayment.paid_amount
+        )
+        .join(Sale)
+        .where(
+            Sale.is_archived.is_(False),
+            InstallmentPayment.due_date < today_tj(),
+            InstallmentPayment.paid_amount < InstallmentPayment.amount,
+        )
+    ).all()
+    return OverdueSummary(
+        count=len(rows),
+        amount=float(sum((r.amount - r.paid_amount for r in rows), Decimal(0))),
+        sales=len({r.sale_id for r in rows}),
+    )
+
+
+def _export(db: Session, sale_id: int, ext: str) -> Response:
+    schedule = _schedule_out(db, sale_id)
+    if ext == "xlsx":
+        content = schedule_xlsx(schedule)
+        media = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    else:
+        content = schedule_docx(schedule)
+        media = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    return Response(
+        content,
+        media_type=media,
+        headers={
+            "Content-Disposition": f'attachment; filename="{export_filename(schedule.sale, ext)}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@protected.get("/sales/{sale_id}/export.xlsx")
+def export_schedule_xlsx(sale_id: int, db: Session = Depends(get_db)) -> Response:
+    return _export(db, sale_id, "xlsx")
+
+
+@protected.get("/sales/{sale_id}/export.docx")
+def export_schedule_docx(sale_id: int, db: Session = Depends(get_db)) -> Response:
+    return _export(db, sale_id, "docx")
 
 
 @protected.get("/sales", response_model=list[SaleOut])
@@ -325,14 +528,12 @@ def list_sales(
     date_from: date | None = None,
     date_to: date | None = None,
     archived: bool = False,
+    overdue: bool = False,
     db: Session = Depends(get_db),
 ) -> list[SaleOut]:
     query = (
         select(Sale)
-        .options(
-            joinedload(Sale.unit).joinedload(Unit.floor).joinedload(Floor.block),
-            joinedload(Sale.author),
-        )
+        .options(*SALE_OPTIONS)
         .where(Sale.is_archived.is_(archived))
         .order_by(Sale.sale_date.desc(), Sale.id.desc())
     )
@@ -348,7 +549,9 @@ def list_sales(
         query = query.where(Sale.sale_date >= date_from)
     if date_to:
         query = query.where(Sale.sale_date <= date_to)
-    return [SaleOut.from_sale(s) for s in db.execute(query).unique().scalars().all()]
+    today = today_tj()
+    result = [SaleOut.from_sale(s, today) for s in db.execute(query).unique().scalars().all()]
+    return [s for s in result if s.overdue_count] if overdue else result
 
 
 # ---------- media ----------

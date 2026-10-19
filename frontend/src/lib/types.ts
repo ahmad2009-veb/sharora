@@ -95,18 +95,36 @@ export interface Lead {
 }
 
 /** Buyer data of a sold unit — admin API only. */
+export type PaymentType = "full" | "installment";
+export type PaymentStatus = "pending" | "paid" | "overdue";
+
 export interface Sale {
   id: number;
   unit_id: number | null;
   unit_name: string | null;
   block_letter: string | null;
   floor_label: string | null;
+  floor_number: number | null;
   area: number | null;
   buyer_name: string;
   buyer_phone: string;
-  amount_paid: number;
   total_price: number | null;
+  down_payment: number;
+  payment_type: PaymentType;
+  term_months: number | null;
+  markup_percent: number;
+  first_payment_date: string | null;
+  /** Sum of the schedule (rest + markup); 0 for full payment. */
+  financed_amount: number;
+  monthly_payment: number | null;
+  /** Down payment plus everything received on the schedule. */
+  paid_total: number;
+  /** Debt still to be received; null for legacy sales without a total price. */
   remaining: number | null;
+  next_payment_date: string | null;
+  next_payment_amount: number | null;
+  overdue_count: number;
+  overdue_amount: number;
   sale_date: string;
   comment: string | null;
   created_by_username: string | null;
@@ -118,10 +136,37 @@ export interface Sale {
 export interface SaleInput {
   buyer_name: string;
   buyer_phone: string;
-  amount_paid: number;
-  total_price: number | null;
+  total_price: number;
+  down_payment: number;
   sale_date: string;
   comment: string | null;
+  payment_type: PaymentType;
+  term_months: number | null;
+  markup_percent: number;
+  first_payment_date: string | null;
+}
+
+export interface Payment {
+  id: number;
+  number: number;
+  due_date: string;
+  amount: number;
+  paid_amount: number;
+  paid_date: string | null;
+  status: PaymentStatus;
+  /** Planned debt after this payment, as in a bank schedule. */
+  balance_after: number;
+}
+
+export interface Schedule {
+  sale: Sale;
+  payments: Payment[];
+}
+
+export interface OverdueSummary {
+  count: number;
+  amount: number;
+  sales: number;
 }
 
 export interface AdminMe {

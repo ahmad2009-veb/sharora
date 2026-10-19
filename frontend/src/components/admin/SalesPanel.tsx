@@ -1,7 +1,17 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Archive, HandCoins, Phone, ReceiptText, Search, Wallet, X } from "lucide-react";
+import {
+  Archive,
+  CalendarClock,
+  HandCoins,
+  Phone,
+  ReceiptText,
+  Search,
+  TableProperties,
+  Wallet,
+  X,
+} from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -11,6 +21,7 @@ import { formatMoney, formatNumber, formatPhone } from "@/lib/format";
 import type { Sale } from "@/lib/types";
 
 import { BuyerInfoModal } from "./BuyerInfoModal";
+import { PaymentScheduleModal } from "./PaymentScheduleModal";
 import { inputClass, labelClass } from "./ui";
 
 const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" });
@@ -25,31 +36,35 @@ function useDebounced<T>(value: T, ms = 300): T {
 }
 
 /** «Покупатели / Продажи»: every recorded sale with search and block / date filters. */
-export function SalesPanel() {
+export function SalesPanel({ initialOverdue = false }: { initialOverdue?: boolean }) {
   const ids = { search: useId(), from: useId(), to: useId() };
   const [search, setSearch] = useState("");
   const [block, setBlock] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [archived, setArchived] = useState(false);
+  const [overdue, setOverdue] = useState(initialOverdue);
   const [open, setOpen] = useState<Sale | null>(null);
+  const [scheduleId, setScheduleId] = useState<number | null>(null);
   const q = useDebounced(search.trim());
 
   const blocks = useQuery({ queryKey: ["blocks"], queryFn: api.blocks });
   const sales = useQuery({
-    queryKey: ["admin", "sales", { q, block, dateFrom, dateTo, archived }],
-    queryFn: () => adminApi.sales({ search: q, block, dateFrom, dateTo, archived }),
+    queryKey: ["admin", "sales", { q, block, dateFrom, dateTo, archived, overdue }],
+    queryFn: () => adminApi.sales({ search: q, block, dateFrom, dateTo, archived, overdue }),
     placeholderData: keepPreviousData,
   });
 
   const list = sales.data ?? [];
-  const paid = list.reduce((s, x) => s + x.amount_paid, 0);
+  const paid = list.reduce((s, x) => s + x.paid_total, 0);
   const rest = list.reduce((s, x) => s + (x.remaining ?? 0), 0);
-  const filtered = !!(q || block || dateFrom || dateTo);
+  const overdueCount = list.reduce((s, x) => s + x.overdue_count, 0);
+  const overdueAmount = list.reduce((s, x) => s + x.overdue_amount, 0);
+  const filtered = !!(q || block || dateFrom || dateTo || overdue);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: "Сделок", value: formatNumber(list.length), Icon: ReceiptText, color: "" },
           {
@@ -64,7 +79,14 @@ export function SalesPanel() {
             Icon: Wallet,
             color: "var(--color-gold-deep)",
           },
-        ].map(({ label, value, Icon, color }) => (
+          {
+            label: "Просроченные платежи",
+            value: formatNumber(overdueCount),
+            Icon: CalendarClock,
+            color: overdueCount ? "var(--status-sold-text)" : "",
+            sub: overdueCount ? `на ${formatMoney(overdueAmount)}` : undefined,
+          },
+        ].map(({ label, value, Icon, color, sub }) => (
           <div key={label} className="rounded-card bg-white p-5 shadow-soft md:p-6">
             <div className="flex items-center justify-between">
               <span className="eyebrow text-muted">{label}</span>
@@ -79,7 +101,7 @@ export function SalesPanel() {
               {value}
             </p>
             <p className="mt-1 text-sm text-muted">
-              {archived ? "в архиве" : filtered ? "по фильтру" : "все активные продажи"}
+              {sub ?? (archived ? "в архиве" : filtered ? "по фильтру" : "все активные продажи")}
             </p>
           </div>
         ))}
@@ -163,6 +185,16 @@ export function SalesPanel() {
             <Archive className="size-4 text-muted" aria-hidden />
             Архив
           </label>
+          <label className="flex h-11 cursor-pointer items-center gap-2.5 rounded-xl bg-sand px-4 text-sm font-semibold select-none">
+            <input
+              type="checkbox"
+              checked={overdue}
+              onChange={(e) => setOverdue(e.target.checked)}
+              className="size-4 accent-[var(--color-ink)]"
+            />
+            <CalendarClock className="size-4 text-status-sold-text" aria-hidden />
+            Только просроченные
+          </label>
           {filtered && (
             <button
               type="button"
@@ -171,6 +203,7 @@ export function SalesPanel() {
                 setBlock("");
                 setDateFrom("");
                 setDateTo("");
+                setOverdue(false);
               }}
               className="flex h-11 items-center gap-1.5 px-2 text-sm font-medium text-muted hover:text-ink"
             >
@@ -183,7 +216,7 @@ export function SalesPanel() {
 
       <div className="overflow-hidden rounded-card bg-white shadow-soft">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-[15px]">
+          <table className="w-full min-w-[1100px] text-[15px]">
             <caption className="sr-only">Продажи</caption>
             <thead>
               <tr className="bg-sand text-left text-[11px] font-bold tracking-[0.12em] text-muted uppercase">
@@ -206,10 +239,16 @@ export function SalesPanel() {
                   Оплачено
                 </th>
                 <th scope="col" className="px-4 py-4 text-right">
-                  Остаток
+                  Остаток долга
                 </th>
                 <th scope="col" className="px-4 py-4 text-right">
-                  Дата
+                  След. платёж
+                </th>
+                <th scope="col" className="px-4 py-4 text-right">
+                  Дата продажи
+                </th>
+                <th scope="col" className="px-4 py-4">
+                  <span className="sr-only">График платежей</span>
                 </th>
               </tr>
             </thead>
@@ -217,14 +256,14 @@ export function SalesPanel() {
               {sales.isPending ? (
                 Array.from({ length: 6 }, (_, i) => (
                   <tr key={i} className="border-b border-line">
-                    <td colSpan={8} className="px-4 py-3">
+                    <td colSpan={10} className="px-4 py-3">
                       <Skeleton className="h-6 w-full" />
                     </td>
                   </tr>
                 ))
               ) : list.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center">
+                  <td colSpan={10} className="px-6 py-16 text-center">
                     <span className="mx-auto grid size-14 place-items-center rounded-full bg-sand text-muted">
                       <ReceiptText className="size-6" aria-hidden />
                     </span>
@@ -247,7 +286,10 @@ export function SalesPanel() {
                       if ((e.target as HTMLElement).closest("a, button")) return;
                       setOpen(s);
                     }}
-                    className="cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-sand/60"
+                    className={cn(
+                      "cursor-pointer border-b border-line/70 transition-colors last:border-0 hover:bg-sand/60",
+                      s.overdue_count > 0 && "bg-status-sold-fill/40",
+                    )}
                   >
                     <td className="px-4 py-3">
                       <button
@@ -271,7 +313,7 @@ export function SalesPanel() {
                       </a>
                     </td>
                     <td className="px-4 py-3 text-right font-semibold whitespace-nowrap text-status-free-text tabular-nums">
-                      {formatMoney(s.amount_paid)}
+                      {formatMoney(s.paid_total)}
                     </td>
                     <td
                       className={cn(
@@ -281,8 +323,35 @@ export function SalesPanel() {
                     >
                       {s.remaining === null ? "—" : formatMoney(s.remaining)}
                     </td>
+                    <td
+                      className={cn(
+                        "px-4 py-3 text-right whitespace-nowrap tabular-nums",
+                        s.overdue_count ? "font-semibold text-status-sold-text" : "text-muted",
+                      )}
+                    >
+                      {s.next_payment_date ? (
+                        <>
+                          {dateFormat.format(new Date(`${s.next_payment_date}T00:00:00`))}
+                          {s.overdue_count > 0 && (
+                            <span className="block text-xs">просрочено: {s.overdue_count}</span>
+                          )}
+                        </>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap text-muted">
                       {dateFormat.format(new Date(`${s.sale_date}T00:00:00`))}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setScheduleId(s.id)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-sand px-3 text-sm font-semibold whitespace-nowrap hover:bg-sand-deep"
+                      >
+                        <TableProperties className="size-4" aria-hidden />
+                        График
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -293,6 +362,7 @@ export function SalesPanel() {
       </div>
 
       <BuyerInfoModal target={open ? { sale: open } : null} onClose={() => setOpen(null)} />
+      <PaymentScheduleModal saleId={scheduleId} onClose={() => setScheduleId(null)} />
     </div>
   );
 }

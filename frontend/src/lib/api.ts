@@ -11,8 +11,10 @@ import type {
   FloorWithUnits,
   Lead,
   LeadCreate,
+  OverdueSummary,
   Sale,
   SaleInput,
+  Schedule,
   Stats,
   UnitCreate,
   UnitDetail,
@@ -110,6 +112,7 @@ export const adminApi = {
     dateFrom?: string;
     dateTo?: string;
     archived?: boolean;
+    overdue?: boolean;
   }) => {
     const qs = new URLSearchParams();
     if (params.search) qs.set("search", params.search);
@@ -117,8 +120,18 @@ export const adminApi = {
     if (params.dateFrom) qs.set("date_from", params.dateFrom);
     if (params.dateTo) qs.set("date_to", params.dateTo);
     if (params.archived) qs.set("archived", "true");
+    if (params.overdue) qs.set("overdue", "true");
     return request<Sale[]>(`/api/admin/sales?${qs}`);
   },
+  schedule: (saleId: number) => request<Schedule>(`/api/admin/sales/${saleId}/schedule`),
+  payInstallment: (paymentId: number, body: { amount: number; paid_date: string }) =>
+    request<Schedule>(`/api/admin/payments/${paymentId}/pay`, { method: "POST", body: json(body) }),
+  resetInstallment: (paymentId: number) =>
+    request<Schedule>(`/api/admin/payments/${paymentId}/reset`, { method: "POST" }),
+  overdue: () => request<OverdueSummary>("/api/admin/payments/overdue"),
+  /** Direct link for «Скачать Excel / Word»: the auth cookie goes with a plain navigation. */
+  exportUrl: (saleId: number, ext: "xlsx" | "docx") =>
+    `${API_URL}/api/admin/sales/${saleId}/export.${ext}`,
   updateFloor: (id: number, patch: { plan_image?: string | null; label?: string }) =>
     request<Floor>(`/api/admin/floors/${id}`, { method: "PATCH", body: json(patch) }),
   upload: (file: File, subdir: "floors" | "units" | "blocks") => {

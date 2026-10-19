@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  CalendarClock,
   CircleDollarSign,
   Clock,
   KeyRound,
@@ -20,7 +21,7 @@ import { useToast } from "@/components/ui/Toast";
 import { adminApi, api, ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatMoney, formatNumber } from "@/lib/format";
-import type { Floor, UnitDetail, UnitStatus, UnitUpdate } from "@/lib/types";
+import type { Floor, OverdueSummary, UnitDetail, UnitStatus, UnitUpdate } from "@/lib/types";
 
 import { BuyerInfoModal, type BuyerTarget } from "./BuyerInfoModal";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -80,33 +81,48 @@ function Kpi({
   sub,
   color,
   Icon,
+  onClick,
 }: {
   label: string;
   value: string;
   sub: string;
   color: string;
   Icon: typeof KeyRound;
+  /** Makes the whole card a button (e.g. jump to the filtered list). */
+  onClick?: () => void;
 }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className="rounded-card bg-white p-5 shadow-soft transition-shadow hover:shadow-lift md:p-6">
-      <div className="flex items-center justify-between">
+    <Tag
+      {...(onClick ? { type: "button" as const, onClick } : {})}
+      className="block w-full rounded-card bg-white p-5 text-left shadow-soft transition-shadow hover:shadow-lift focus-visible:ring-2 focus-visible:ring-gold-soft focus-visible:outline-none md:p-6"
+    >
+      <span className="flex items-center justify-between">
         <span className="eyebrow text-muted">{label}</span>
         <span className="grid size-9 place-items-center rounded-full bg-sand">
           <Icon className="size-4" aria-hidden />
         </span>
-      </div>
-      <p
-        className="mt-4 font-display text-4xl font-extrabold tracking-tight tabular-nums"
+      </span>
+      <span
+        className="mt-4 block font-display text-4xl font-extrabold tracking-tight tabular-nums"
         style={{ color }}
       >
         {value}
-      </p>
-      <p className="mt-1 text-sm text-muted">{sub}</p>
-    </div>
+      </span>
+      <span className="mt-1 block text-sm text-muted">{sub}</span>
+    </Tag>
   );
 }
 
-export function UnitsPanel({ newLeads }: { newLeads?: number }) {
+export function UnitsPanel({
+  newLeads,
+  overdue,
+  onOverdueClick,
+}: {
+  newLeads?: number;
+  overdue?: OverdueSummary;
+  onOverdueClick?: () => void;
+}) {
   const ids = {
     block: useId(),
     floor: useId(),
@@ -211,7 +227,7 @@ export function UnitsPanel({ newLeads }: { newLeads?: number }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <Kpi
           label="Свободно к продаже"
           value={stats.data ? formatNumber(stats.data.free) : "—"}
@@ -243,6 +259,18 @@ export function UnitsPanel({ newLeads }: { newLeads?: number }) {
           sub="требуют обратного звонка"
           color="var(--color-gold-deep)"
           Icon={PhoneCall}
+        />
+        <Kpi
+          onClick={onOverdueClick}
+          label="Просроченные платежи"
+          value={overdue ? formatNumber(overdue.count) : "—"}
+          sub={
+            overdue?.count
+              ? `${formatMoney(overdue.amount)} · покупателей: ${overdue.sales}`
+              : "по графикам рассрочки"
+          }
+          color={overdue?.count ? "var(--status-sold-text)" : "var(--color-ink)"}
+          Icon={CalendarClock}
         />
       </div>
 

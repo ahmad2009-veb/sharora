@@ -3,10 +3,12 @@ from fastapi.testclient import TestClient
 BUYER = {
     "buyer_name": "Раҳмонов Исмоил",
     "buyer_phone": "+992 93 123 4567",
-    "amount_paid": 250000,
     "total_price": 650000,
+    "down_payment": 250000,
     "sale_date": "2026-10-18",
-    "comment": "Рассрочка 24 мес.",
+    "comment": "Договор №17",
+    "payment_type": "installment",
+    "term_months": 24,
 }
 
 
@@ -99,7 +101,8 @@ def test_add_and_remove_unit_on_a_floor(admin_client: TestClient) -> None:
 
 def test_sold_unit_cannot_be_removed(admin_client: TestClient) -> None:
     unit = admin_client.get("/api/units", params={"status": "free"}).json()[0]
-    buyer = {"buyer_name": "Нодира", "buyer_phone": "+992931112233", "amount_paid": 1000}
+    buyer = {"buyer_name": "Нодира", "buyer_phone": "+992931112233", "down_payment": 1000}
+    buyer["total_price"] = 1000
     buyer["sale_date"] = "2026-10-19"
     assert admin_client.post(f"/api/admin/units/{unit['id']}/sell", json=buyer).status_code == 201
     assert admin_client.delete(f"/api/admin/units/{unit['id']}").status_code == 409

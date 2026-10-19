@@ -29,8 +29,8 @@ export type FeatureIcon =
 
 export const site = {
   brand: {
-    name: "Sharora Sokhtmon",
-    project: { ru: "ЖК «Шарора»", tg: "МИ «Шарора»" } satisfies Localized,
+    name: "Zarafshon Sokhtmon",
+    project: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
     logo: "/logo.svg",
   },
 
@@ -48,8 +48,8 @@ export const site = {
     telegram: "https://t.me/+992206431001", // TODO: replace with the company's Telegram username
     hours: { ru: "Пн–Сб, 9:00–18:00", tg: "Дш–Шн, 9:00–18:00" } satisfies Localized,
     greeting: {
-      ru: "Здравствуйте! Хочу узнать о квартирах в ЖК «Шарора».",
-      tg: "Ассалому алейкум! Мехоҳам дар бораи хонаҳои МИ «Шарора» маълумот гирам.",
+      ru: "Здравствуйте! Хочу узнать о квартирах в ЖК «Зарафшон».",
+      tg: "Ассалому алейкум! Мехоҳам дар бораи хонаҳои МИ «Зарафшон» маълумот гирам.",
     } satisfies Localized,
     /** `{unit}` → "Хонаи 2, Блок А, Этаж 2, 89.70 м²" */
     unitGreeting: {
@@ -84,7 +84,7 @@ export const site = {
   },
 
   hero: {
-    eyebrow: { ru: "Sharora Sokhtmon · Шарора" } satisfies Localized,
+    eyebrow: { ru: "Zarafshon Sokhtmon · Зарафшон" } satisfies Localized,
     badge: {
       ru: "Новый жилой квартал · 4 км от Душанбе",
       tg: "Маҳаллаи нави истиқоматӣ · 4 км аз Душанбе",
@@ -107,7 +107,7 @@ export const site = {
     // TODO(client): renders from the design mock-up — replace with the project's own visuals.
     image: "/renders/hero.jpg",
     imageAlt: {
-      ru: "Вечерний вид на жилые блоки комплекса «Шарора» на фоне гор",
+      ru: "Вечерний вид на жилые блоки комплекса «Зарафшон» на фоне гор",
     } satisfies Localized,
     facts: [
       {
@@ -161,7 +161,7 @@ export const site = {
     ] satisfies Localized[],
     image: "/renders/about.jpg",
     imageAlt: {
-      ru: "Двор с фонтаном и фасады жилых блоков комплекса «Шарора»",
+      ru: "Двор с фонтаном и фасады жилых блоков комплекса «Зарафшон»",
     } satisfies Localized,
     developerLabel: { ru: "Застройщик", tg: "Сохтмончӣ" } satisfies Localized,
     safety: { ru: "Безопасность", tg: "Амният" } satisfies Localized,
@@ -190,7 +190,7 @@ export const site = {
     } satisfies Localized,
     image: "/renders/masterplan.jpg",
     imageAlt: {
-      ru: "Генеральный план ЖК «Шарора»: 12 жилых блоков с буквами на крышах",
+      ru: "Генеральный план ЖК «Зарафшон»: 12 жилых блоков с буквами на крышах",
     } satisfies Localized,
     // Marker positions in percent of the image; must match the letters on the roofs.
     blocks: [
@@ -416,8 +416,8 @@ export const site = {
       ru: "Комплекс находится в посёлке Шарора — в спокойном районе с быстрым выездом к Душанбе.",
     } satisfies Localized,
     route: { ru: "Построить маршрут", tg: "Масир сохтан" } satisfies Localized,
-    mapTitle: { ru: "Карта расположения ЖК «Шарора»" } satisfies Localized,
-    pinLabel: { ru: "ЖК «Шарора»", tg: "МИ «Шарора»" } satisfies Localized,
+    mapTitle: { ru: "Карта расположения ЖК «Зарафшон»" } satisfies Localized,
+    pinLabel: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
     routeNote: {
       ru: "Быстрый выезд к городской инфраструктуре",
       tg: "Роҳи зуд ба инфрасохтори шаҳр",
@@ -427,8 +427,8 @@ export const site = {
   cta: {
     badge: { ru: "Персональная консультация", tg: "Машварати шахсӣ" } satisfies Localized,
     title: {
-      ru: "Найдите свою квартиру в «Шарора»",
-      tg: "Хонаи худро дар «Шарора» ёбед",
+      ru: "Найдите свою квартиру в «Зарафшон»",
+      tg: "Хонаи худро дар «Зарафшон» ёбед",
     } satisfies Localized,
     text: {
       ru: "Выберите блок, этаж и планировку онлайн — или оставьте номер, и менеджер подберёт варианты и расскажет об условиях рассрочки.",
@@ -458,8 +458,8 @@ export const site = {
 
   footer: {
     rights: {
-      ru: "© 2026 Sharora Sokhtmon. Все права защищены.",
-      tg: "© 2026 Sharora Sokhtmon. Ҳамаи ҳуқуқҳо ҳифз шудаанд.",
+      ru: "© 2026 Zarafshon Sokhtmon. Все права защищены.",
+      tg: "© 2026 Zarafshon Sokhtmon. Ҳамаи ҳуқуқҳо ҳифз шудаанд.",
     } satisfies Localized,
     sections: { ru: "Разделы", tg: "Бахшҳо" } satisfies Localized,
     contacts: { ru: "Контакты", tg: "Тамос" } satisfies Localized,
@@ -488,8 +488,8 @@ export const site = {
 
   seo: {
     title: {
-      ru: "ЖК «Шарора» — жилой квартал нового уровня",
-      tg: "МИ «Шарора»",
+      ru: "ЖК «Зарафшон» — жилой квартал нового уровня",
+      tg: "МИ «Зарафшон»",
     } satisfies Localized,
     description: {
       ru: "12 жилых блоков в посёлке Шарора, 4 км до Душанбе: подземный паркинг, детский сад, торговые центры, солнечные панели и собственная котельная. Выбор квартиры онлайн.",

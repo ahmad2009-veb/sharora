@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import { hasFinePointer, prefersReducedMotion } from "@/lib/capabilities";
 import { gsap } from "@/lib/gsap";
 
-export const CURSOR_EVENT = "sharora:cursor";
+export const CURSOR_EVENT = "zarafshon:cursor";
 /** Lets non-DOM targets (the 3D scene) drive the cursor: `setCursor("view")` / `setCursor(null)`. */
 export function setCursor(mode: "view" | "hover" | null) {
   window.dispatchEvent(new CustomEvent(CURSOR_EVENT, { detail: mode }));

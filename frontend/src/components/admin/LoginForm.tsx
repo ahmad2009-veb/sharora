@@ -40,7 +40,9 @@ export function LoginForm() {
           <Image src="/logo.svg" alt="" width={38} height={38} unoptimized />
         </span>
         <div>
-          <p className="font-display text-lg font-extrabold tracking-[0.16em] uppercase">Шарора</p>
+          <p className="font-display text-lg font-extrabold tracking-[0.16em] uppercase">
+            Зарафшон
+          </p>
           <p className="eyebrow text-muted">Кабинет менеджера</p>
         </div>
       </div>

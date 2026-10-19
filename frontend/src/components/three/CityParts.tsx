@@ -17,7 +17,7 @@ import {
 } from "./layout";
 import { getTextures } from "./textures";
 
-const FONT_URL = "/fonts/sharora-letters.typeface.json";
+const FONT_URL = "/fonts/zarafshon-letters.typeface.json";
 const GOLD = "#C9A45C";
 
 // ---------------------------------------------------------------- ground & streets

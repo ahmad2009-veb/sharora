@@ -23,7 +23,7 @@ export async function Footer() {
         aria-hidden
         className="pointer-events-none absolute right-0 -bottom-[0.18em] left-0 text-center font-display text-[22vw] leading-none font-extrabold tracking-tighter text-white/[0.025] select-none"
       >
-        ШАРОРА
+        ЗАРАФШОН
       </p>
 
       <div className="relative container-page grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.3fr_0.8fr_1fr_1fr] lg:py-24">

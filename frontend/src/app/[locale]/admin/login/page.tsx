@@ -16,7 +16,7 @@ export default function AdminLoginPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-ink/40" />
         <div className="absolute right-12 bottom-12 left-12 text-white">
-          <p className="eyebrow text-gold">Sharora Sokhtmon · Residence</p>
+          <p className="eyebrow text-gold">Zarafshon Sokhtmon · Residence</p>
           <p className="mt-4 max-w-md font-display text-4xl leading-tight font-extrabold tracking-tight">
             Управление продажами квартала
           </p>

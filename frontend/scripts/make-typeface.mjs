@@ -32,7 +32,7 @@ for (const ch of CHARS) {
 
 const json = {
   glyphs,
-  familyName: font.names.fontFamily?.en ?? "Sharora Letters",
+  familyName: font.names.fontFamily?.en ?? "Zarafshon Letters",
   ascender: r(font.ascender),
   descender: r(font.descender),
   underlinePosition: r(font.tables.post.underlinePosition),
@@ -41,5 +41,5 @@ const json = {
   resolution: 1000,
   original_font_information: { format: 0, copyright: font.names.copyright?.en ?? "" },
 };
-writeFileSync("public/fonts/sharora-letters.typeface.json", JSON.stringify(json));
+writeFileSync("public/fonts/zarafshon-letters.typeface.json", JSON.stringify(json));
 console.log("glyphs:", Object.keys(glyphs).join(""));

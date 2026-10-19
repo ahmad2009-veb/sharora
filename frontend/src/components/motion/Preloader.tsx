@@ -30,7 +30,7 @@ export function Preloader() {
               <path className="pl-draw" pathLength={1} d="M108 92h104" stroke="#FFDEA4" />
             </g>
             <text x="160" y="132" textAnchor="middle" className="pl-text">
-              ШАРОРА
+              ЗАРАФШОН
             </text>
             <circle className="pl-spark" cx="92" cy="122" r="3" fill="#FFE7B0" />
           </svg>

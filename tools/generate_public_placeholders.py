@@ -139,7 +139,7 @@ def genplan() -> list[tuple[str, float, float]]:
     overlay = Image.new("RGBA", og.size, (15, 23, 42, 150))
     og = Image.alpha_composite(og, overlay).convert("RGB")
     od = ImageDraw.Draw(og)
-    od.text((72, 380), "ЖК «Шарора»", fill=(255, 255, 255), font=font(72, True))
+    od.text((72, 380), "ЖК «Зарафшон»", fill=(255, 255, 255), font=font(72, True))
     od.text((72, 480), "Жилой квартал нового уровня · 4 км до Душанбе", fill=(230, 226, 214), font=font(32))
     od.rectangle((72, 350, 152, 356), fill=GOLD)
     og.save(PUBLIC / "og.jpg", quality=86, optimize=True)

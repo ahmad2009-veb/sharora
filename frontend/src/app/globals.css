@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------
-   Sharora design tokens
+   Zarafshon design tokens
    One palette, one radius scale, one shadow system. Components only
    reference these tokens — never raw hex values.
    ------------------------------------------------------------------ */
 
 @theme {
-  /* Navy & champagne-gold palette (Sharora Residence design) */
+  /* Navy & champagne-gold palette (Zarafshon Residence design) */
   --color-ink: #131b2e;
   --color-night: #0a0f1c;
   --color-navy: #1c2641;

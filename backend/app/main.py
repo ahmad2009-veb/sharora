@@ -51,9 +51,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="Sharora API",
+    title="Zarafshon API",
     version="1.0.0",
-    description="API выбора квартир ЖК «Шарора» и админ-панели менеджеров.",
+    description="API выбора квартир ЖК «Зарафшон» и админ-панели менеджеров.",
     lifespan=lifespan,
 )
 app.state.limiter = limiter

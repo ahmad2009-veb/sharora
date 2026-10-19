@@ -10,7 +10,7 @@ import { site, tr } from "@/content/site";
 import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
 
-export const FEEDBACK_OPEN_EVENT = "sharora:feedback-open";
+export const FEEDBACK_OPEN_EVENT = "zarafshon:feedback-open";
 const OPEN_EVENT = FEEDBACK_OPEN_EVENT;
 
 /** Opens the floating feedback menu from anywhere (e.g. the footer button). */

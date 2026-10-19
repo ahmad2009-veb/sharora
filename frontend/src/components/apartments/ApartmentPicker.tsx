@@ -61,12 +61,19 @@ export function ApartmentPicker() {
     floors.data?.[0] ??
     null;
 
+  const blockName = blockLetter ? t("blockN", { n: blockLetter }) : "";
+  const floorName = floor
+    ? floor.kind === "commercial"
+      ? `${t("floorN", { n: floor.number })} · ${t("shop")}`
+      : t("floorN", { n: floor.number })
+    : "";
+
   const floorUnits = useFloorUnits(floor?.id ?? null);
   const units = useMemo(() => floorUnits.data?.units ?? [], [floorUnits.data]);
 
   // Area slider bounds follow the current floor.
   const areaBounds = useMemo<[number, number]>(() => {
-    if (!units.length) return [30, 120];
+    if (!units.length) return [42, 103];
     const areas = units.map((u) => u.area);
     const lo = Math.floor(Math.min(...areas));
     const hi = Math.ceil(Math.max(...areas));
@@ -127,7 +134,7 @@ export function ApartmentPicker() {
                 </h1>
                 {blockLetter && floor && (
                   <span className="font-display text-xl font-bold text-gold md:text-2xl">
-                    {t("stepBlock")} {blockLetter} · {floor.label}
+                    {blockName} · {floorName}
                   </span>
                 )}
               </div>
@@ -180,9 +187,7 @@ export function ApartmentPicker() {
 
                 <div className="hidden overflow-hidden rounded-card bg-white p-4 shadow-soft lg:block">
                   <div className="flex items-center justify-between">
-                    <span className="eyebrow text-muted">
-                      {t("stepBlock")} {blockLetter}
-                    </span>
+                    <span className="eyebrow text-muted">{blockName}</span>
                     <Layers className="size-4 text-gold-deep" aria-hidden />
                   </div>
                   <div className="relative mt-3 h-52 overflow-hidden rounded-2xl bg-ink">
@@ -199,7 +204,7 @@ export function ApartmentPicker() {
                     />
                     {floor && (
                       <span className="absolute right-2 bottom-2 left-2 rounded-xl px-3 py-2 text-[11px] font-bold tracking-wider text-gold uppercase glass-dark">
-                        {t("selectedFloor")}: {floor.label}
+                        {t("selectedFloor")}: {floorName}
                       </span>
                     )}
                   </div>
@@ -224,7 +229,11 @@ export function ApartmentPicker() {
                       id="units-title"
                       className="font-display text-2xl font-extrabold tracking-tight md:text-3xl"
                     >
-                      {floor ? t("unitsOn", { floor: floor.label }) : t("stepUnit")}
+                      {!floor
+                        ? t("stepUnit")
+                        : floor.kind === "commercial"
+                          ? `${t("commercial")} · ${floorName}`
+                          : t("unitsOn", { floor: floorName })}
                     </h2>
                     {units.length > 0 && (
                       <p className="mt-1 text-[15px] text-muted">{t("floorSummary", counts)}</p>
@@ -269,7 +278,7 @@ export function ApartmentPicker() {
                 ) : floorUnits.isPending || !floorUnits.data ? (
                   <div aria-busy="true" className="space-y-6">
                     <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
-                      {Array.from({ length: 8 }, (_, i) => (
+                      {Array.from({ length: 7 }, (_, i) => (
                         <Skeleton key={i} className="h-[360px] rounded-card" />
                       ))}
                     </div>
@@ -296,7 +305,7 @@ export function ApartmentPicker() {
                           <li key={u.id}>
                             <UnitCard
                               unit={u}
-                              blockLetter={blockLetter ?? ""}
+                              blockName={blockName}
                               hovered={hoveredId === u.id}
                               onHover={setHoveredId}
                               onSelect={select}
@@ -308,7 +317,7 @@ export function ApartmentPicker() {
 
                     <FloorPlan
                       planImage={floorUnits.data.plan_image}
-                      floorLabel={`${t("stepBlock")} ${blockLetter} · ${floorUnits.data.label}`}
+                      floorLabel={`${blockName} · ${floorName}`}
                       units={units}
                       matches={matches}
                       hoveredId={hoveredId}
@@ -334,7 +343,11 @@ export function ApartmentPicker() {
         initialArea={selectedUnit?.area}
         initialPrice={selectedUnit?.price_per_m2}
         unitId={selectedUnit?.id ?? null}
-        unitLabel={selectedUnit ? `${t("stepBlock")} ${blockLetter} · ${selectedUnit.name}` : null}
+        unitLabel={
+          selectedUnit && floor
+            ? `${blockName} · ${t("floorN", { n: floor.number })} · ${selectedUnit.name}`
+            : null
+        }
       />
       <CallbackModal open={callbackOpen} onClose={() => setCallbackOpen(false)} />
     </>

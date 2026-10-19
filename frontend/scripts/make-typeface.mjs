@@ -1,10 +1,10 @@
 // Builds a minimal three.js typeface JSON (FontLoader format) with only the glyphs the
-// 3D scenes need — the 12 block letters. Usage: node scripts/make-typeface.mjs <font.ttf>
+// 3D scenes need — the block numbers on the roofs. Usage: node scripts/make-typeface.mjs <font.ttf>
 import { readFileSync, writeFileSync } from "node:fs";
 import opentype from "opentype.js";
 
 const [, , fontPath = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"] = process.argv;
-const CHARS = "АБВГДЕЖИКЛМН";
+const CHARS = "0123456789";
 const buf = readFileSync(fontPath);
 const font = opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
 const scale = 1000 / font.unitsPerEm;

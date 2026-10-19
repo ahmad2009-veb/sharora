@@ -13,7 +13,13 @@ from app.schemas.lead import LeadCreate, LeadOut
 from app.schemas.settings import SettingsOut
 from app.schemas.stats import StatsOut
 from app.schemas.unit import UnitDetail, UnitListItem
-from app.services.aggregates import block_counts, floor_counts, get_block_or_none, global_stats
+from app.services.aggregates import (
+    BlockCounts,
+    block_counts,
+    floor_counts,
+    get_block_or_none,
+    global_stats,
+)
 from app.services.converters import to_unit_detail
 
 settings = get_settings()
@@ -50,7 +56,7 @@ def list_blocks(db: Session = Depends(get_db)) -> list[BlockOut]:
     counts = block_counts(db)
     result: list[BlockOut] = []
     for block in blocks:
-        free, total = counts.get(block.id, (0, 0))
+        c = counts.get(block.id, BlockCounts())
         result.append(
             BlockOut(
                 id=block.id,
@@ -58,8 +64,10 @@ def list_blocks(db: Session = Depends(get_db)) -> list[BlockOut]:
                 name=block.name,
                 sort_order=block.sort_order,
                 cover_image=block.cover_image,
-                free_count=free,
-                total_count=total,
+                free_count=c.free,
+                reserved_count=c.reserved,
+                sold_count=c.sold,
+                total_count=c.total,
             )
         )
     return result

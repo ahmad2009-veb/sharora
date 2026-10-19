@@ -20,6 +20,12 @@
     "stepBlock": "Блок",
     "stepFloor": "Ошёна",
     "stepUnit": "Хона",
+    "blockN": "Блоки {n}",
+    "floorN": "Ошёнаи {n}",
+    "shop": "Мағоза",
+    "freeShort": "озод",
+    "reservedShort": "банд",
+    "soldShort": "фурӯхта",
     "commercial": "Тиҷоратӣ",
     "floorPlan": "Нақшаи ошёна",
     "rooms": "Ҳуҷраҳо",
@@ -33,7 +39,7 @@
     "price": "Нарх"
   },
   "unit": {
-    "block": "Блок",
+    "block": "Блоки",
     "floor": "Ошёна",
     "area": "Масоҳат",
     "price": "Нарх",

@@ -25,7 +25,7 @@ export function telegramLink(text: string): string {
 }
 
 export type FeatureIcon =
-  "sun" | "flame" | "droplets" | "parking" | "baby" | "mapPin" | "store" | "school" | "building";
+  "sun" | "flame" | "droplets" | "baby" | "mapPin" | "store" | "school" | "building";
 
 export const site = {
   brand: {
@@ -41,7 +41,6 @@ export const site = {
       ru: "Ответственное лицо — звоните для связи",
       tg: "Шахси масъул — барои тамос занг занед",
     } satisfies Localized,
-    salesLabel: { ru: "Отдел продаж", tg: "Шӯъбаи фурӯш" } satisfies Localized,
     // Messengers: change the number / username here only — links are built from these.
     whatsappNumber: "992206431001",
     whatsapp: "https://wa.me/992206431001",
@@ -51,18 +50,19 @@ export const site = {
       ru: "Здравствуйте! Хочу узнать о квартирах в ЖК «Зарафшон».",
       tg: "Ассалому алейкум! Мехоҳам дар бораи хонаҳои МИ «Зарафшон» маълумот гирам.",
     } satisfies Localized,
-    /** `{unit}` → "Хонаи 2, Блок А, Этаж 2, 89.70 м²" */
+    /** `{unit}` → "Хонаи 2, Блок 1, Этаж 2, 75.00 м²" */
     unitGreeting: {
       ru: "Здравствуйте! Интересует {unit}.",
       tg: "Ассалому алейкум! Ба ман {unit} маъқул аст.",
     } satisfies Localized,
+    // TODO(client): add the street once known.
     address: {
-      ru: "Посёлок Шарора, ул. А. Джоми и Дусти",
-      tg: "Шаҳраки Шарора, кӯчаҳои А. Ҷомӣ ва Дӯстӣ",
+      ru: "Согдийская область, Айнинский район, пос. Айни",
+      tg: "Вилояти Суғд, ноҳияи Айнӣ, шаҳраки Айнӣ",
     } satisfies Localized,
-    distance: { ru: "Всего 4 км до Душанбе", tg: "Ҳамагӣ 4 км то Душанбе" } satisfies Localized,
-    // TODO: pin the exact construction site; these are the coordinates of Sharora.
-    map: { lat: 38.57, lon: 68.6597 },
+    distance: { ru: "100 км от Душанбе", tg: "100 км аз Душанбе" } satisfies Localized,
+    // TODO(client): pin the exact construction site; this is the centre of Ayni.
+    map: { lat: 39.39, lon: 68.54 },
   },
 
   nav: [
@@ -86,23 +86,23 @@ export const site = {
   hero: {
     eyebrow: { ru: "Zarafshon Sokhtmon · Зарафшон" } satisfies Localized,
     badge: {
-      ru: "Новый жилой квартал · 4 км от Душанбе",
-      tg: "Маҳаллаи нави истиқоматӣ · 4 км аз Душанбе",
+      ru: "Новый жилой комплекс · 100 км от Душанбе",
+      tg: "Маҷмааи нави истиқоматӣ · 100 км аз Душанбе",
     } satisfies Localized,
     titleLines: [
-      { ru: "Жилой квартал", tg: "Маҳаллаи истиқоматии" },
-      { ru: "нового уровня", tg: "сатҳи нав" },
+      { ru: "Жилой комплекс", tg: "Маҷмааи истиқоматии" },
+      { ru: "«Зарафшон»", tg: "Зарафшон" },
     ] satisfies Localized[],
     salesNote: {
-      ru: "Открыты продажи — 12 блоков",
-      tg: "Фурӯш кушода аст — 12 блок",
+      ru: "Открыты продажи — 2 блока",
+      tg: "Фурӯш кушода аст — 2 блок",
     } satisfies Localized,
     title: {
-      ru: "Жилой квартал нового уровня",
-      tg: "Маҳаллаи истиқоматии сатҳи нав",
+      ru: "Жилой комплекс «Зарафшон»",
+      tg: "Маҷмааи истиқоматии Зарафшон",
     } satisfies Localized,
     subtitle: {
-      ru: "Широкие дороги, подземный паркинг, торговые центры и всё необходимое для комфортной современной жизни.",
+      ru: "Широкие дороги, магазины на первом этаже и всё необходимое для комфортной современной жизни.",
     } satisfies Localized,
     // TODO(client): renders from the design mock-up — replace with the project's own visuals.
     // Real-ESRGAN x4 upscale of renders/hero-building.jpg (kept as the source), graded and
@@ -121,27 +121,27 @@ export const site = {
     } satisfies Localized,
     facts: [
       {
-        value: "12",
-        label: { ru: "блоков", tg: "блок" },
+        value: "2",
+        label: { ru: "блока", tg: "блок" },
         text: {
-          ru: "Жилые блоки с буквами А–Н на крышах",
-          tg: "Блокҳои истиқоматӣ бо ҳарфҳои А–Н",
+          ru: "Блок 1 и Блок 2, по одному подъезду",
+          tg: "Блоки 1 ва Блоки 2, ҳар кадом як даромадгоҳ",
         },
       },
       {
-        value: "4 км",
-        label: { ru: "до Душанбе", tg: "то Душанбе" },
+        value: "9",
+        label: { ru: "этажей", tg: "ошёна" },
         text: {
-          ru: "Тихий посёлок и быстрый выезд в город",
-          tg: "Шаҳраки ором ва роҳи зуд ба шаҳр",
+          ru: "Магазины на 1-м этаже, по 7 квартир на 2–9 этажах",
+          tg: "Мағозаҳо дар ошёнаи 1, дар ошёнаҳои 2–9 ҳар кадом 7 хона",
         },
       },
       {
-        value: "P",
-        label: { ru: "паркинг", tg: "таваққуфгоҳ" },
+        value: "100 км",
+        label: { ru: "от Душанбе", tg: "аз Душанбе" },
         text: {
-          ru: "Подземный паркинг — двор без машин",
-          tg: "Таваққуфгоҳи зеризаминӣ — ҳавлӣ бе мошин",
+          ru: "Айнинский район, Согдийская область",
+          tg: "Ноҳияи Айнӣ, вилояти Суғд",
         },
       },
       {
@@ -160,10 +160,10 @@ export const site = {
     } satisfies Localized,
     paragraphs: [
       {
-        ru: "Современный жилой комплекс в посёлке Шарора состоит из 12 жилых блоков, созданных для комфортной и современной жизни.",
+        ru: "Современный жилой комплекс в Айнинском районе состоит из 2 жилых блоков по 9 этажей, созданных для комфортной и современной жизни.",
       },
       {
-        ru: "На первом этаже и в цокольном уровне расположатся магазины, торговые площади и объекты сферы услуг, чтобы всё необходимое было рядом с вашим домом.",
+        ru: "На первом этаже расположатся магазины и объекты сферы услуг, чтобы всё необходимое было рядом с вашим домом.",
       },
       {
         ru: "Это не просто жилой комплекс — это пространство для комфортной жизни, безопасности и уверенного будущего.",
@@ -190,34 +190,21 @@ export const site = {
   },
 
   genplan: {
-    eyebrow: { ru: "Генплан", tg: "Нақшаи генералӣ" } satisfies Localized,
+    eyebrow: { ru: "Блоки", tg: "Блокҳо" } satisfies Localized,
     title: {
-      ru: "Выберите блок на генплане",
-      tg: "Блокро дар нақша интихоб кунед",
+      ru: "Выберите блок",
+      tg: "Блокро интихоб кунед",
     } satisfies Localized,
     subtitle: {
-      ru: "Нажмите на букву блока — откроется выбор этажа и квартиры в этом блоке.",
+      ru: "Два 9-этажных блока: магазины на первом этаже, по 7 квартир на этажах 2–9. Выберите блок — откроется выбор этажа и квартиры.",
     } satisfies Localized,
-    image: "/renders/masterplan.jpg",
-    imageAlt: {
-      ru: "Генеральный план ЖК «Зарафшон»: 12 жилых блоков с буквами на крышах",
+    // Phones and devices without WebGL get this render with two block buttons instead of 3D.
+    fallbackImage: "/renders/hero/hero-1280.webp",
+    fallbackAlt: {
+      ru: "Жилой комплекс «Зарафшон»: Блок 1 и Блок 2",
     } satisfies Localized,
-    // Marker positions in percent of the image; must match the letters on the roofs.
-    blocks: [
-      { letter: "А", x: 19.7, y: 21.3 },
-      { letter: "Б", x: 40.0, y: 21.3 },
-      { letter: "В", x: 60.4, y: 21.3 },
-      { letter: "Г", x: 80.1, y: 21.3 },
-      { letter: "Д", x: 18.2, y: 44.6 },
-      { letter: "Е", x: 37.4, y: 44.6 },
-      { letter: "Ж", x: 63.1, y: 44.6 },
-      { letter: "И", x: 81.8, y: 44.6 },
-      { letter: "К", x: 19.7, y: 68.3 },
-      { letter: "Л", x: 39.2, y: 68.3 },
-      { letter: "М", x: 60.7, y: 68.3 },
-      { letter: "Н", x: 80.1, y: 68.3 },
-    ],
-    blockLabel: { ru: "Блок", tg: "Блок" } satisfies Localized,
+    blocks: [{ letter: "1" }, { letter: "2" }],
+    blockLabel: { ru: "Блок", tg: "Блоки" } satisfies Localized,
     selected: { ru: "Выбранный блок", tg: "Блоки интихобшуда" } satisfies Localized,
     onSale: { ru: "В продаже", tg: "Дар фурӯш" } satisfies Localized,
     soldOut: { ru: "Всё продано", tg: "Ҳама фурӯхта шуд" } satisfies Localized,
@@ -230,15 +217,11 @@ export const site = {
       ru: "Быстрый переход по блокам",
       tg: "Гузариши зуд ба блокҳо",
     } satisfies Localized,
-    view: {
-      plan: { ru: "Генплан", tg: "Нақша" } satisfies Localized,
-      model: { ru: "3D-модель", tg: "Модели 3D" } satisfies Localized,
-    },
-    compass: {
-      ru: "Вид сверху · север вверху",
-      tg: "Намуди боло · шимол дар боло",
-    } satisfies Localized,
     noData: { ru: "Данные о наличии обновляются", tg: "Маълумот нав мешавад" } satisfies Localized,
+    modelHint: {
+      ru: "3D-модель · нажмите на блок",
+      tg: "Модели 3D · блокро пахш кунед",
+    } satisfies Localized,
   },
 
   features: {
@@ -247,7 +230,6 @@ export const site = {
     subtitle: {
       ru: "Своя энергия, тепло и вода — комплекс не зависит от городских перебоев.",
     } satisfies Localized,
-    wideBadge: { ru: "Перспектива развития", tg: "Дурнамои рушд" } satisfies Localized,
     items: [
       {
         icon: "sun",
@@ -271,11 +253,6 @@ export const site = {
         },
       },
       {
-        icon: "parking",
-        title: { ru: "Подземный паркинг", tg: "Таваққуфгоҳи зеризаминӣ" },
-        text: { ru: "Защищает автомобили от погоды и освобождает двор от машин." },
-      },
-      {
         icon: "baby",
         title: { ru: "Детская площадка", tg: "Майдончаи бачагона" },
         text: {
@@ -284,8 +261,10 @@ export const site = {
       },
       {
         icon: "mapPin",
-        title: { ru: "Всего 4 км до Душанбе", tg: "Ҳамагӣ 4 км то Душанбе" },
-        text: { ru: "Спокойная атмосфера и быстрый доступ к городской инфраструктуре." },
+        title: { ru: "100 км от Душанбе", tg: "100 км аз Душанбе" },
+        text: {
+          ru: "Айнинский район Согдийской области — спокойная атмосфера вдали от городского шума.",
+        },
       },
       {
         icon: "store",
@@ -299,21 +278,10 @@ export const site = {
           ru: "На территории комплекса — безопасные условия для воспитания, обучения и развития детей.",
         },
       },
-      {
-        icon: "building",
-        title: { ru: "Современный городок нового уровня" },
-        text: {
-          ru: "На территории будет построен городок из 44 жилых блоков: открытая территория, широкие улицы, зелёные зоны, благоустроенные места отдыха.",
-        },
-        wide: true,
-        stat: { value: "44", label: { ru: "жилых блока в будущем городке" } },
-      },
     ] satisfies {
       icon: FeatureIcon;
       title: Localized;
       text: Localized;
-      wide?: boolean;
-      stat?: { value: string; label: Localized };
     }[],
     closing: {
       ru: "Это не просто жилой комплекс — это новое пространство для жизни, комфорта и будущего.",
@@ -421,16 +389,17 @@ export const site = {
 
   location: {
     eyebrow: { ru: "Расположение", tg: "Ҷойгиршавӣ" } satisfies Localized,
-    title: { ru: "Тихо, но рядом с городом", tg: "Ором, вале наздики шаҳр" } satisfies Localized,
+    title: { ru: "Айнинский район", tg: "Ноҳияи Айнӣ" } satisfies Localized,
     text: {
-      ru: "Комплекс находится в посёлке Шарора — в спокойном районе с быстрым выездом к Душанбе.",
+      ru: "Комплекс находится в Айнинском районе Согдийской области, в 100 км от Душанбе.",
+      tg: "Маҷмаа дар ноҳияи Айнии вилояти Суғд, 100 км дуртар аз Душанбе ҷойгир аст.",
     } satisfies Localized,
     route: { ru: "Построить маршрут", tg: "Масир сохтан" } satisfies Localized,
     mapTitle: { ru: "Карта расположения ЖК «Зарафшон»" } satisfies Localized,
     pinLabel: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
     routeNote: {
-      ru: "Быстрый выезд к городской инфраструктуре",
-      tg: "Роҳи зуд ба инфрасохтори шаҳр",
+      ru: "100 км от Душанбе",
+      tg: "100 км аз Душанбе",
     } satisfies Localized,
   },
 
@@ -461,6 +430,7 @@ export const site = {
       { value: "1", label: { ru: "1-комн.", tg: "1-ҳуҷра" } },
       { value: "2", label: { ru: "2-комн.", tg: "2-ҳуҷра" } },
       { value: "3", label: { ru: "3-комн.", tg: "3-ҳуҷра" } },
+      { value: "4", label: { ru: "4-комн.", tg: "4-ҳуҷра" } },
       { value: "shop", label: { ru: "Коммерция", tg: "Тиҷоратӣ" } },
     ] satisfies { value: string; label: Localized }[],
     browse: { ru: "Смотреть все квартиры", tg: "Ҳамаи хонаҳоро дидан" } satisfies Localized,
@@ -474,8 +444,8 @@ export const site = {
     sections: { ru: "Разделы", tg: "Бахшҳо" } satisfies Localized,
     contacts: { ru: "Контакты", tg: "Тамос" } satisfies Localized,
     about: {
-      ru: "Новый жилой квартал в посёлке Шарора: 12 блоков, своя инженерия и всё для жизни рядом с домом.",
-      tg: "Маҳаллаи нави истиқоматӣ дар шаҳраки Шарора: 12 блок, муҳандисии худӣ ва ҳама чиз дар наздикии хона.",
+      ru: "Новый жилой комплекс в Айнинском районе: 2 блока, своя инженерия и всё для жизни рядом с домом.",
+      tg: "Маҷмааи нави истиқоматӣ дар ноҳияи Айнӣ: 2 блок, муҳандисии худӣ ва ҳама чиз дар наздикии хона.",
     } satisfies Localized,
     visit: { ru: "Личная встреча", tg: "Вохӯрии шахсӣ" } satisfies Localized,
     visitText: {
@@ -498,11 +468,11 @@ export const site = {
 
   seo: {
     title: {
-      ru: "ЖК «Зарафшон» — жилой квартал нового уровня",
-      tg: "МИ «Зарафшон»",
+      ru: "Жилой комплекс «Зарафшон» — Айнинский район",
+      tg: "Маҷмааи истиқоматии Зарафшон — ноҳияи Айнӣ",
     } satisfies Localized,
     description: {
-      ru: "12 жилых блоков в посёлке Шарора, 4 км до Душанбе: подземный паркинг, детский сад, торговые центры, солнечные панели и собственная котельная. Выбор квартиры онлайн.",
+      ru: "2 жилых блока по 9 этажей в Айнинском районе Согдийской области, 100 км от Душанбе: квартиры от 42 до 103 м², магазины на первом этаже, детский сад, солнечные панели и собственная котельная. Выбор квартиры онлайн.",
     } satisfies Localized,
   },
 } as const;

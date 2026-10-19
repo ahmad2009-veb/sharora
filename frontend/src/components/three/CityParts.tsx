@@ -2,7 +2,7 @@
 
 import { Center, Outlines, Text3D } from "@react-three/drei";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { Suspense, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
+import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import {
@@ -11,7 +11,7 @@ import {
   clamp01,
   easeOutBack,
   easeOutCubic,
-  FUTURE_BLOCKS,
+  PLOT,
   treePositions,
   type BlockSpot,
 } from "./layout";
@@ -22,70 +22,37 @@ const GOLD = "#C9A45C";
 
 // ---------------------------------------------------------------- ground & streets
 
-export function Ground({ wide = false }: { wide?: boolean }) {
-  const lawns: [number, number, number, number][] = [
-    [-4.2, -2.15, 7.4, 2.5],
-    [4.2, -2.15, 7.4, 2.5],
-    [-4.2, 2.15, 7.4, 2.5],
-    [4.2, 2.15, 7.4, 2.5],
-  ];
-  const dashes = useMemo(() => {
-    const out: number[] = [];
-    for (let x = -9.5; x <= 9.5; x += 0.7) out.push(x);
-    return out;
-  }, []);
-
+export function Ground() {
+  const road = PLOT.x + 0.85;
+  const roadZ = PLOT.z + 0.75;
   return (
     <group>
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <planeGeometry args={[140, 140]} />
         <meshStandardMaterial color="#b9ac8e" roughness={1} />
       </mesh>
-      {lawns.map(([x, z, w, d], i) => (
-        <mesh key={i} rotation-x={-Math.PI / 2} position={[x, 0.004, z]}>
-          <planeGeometry args={[w, d]} />
-          <meshStandardMaterial color="#7d9858" roughness={1} />
-        </mesh>
-      ))}
-      {/* Boulevard, cross street, perimeter */}
+      {/* Paved plot, courtyard lawn between the blocks */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.003, 0]}>
+        <planeGeometry args={[PLOT.x * 2, PLOT.z * 2]} />
+        <meshStandardMaterial color="#d3c9b0" roughness={1} />
+      </mesh>
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 0]}>
+        <planeGeometry args={[BUILDING.w + 0.6, 1.5]} />
+        <meshStandardMaterial color="#7d9858" roughness={1} />
+      </mesh>
+      {/* Perimeter streets */}
       {(
         [
-          [0, 0, 20, 1.5],
-          [0, -3.75, 20, 0.7],
-          [0, 3.75, 20, 0.7],
-          [0, 0, 0.9, 8.2],
-          [-8.6, 0, 0.7, 8.2],
-          [8.6, 0, 0.7, 8.2],
-          ...(wide
-            ? ([
-                [0, -8.2, 34, 0.7],
-                [0, 8.2, 34, 0.7],
-                [-15.6, 0, 0.7, 17],
-                [15.6, 0, 0.7, 17],
-              ] as const)
-            : []),
+          [0, -roadZ, road * 2 + 0.8, 0.8],
+          [0, roadZ, road * 2 + 0.8, 0.8],
+          [-road, 0, 0.8, roadZ * 2],
+          [road, 0, 0.8, roadZ * 2],
         ] as const
       ).map(([x, z, w, d], i) => (
         <mesh key={i} rotation-x={-Math.PI / 2} position={[x, 0.006, z]}>
           <planeGeometry args={[w, d]} />
           <meshStandardMaterial color="#454a57" roughness={0.95} />
         </mesh>
-      ))}
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0.008, 0]}>
-        <planeGeometry args={[19.5, 0.26]} />
-        <meshStandardMaterial color="#6f8a4f" roughness={1} />
-      </mesh>
-      {dashes.map((x) => (
-        <group key={x}>
-          <mesh rotation-x={-Math.PI / 2} position={[x, 0.009, 0.45]}>
-            <planeGeometry args={[0.3, 0.035]} />
-            <meshBasicMaterial color="#d9d5ca" />
-          </mesh>
-          <mesh rotation-x={-Math.PI / 2} position={[x, 0.009, -0.45]}>
-            <planeGeometry args={[0.3, 0.035]} />
-            <meshBasicMaterial color="#d9d5ca" />
-          </mesh>
-        </group>
       ))}
     </group>
   );
@@ -95,10 +62,10 @@ export function Ground({ wide = false }: { wide?: boolean }) {
 
 const FOLIAGE = ["#5f7d45", "#6d8b4c", "#4f6c3d", "#7a9455"].map((c) => new THREE.Color(c));
 
-export function Trees({ count, wide = false }: { count: number; wide?: boolean }) {
+export function Trees({ count }: { count: number }) {
   const crowns = useRef<THREE.InstancedMesh>(null);
   const trunks = useRef<THREE.InstancedMesh>(null);
-  const positions = useMemo(() => treePositions(count, wide), [count, wide]);
+  const positions = useMemo(() => treePositions(count), [count]);
 
   useLayoutEffect(() => {
     const m = new THREE.Matrix4();
@@ -298,8 +265,8 @@ function RoofLetter({ char, hovered }: { char: string; hovered: boolean }) {
       <Center disableZ>
         <Text3D
           font={FONT_URL}
-          size={0.62}
-          height={0.14}
+          size={0.95}
+          height={0.16}
           curveSegments={4}
           bevelEnabled
           bevelThickness={0.02}
@@ -311,58 +278,6 @@ function RoofLetter({ char, hovered }: { char: string; hovered: boolean }) {
         </Text3D>
       </Center>
     </group>
-  );
-}
-
-// ---------------------------------------------------------------- the 32 future blocks
-
-const silhouetteMaterial = new THREE.MeshStandardMaterial({
-  color: "#e6ecf7",
-  emissive: GOLD,
-  emissiveIntensity: 0.12,
-  transparent: true,
-  opacity: 0.32,
-  depthWrite: false,
-  roughness: 0.6,
-});
-
-/** Semi-transparent blocks that "build themselves" as `progress` goes 0 → 1. */
-export function FutureBlocks({ progress }: { progress: RefObject<number> }) {
-  const mesh = useRef<THREE.InstancedMesh>(null);
-  const last = useRef(-1);
-  const order = useMemo(
-    () =>
-      FUTURE_BLOCKS.map((b, i) => ({ ...b, i, d: Math.hypot(b.x, b.z * 1.4) })).sort(
-        (a, b) => a.d - b.d,
-      ),
-    [],
-  );
-
-  useFrame(() => {
-    const p = progress.current ?? 0;
-    if (Math.abs(p - last.current) < 0.0005 || !mesh.current) return;
-    last.current = p;
-    const m = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const s = new THREE.Vector3();
-    const v = new THREE.Vector3();
-    order.forEach((b, rank) => {
-      const begin = 0.15 + (rank / order.length) * 0.6;
-      const k = easeOutCubic(clamp01((p - begin) / 0.18));
-      s.set(1, Math.max(0.001, k), 1);
-      v.set(b.x, 0, b.z);
-      m.compose(v, q, s);
-      mesh.current!.setMatrixAt(b.i, m);
-    });
-    mesh.current.instanceMatrix.needsUpdate = true;
-  });
-
-  return (
-    <instancedMesh
-      ref={mesh}
-      args={[boxGeometry(), silhouetteMaterial, FUTURE_BLOCKS.length]}
-      frustumCulled={false}
-    />
   );
 }
 

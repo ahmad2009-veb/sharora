@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@/components/ui/Skeleton";
+import { statusClasses } from "@/components/ui/status";
+import { site } from "@/content/site";
 import { cn } from "@/lib/cn";
 import type { Block } from "@/lib/types";
 
@@ -13,7 +15,7 @@ type Props = {
   onChange: (letter: string) => void;
 };
 
-/** Step 1 — block picker: a segmented row of letters with free counts. */
+/** Step 1 — block picker: one large tile per block with free / reserved / sold counts. */
 export function BlockSelector({ blocks, loading, value, onChange }: Props) {
   const t = useTranslations("apartments");
 
@@ -22,39 +24,51 @@ export function BlockSelector({ blocks, loading, value, onChange }: Props) {
       <legend className="mb-3 eyebrow text-mist">
         <span className="text-gold">01</span> · {t("stepBlock")}
       </legend>
-      <div className="-mx-4 scrollbar-thin overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
-        <div className="flex min-w-max gap-2 md:grid md:min-w-0 md:grid-cols-12">
+      <div>
+        <div className="grid grid-cols-2 gap-3 md:max-w-xl">
           {loading || !blocks
-            ? Array.from({ length: 12 }, (_, i) => (
-                <Skeleton key={i} className="h-[72px] w-16 rounded-2xl bg-white/10 md:w-auto" />
+            ? Array.from({ length: site.genplan.blocks.length }, (_, i) => (
+                <Skeleton key={i} className="h-[92px] rounded-2xl bg-white/10" />
               ))
             : blocks.map((b) => {
                 const active = b.letter === value;
-                const soldOut = b.free_count === 0;
+                const counts = [
+                  { status: "free", count: b.free_count, label: t("freeShort") },
+                  { status: "reserved", count: b.reserved_count, label: t("reservedShort") },
+                  { status: "sold", count: b.sold_count, label: t("soldShort") },
+                ] as const;
                 return (
                   <button
                     key={b.id}
                     type="button"
                     aria-pressed={active}
                     onClick={() => onChange(b.letter)}
-                    aria-label={`${b.name}: ${t("freeCount", { count: b.free_count })}`}
+                    aria-label={`${t("blockN", { n: b.letter })}: ${counts.map((c) => `${c.count} ${c.label}`).join(", ")}`}
                     className={cn(
-                      "relative flex h-[72px] w-16 flex-col items-center justify-center gap-1 rounded-2xl transition-all duration-300 md:w-auto",
+                      "relative flex min-h-[92px] flex-col items-center justify-center gap-2.5 rounded-2xl px-2 py-3 transition-all duration-300",
                       active
                         ? "bg-gold text-on-gold shadow-glow"
                         : "bg-white/[0.05] text-white ring-1 ring-white/[0.08] hover:bg-white/10 hover:text-gold",
                     )}
                   >
                     <span className="font-display text-xl leading-none font-extrabold">
-                      {b.letter}
+                      {t("blockN", { n: b.letter })}
                     </span>
                     <span
                       className={cn(
-                        "text-[11px] font-semibold tabular-nums",
-                        active ? "text-on-gold/70" : soldOut ? "text-[#fca5a5]" : "text-mist",
+                        "flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs font-semibold tabular-nums",
+                        active ? "text-on-gold/75" : "text-mist",
                       )}
                     >
-                      {b.free_count} {t("freeShort")}
+                      {counts.map((c) => (
+                        <span key={c.status} className="flex items-center gap-1.5">
+                          <span
+                            aria-hidden
+                            className={cn("size-2 rounded-full", statusClasses[c.status].dot)}
+                          />
+                          {c.count} {c.label}
+                        </span>
+                      ))}
                     </span>
                   </button>
                 );

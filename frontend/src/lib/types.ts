@@ -18,6 +18,8 @@ export interface Block {
   sort_order: number;
   cover_image: string | null;
   free_count: number;
+  reserved_count: number;
+  sold_count: number;
   total_count: number;
 }
 
@@ -126,6 +128,9 @@ export interface AdminMe {
   id: number;
   username: string;
 }
+
+export type UnitCreate = Pick<UnitDetail, "floor_id" | "name" | "number" | "kind" | "area"> &
+  Partial<Pick<UnitDetail, "rooms" | "price_per_m2" | "polygon">>;
 
 export type UnitUpdate = Partial<
   Pick<

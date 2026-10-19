@@ -55,7 +55,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
   // Lets the mobile «Заявка» sheet prefill messenger texts with this apartment.
   const interest =
     unitId !== null && unit
-      ? `${unit.name}, ${t("block")} ${unit.block_letter}, ${unit.floor_label}, ${unit.area.toFixed(2)} м²`
+      ? `${unit.name}, ${ta("blockN", { n: unit.block_letter })}, ${ta("floorN", { n: unit.floor_number })}, ${unit.area.toFixed(2)} м²`
       : null;
   useEffect(() => {
     setInterestUnit(interest);
@@ -97,7 +97,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
             {unit.name}
             <span className="text-base font-semibold text-muted">
-              {t("block")} {unit.block_letter} · {unit.floor_label}
+              {ta("blockN", { n: unit.block_letter })} · {ta("floorN", { n: unit.floor_number })}
             </span>
             <StatusBadge status={unit.status} label={ts(unit.status)} />
           </span>
@@ -298,7 +298,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
                 )}
                 <div className="flex justify-between gap-4 text-mist">
                   <dt>{t("floor")}</dt>
-                  <dd className="font-semibold text-white">{unit.floor_label}</dd>
+                  <dd className="font-semibold text-white">{unit.floor_number}</dd>
                 </div>
               </dl>
               {!sold && onCalculator && (

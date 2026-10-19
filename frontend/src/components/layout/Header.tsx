@@ -16,8 +16,9 @@ import { LocaleSwitcher } from "./LocaleSwitcher";
 import { Logo } from "./Logo";
 
 /**
- * Transparent over the home hero, turning ink once the page scrolls.
- * On inner pages (`overlay={false}`) it is ink from the start.
+ * Transparent over the home hero, turning into navy glass with a thin gold hairline once the
+ * page scrolls. On inner pages (`overlay={false}`) it is glass from the start.
+ * 72px tall on phones/tablets, 80px on desktop.
  */
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const locale = useLocale() as Locale;
@@ -73,59 +74,65 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
           "fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,backdrop-filter,translate] duration-500 ease-out-soft",
           hidden && !menuOpen && "-translate-y-full",
           solid
-            ? "bg-ink/85 shadow-[0_4px_30px_rgb(0_0_0/0.3)] backdrop-blur-xl backdrop-saturate-150"
-            : "bg-gradient-to-b from-night/60 to-transparent",
+            ? "bg-ink/70 shadow-[0_8px_32px_rgb(0_0_0/0.35)] backdrop-blur-2xl backdrop-saturate-150"
+            : "bg-gradient-to-b from-night/70 to-transparent",
         )}
       >
-        <div className="container-page flex h-20 items-center gap-6">
-          <Logo />
+        {/* Gold hairline under the glass, fades in once the page has scrolled. */}
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,rgb(255_222_164/0.7)_30%,rgb(255_222_164/0.7)_70%,transparent)] transition-opacity duration-500",
+            scrolled ? "opacity-100" : "opacity-0",
+          )}
+        />
+        <div className="container-page flex h-[72px] items-center gap-4 lg:h-20">
+          <Logo size="lg" className="shrink-0" />
 
-          <nav aria-label="Основная навигация" className="ml-auto hidden xl:block">
-            <ul className="flex items-center gap-1 rounded-full bg-white/[0.04] p-1 ring-1 ring-white/[0.06]">
-              {site.nav.map((item) => {
-                const active = isActive(item.href);
-                return (
-                  <li key={item.href} className="relative">
-                    {active && (
-                      <motion.span
-                        layoutId="nav-pill"
-                        aria-hidden
-                        className="absolute inset-0 rounded-full bg-night ring-1 ring-gold/25"
-                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                      />
-                    )}
-                    <Link
-                      href={item.href}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "relative block rounded-full px-3.5 py-2 text-[13px] font-semibold tracking-wide whitespace-nowrap transition-colors",
-                        active ? "text-gold" : "text-mist hover:text-gold",
-                      )}
-                    >
-                      {tr(item.label, locale)}
-                    </Link>
-                  </li>
-                );
-              })}
+          {/* The items at 16px only fit from the `nav` breakpoint (1400px); below it, the burger. */}
+          <nav aria-label="Основная навигация" className="ml-auto hidden nav:block">
+            <ul className="flex items-center gap-1">
+              {/* The logo already links home, so the desktop bar skips «Главная». */}
+              {site.nav
+                .filter((item) => item.href !== "/")
+                .map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "group relative block px-2.5 py-2.5 text-base font-medium whitespace-nowrap transition-colors duration-300",
+                          active ? "text-gold" : "text-white/80 hover:text-gold",
+                        )}
+                      >
+                        {tr(item.label, locale)}
+                        {/* Hover: underline grows from the centre. Active: a gold bar that glides between items. */}
+                        <span
+                          aria-hidden
+                          className="absolute inset-x-2.5 bottom-1 h-px origin-center scale-x-0 bg-gold/60 transition-transform duration-300 ease-out-soft group-hover:scale-x-100"
+                        />
+                        {active && (
+                          <motion.span
+                            layoutId="nav-underline"
+                            aria-hidden
+                            className="absolute inset-x-2.5 bottom-0.5 h-[2px] rounded-full bg-gold shadow-[0_0_10px_rgb(255_222_164/0.8)]"
+                            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                          />
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
             </ul>
           </nav>
 
-          <div className="ml-auto flex items-center gap-3 xl:ml-4">
-            <a
-              href={site.contact.phoneHref}
-              className="hidden flex-col items-end leading-tight whitespace-nowrap 2xl:flex"
-            >
-              <span className="text-[10px] font-bold tracking-[0.18em] text-mist uppercase">
-                {tr(site.contact.salesLabel, locale)}
-              </span>
-              <span className="text-[15px] font-semibold text-gold transition-colors hover:text-white">
-                {site.contact.phoneDisplay}
-              </span>
-            </a>
+          <div className="ml-auto flex items-center gap-3 nav:ml-4">
             <a
               href={site.contact.phoneHref}
               aria-label={`${tr(site.actions.call, locale)}: ${site.contact.phoneDisplay}`}
-              className="grid size-10 place-items-center rounded-full text-gold ring-1 ring-white/10 transition-colors hover:bg-white/10 2xl:hidden"
+              className="grid size-10 place-items-center rounded-full text-gold ring-1 ring-white/10 transition-colors hover:bg-white/10"
             >
               <Phone className="size-[18px]" aria-hidden />
             </a>
@@ -136,7 +143,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               className={buttonClasses(
                 "primary",
                 "md",
-                "text-[13px] tracking-wider uppercase max-md:hidden",
+                "h-12 px-7 text-sm tracking-wider uppercase ring-1 ring-gold-soft/60 hover:-translate-y-px hover:shadow-[0_0_44px_rgb(255_222_164/0.6)] max-md:hidden",
               )}
             >
               {tr(site.actions.chooseApartment, locale)}
@@ -147,7 +154,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
               aria-label={tr(site.actions.menu, locale)}
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
-              className="hidden size-10 place-items-center rounded-full text-white transition-colors hover:bg-white/10 lg:grid xl:hidden"
+              className="hidden size-10 place-items-center rounded-full text-white transition-colors hover:bg-white/10 lg:grid nav:hidden"
             >
               <Menu className="size-6" aria-hidden />
             </button>
@@ -165,15 +172,15 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             aria-modal="true"
             aria-label={tr(site.actions.menu, locale)}
             tabIndex={-1}
-            className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-ink text-white outline-none xl:hidden"
+            className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-ink text-white outline-none nav:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
             <div aria-hidden className="atmosphere" />
-            <div className="relative container-page flex h-20 items-center justify-between">
-              <Logo />
+            <div className="relative container-page flex h-[72px] items-center justify-between lg:h-20">
+              <Logo size="lg" />
               <button
                 type="button"
                 onClick={() => setMenuOpen(false)}

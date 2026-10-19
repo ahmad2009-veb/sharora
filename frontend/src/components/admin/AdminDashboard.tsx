@@ -6,6 +6,7 @@ import {
   ExternalLink,
   HandCoins,
   Inbox,
+  LayoutGrid,
   LogOut,
   Settings,
   UserRound,
@@ -19,12 +20,13 @@ import { adminApi, api, ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 
+import { FloorsPanel } from "./FloorsPanel";
 import { LeadsPanel } from "./LeadsPanel";
 import { SalesPanel } from "./SalesPanel";
 import { SettingsPanel } from "./SettingsPanel";
 import { UnitsPanel } from "./UnitsPanel";
 
-type Tab = "units" | "sales" | "leads" | "settings";
+type Tab = "units" | "floors" | "sales" | "leads" | "settings";
 
 const TABS: {
   value: Tab;
@@ -39,6 +41,13 @@ const TABS: {
     title: "Фонд квартир",
     eyebrow: "База помещений",
     Icon: Building2,
+  },
+  {
+    value: "floors",
+    label: "Этажи и схемы",
+    title: "Этажи и схемы",
+    eyebrow: "Планировки",
+    Icon: LayoutGrid,
   },
   {
     value: "sales",
@@ -208,6 +217,7 @@ export function AdminDashboard() {
             </h1>
           </div>
           {tab === "units" && <UnitsPanel newLeads={newLeads.data?.length} />}
+          {tab === "floors" && <FloorsPanel />}
           {tab === "sales" && <SalesPanel />}
           {tab === "leads" && <LeadsPanel />}
           {tab === "settings" && <SettingsPanel />}

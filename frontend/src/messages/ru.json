@@ -27,6 +27,11 @@
     "stepBlock": "Блок",
     "stepFloor": "Этаж",
     "stepUnit": "Квартира",
+    "blockN": "Блок {n}",
+    "floorN": "Этаж {n}",
+    "shop": "Магазин",
+    "reservedShort": "бронь",
+    "soldShort": "прод.",
     "freeShort": "своб.",
     "freeCount": "{count, plural, =0 {нет свободных} one {# свободная} few {# свободные} many {# свободных} other {# свободных}}",
     "unitsCount": "{count, plural, one {# помещение} few {# помещения} many {# помещений} other {# помещения}}",
@@ -144,7 +149,7 @@
     "leadMessage": "Калькулятор: {area} м², стоимость {total}, взнос {down}, срок {term} мес., платёж {monthly}/мес."
   },
   "home": {
-    "sceneLabel": "Интерактивная 3D-модель квартала: 12 жилых блоков",
+    "sceneLabel": "Интерактивная 3D-модель комплекса: Блок 1 и Блок 2",
     "loading3d": "Загружаем 3D-модель",
     "blockTooltip": "{block} — {count, plural, =0 {нет свободных квартир} one {# свободная квартира} few {# свободные квартиры} many {# свободных квартир} other {# свободной квартиры}}",
     "blockTooltipNoData": "{block} — смотреть квартиры",

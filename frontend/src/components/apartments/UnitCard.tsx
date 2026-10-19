@@ -14,13 +14,13 @@ import { unitTotal } from "./price";
 
 type Props = {
   unit: UnitListItem;
-  blockLetter: string;
+  blockName: string;
   hovered: boolean;
   onHover: (id: number | null) => void;
   onSelect: (unit: UnitListItem) => void;
 };
 
-export function UnitCard({ unit, blockLetter, hovered, onHover, onSelect }: Props) {
+export function UnitCard({ unit, blockName, hovered, onHover, onSelect }: Props) {
   const t = useTranslations("apartments");
   const ts = useTranslations("status");
   const total = unitTotal(unit);
@@ -36,19 +36,16 @@ export function UnitCard({ unit, blockLetter, hovered, onHover, onSelect }: Prop
       onFocus={() => onHover(unit.id)}
       onBlur={() => onHover(null)}
       className={cn(
-        "group flex h-full w-full flex-col rounded-2xl p-3 text-left transition-[box-shadow,transform,background-color] duration-300 ease-out-soft sm:rounded-card sm:p-5",
-        sold ? "bg-sand-deep/60" : "bg-white shadow-soft",
-        // Phones: the whole card carries the status colour (2-column grid, no room for much else).
-        statusClasses[unit.status].mobileSurface,
+        "group flex h-full w-full flex-col rounded-2xl border-2 p-3 text-left shadow-soft transition-[box-shadow,transform,background-color] duration-300 ease-out-soft sm:rounded-card sm:p-5",
+        // The whole card carries the status colour: green free, amber reserved, red sold.
+        statusClasses[unit.status].surface,
         hovered && !sold && "-translate-y-1 shadow-lift ring-2 ring-gold",
         hovered && sold && "ring-2 ring-status-sold-line/40",
       )}
     >
       <span className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
         <span className="min-w-0">
-          <span className="block eyebrow text-muted">
-            {t("stepBlock")} {blockLetter}
-          </span>
+          <span className="block eyebrow text-muted">{blockName}</span>
           <span
             className={cn(
               "mt-1 block font-display text-base font-extrabold sm:text-xl",
@@ -63,7 +60,7 @@ export function UnitCard({ unit, blockLetter, hovered, onHover, onSelect }: Prop
 
       <span
         className={cn(
-          "relative my-3 grid h-28 place-items-center overflow-hidden rounded-xl bg-white/70 p-1.5 sm:my-4 sm:h-40 sm:rounded-2xl sm:bg-sand sm:p-2",
+          "relative my-3 grid h-28 place-items-center overflow-hidden rounded-xl bg-white/80 p-1.5 sm:my-4 sm:h-40 sm:rounded-2xl sm:p-2",
           sold && "grayscale",
         )}
       >

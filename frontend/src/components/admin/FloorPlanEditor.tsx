@@ -72,10 +72,12 @@ export function FloorPlanEditor({ floorId }: { floorId: number }) {
         <div>
           <h2 id="plan-editor" className="font-display text-lg font-bold">
             Схема этажа · {floor.data.label}
+            {floor.data.kind === "commercial" && " · Магазин"}
           </h2>
           <p className="mt-1 max-w-xl text-sm text-muted">
-            Выберите квартиру и кликайте по углам её контура на схеме. Координаты сохраняются в
-            процентах, поэтому подходят для любого размера изображения.
+            Загрузите план этажа (JPG, PNG или WEBP), выберите помещение и кликайте по углам его
+            контура. Координаты сохраняются в процентах, поэтому подходят для любого размера
+            изображения.
           </p>
         </div>
         <ImageUpload

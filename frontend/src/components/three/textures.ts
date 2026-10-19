@@ -26,7 +26,7 @@ function facade(columns: number, seed: number) {
   ectx.fillStyle = "#000";
   ectx.fillRect(0, 0, W, H);
 
-  const floors = 11;
+  const floors = 9; // ground-floor shops + 8 residential floors
   const fh = H / floors;
   // Ground floor: glazed retail band
   ctx.fillStyle = "#3a3a3c";
@@ -97,8 +97,8 @@ function panels() {
 }
 
 function build() {
-  const front = facade(10, 7);
-  const side = facade(6, 13);
+  const front = facade(14, 7);
+  const side = facade(5, 13);
   return { front, side, panels: panels() };
 }
 

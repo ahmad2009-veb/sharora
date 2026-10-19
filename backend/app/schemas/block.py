@@ -8,6 +8,8 @@ class BlockOut(ORMModel):
     sort_order: int
     cover_image: str | None
     free_count: int
+    reserved_count: int
+    sold_count: int
     total_count: int
 
 

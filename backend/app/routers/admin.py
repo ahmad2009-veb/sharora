@@ -16,7 +16,7 @@ from app.schemas.lead import LeadAdminOut, LeadUpdate
 from app.schemas.sale import SaleCreate, SaleOut, SaleUpdate
 from app.schemas.settings import SettingsOut, SettingsUpdate
 from app.schemas.unit import UnitAdminOut, UnitCreate, UnitStatusUpdate, UnitUpdate
-from app.services.aggregates import block_counts
+from app.services.aggregates import BlockCounts, block_counts
 from app.services.converters import to_unit_detail
 from app.services.media import UPLOAD_SUBDIRS, save_upload
 
@@ -75,15 +75,17 @@ def _load_sale(db: Session, sale_id: int) -> Sale:
 
 
 def _block_out(db: Session, block: Block) -> BlockOut:
-    free, total = block_counts(db).get(block.id, (0, 0))
+    c = block_counts(db).get(block.id, BlockCounts())
     return BlockOut(
         id=block.id,
         letter=block.letter,
         name=block.name,
         sort_order=block.sort_order,
         cover_image=block.cover_image,
-        free_count=free,
-        total_count=total,
+        free_count=c.free,
+        reserved_count=c.reserved,
+        sold_count=c.sold,
+        total_count=c.total,
     )
 
 
@@ -227,6 +229,8 @@ def list_units_admin(
 def create_unit(payload: UnitCreate, db: Session = Depends(get_db)) -> UnitAdminOut:
     if db.get(Floor, payload.floor_id) is None:
         raise HTTPException(status_code=404, detail="Этаж не найден")
+    if payload.status == UnitStatus.sold:
+        raise HTTPException(status_code=400, detail="Используйте /sell с данными покупателя")
     unit = Unit(**payload.model_dump())
     db.add(unit)
     db.commit()
@@ -257,7 +261,11 @@ def update_unit_status(
 
 @protected.delete("/units/{unit_id}", status_code=204)
 def delete_unit(unit_id: int, db: Session = Depends(get_db)) -> None:
-    db.delete(_load_unit(db, unit_id))
+    unit = _load_unit(db, unit_id)
+    if unit.status == UnitStatus.sold:
+        # The buyer record must not lose its unit silently.
+        raise HTTPException(status_code=409, detail="Проданное помещение: сначала снимите продажу")
+    db.delete(unit)
     db.commit()
 
 

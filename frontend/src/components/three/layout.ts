@@ -1,32 +1,18 @@
 /**
- * World layout of the квартал, mirroring the genplan (hero.jpg): two rows of six blocks
- * split by a boulevard (z = 0) and a cross street (x = 0). Units are roughly 10 m.
+ * World layout of the complex: two parallel 9-storey blocks (one entrance, 7 apartments per
+ * floor) facing a shared courtyard at z = 0. Units are roughly 10 m.
  */
-export const BUILDING = { w: 2.1, d: 1.3, h: 2.6 } as const;
-
-const XS = [-6.5, -4.1, -1.7, 1.7, 4.1, 6.5];
-const LETTERS = ["А", "Б", "В", "Г", "Д", "Е", "Ж", "И", "К", "Л", "М", "Н"];
+export const BUILDING = { w: 3.6, d: 1.4, h: 2.9 } as const;
 
 export type BlockSpot = { letter: string; x: number; z: number; index: number };
 
-export const BLOCKS: BlockSpot[] = LETTERS.map((letter, index) => ({
-  letter,
-  index,
-  x: XS[index % 6],
-  z: index < 6 ? -2.15 : 2.15,
-}));
-
-/** The 32 future blocks of the 44-block town, placed around the first quarter. */
-export const FUTURE_BLOCKS: { x: number; z: number }[] = [
-  ...[-14.1, -11.7, -9.3, -6.5, -4.1, -1.7, 1.7, 4.1, 6.5, 9.3, 11.7, 14.1].flatMap((x) => [
-    { x, z: -6.6 },
-    { x, z: 6.6 },
-  ]),
-  ...[-11.7, -9.3, 9.3, 11.7].flatMap((x) => [
-    { x, z: -2.15 },
-    { x, z: 2.15 },
-  ]),
+export const BLOCKS: BlockSpot[] = [
+  { letter: "1", index: 0, x: 0, z: -1.65 },
+  { letter: "2", index: 1, x: 0, z: 1.65 },
 ];
+
+/** Half-size of the paved plot around the two blocks. */
+export const PLOT = { x: 3.4, z: 3.1 } as const;
 
 /** Deterministic pseudo-random generator so tree placement is stable between renders. */
 export function seeded(seed: number) {
@@ -37,28 +23,20 @@ export function seeded(seed: number) {
   };
 }
 
-export function treePositions(count: number, wide = false): [number, number, number][] {
+export function treePositions(count: number): [number, number, number][] {
   const rand = seeded(42);
   const out: [number, number, number][] = [];
-  // Boulevard median
-  for (let x = -8.6; x <= 8.6; x += 0.62) {
-    if (Math.abs(x) < 0.9) continue;
-    out.push([x, 0, 0]);
+  // Rows along the long edges of the plot and a few in the courtyard corners
+  for (let x = -PLOT.x + 0.3; x <= PLOT.x - 0.3; x += 0.5) {
+    out.push([x + (rand() - 0.5) * 0.1, 0, -PLOT.z + 0.25]);
+    out.push([x + (rand() - 0.5) * 0.1, 0, PLOT.z - 0.25]);
   }
-  // Courtyard edges between blocks
-  for (const z of [-3.25, -1.05, 1.05, 3.25]) {
-    for (let x = -7.8; x <= 7.8; x += 0.55) {
-      if (Math.abs(x) < 0.8 || rand() < 0.45) continue;
-      out.push([x + (rand() - 0.5) * 0.2, 0, z + (rand() - 0.5) * 0.15]);
-    }
-  }
+  for (const x of [-2.4, -1.9, 1.9, 2.4]) out.push([x, 0, (rand() - 0.5) * 0.4]);
   // Scattered groves outside the perimeter road
-  const radius = wide ? 22 : 15;
   while (out.length < count) {
-    const x = (rand() - 0.5) * radius * 2;
-    const z = (rand() - 0.5) * radius * 1.3;
-    if (Math.abs(x) < 9 && Math.abs(z) < 4.3) continue;
-    if (wide && Math.abs(z) > 5.5 && Math.abs(z) < 7.7 && Math.abs(x) < 15.3) continue;
+    const x = (rand() - 0.5) * 30;
+    const z = (rand() - 0.5) * 20;
+    if (Math.abs(x) < PLOT.x + 1.6 && Math.abs(z) < PLOT.z + 1.6) continue;
     out.push([x, 0, z]);
   }
   return out.slice(0, count);

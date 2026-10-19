@@ -95,8 +95,8 @@ def test_unsold_archives_sale(admin_client: TestClient) -> None:
 
 def test_sales_list_filters(admin_client: TestClient) -> None:
     units = admin_client.get("/api/units", params={"status": "free"}).json()
-    a = next(u for u in units if u["block_letter"] == "А")
-    b = next(u for u in units if u["block_letter"] == "Б")
+    a = next(u for u in units if u["block_letter"] == "1")
+    b = next(u for u in units if u["block_letter"] == "2")
     admin_client.post(f"/api/admin/units/{a['id']}/sell", json=BUYER)
     admin_client.post(
         f"/api/admin/units/{b['id']}/sell",
@@ -109,7 +109,7 @@ def test_sales_list_filters(admin_client: TestClient) -> None:
     )
     assert len(admin_client.get("/api/admin/sales").json()) == 2
     assert [
-        s["unit_id"] for s in admin_client.get("/api/admin/sales", params={"block": "Б"}).json()
+        s["unit_id"] for s in admin_client.get("/api/admin/sales", params={"block": "2"}).json()
     ] == [b["id"]]
     assert len(admin_client.get("/api/admin/sales", params={"search": "Саидов"}).json()) == 1
     assert len(admin_client.get("/api/admin/sales", params={"search": "0000002"}).json()) == 1

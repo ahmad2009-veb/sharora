@@ -14,6 +14,7 @@ import type {
   Sale,
   SaleInput,
   Stats,
+  UnitCreate,
   UnitDetail,
   UnitStatus,
   UnitUpdate,
@@ -88,6 +89,9 @@ export const adminApi = {
     if (params.status) qs.set("status", params.status);
     return request<UnitDetail[]>(`/api/admin/units?${qs}`);
   },
+  createUnit: (unit: UnitCreate) =>
+    request<UnitDetail>("/api/admin/units", { method: "POST", body: json(unit) }),
+  deleteUnit: (id: number) => request<void>(`/api/admin/units/${id}`, { method: "DELETE" }),
   updateUnit: (id: number, patch: UnitUpdate) =>
     request<UnitDetail>(`/api/admin/units/${id}`, { method: "PATCH", body: json(patch) }),
   setStatus: (id: number, status: UnitStatus) =>

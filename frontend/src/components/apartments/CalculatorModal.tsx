@@ -26,7 +26,8 @@ type Props = {
 };
 
 const TERM_PRESETS = [6, 12, 18, 24, 36, 48, 60];
-const AREA_PRESETS = [45, 60, 75, 90, 120];
+// Apartments on sale are 42–103 m².
+const AREA_PRESETS = [42, 60, 75, 90, 103];
 
 const slider =
   "h-2 w-full cursor-pointer appearance-none rounded-full bg-line accent-[var(--color-ink)] [&::-webkit-slider-thumb]:size-6 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-ink [&::-webkit-slider-thumb]:bg-gold [&::-webkit-slider-thumb]:shadow-lift [&::-moz-range-thumb]:size-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-ink [&::-moz-range-thumb]:bg-gold";

@@ -1,21 +1,36 @@
-from sqlalchemy import case, func, select
+from typing import NamedTuple
+
+from sqlalchemy import ColumnElement, case, func, select
 from sqlalchemy.orm import Session
 
 from app.models import Block, Floor, Unit, UnitStatus
 
 
-def block_counts(db: Session) -> dict[int, tuple[int, int]]:
-    """Returns {block_id: (free_count, total_count)}."""
+class BlockCounts(NamedTuple):
+    free: int = 0
+    reserved: int = 0
+    sold: int = 0
+    total: int = 0
+
+
+def _count(status: UnitStatus) -> ColumnElement[int]:
+    return func.sum(case((Unit.status == status, 1), else_=0))
+
+
+def block_counts(db: Session) -> dict[int, BlockCounts]:
+    """Returns {block_id: BlockCounts} with units per status."""
     rows = db.execute(
         select(
             Floor.block_id,
-            func.sum(case((Unit.status == UnitStatus.free, 1), else_=0)),
+            _count(UnitStatus.free),
+            _count(UnitStatus.reserved),
+            _count(UnitStatus.sold),
             func.count(Unit.id),
         )
         .join(Unit, Unit.floor_id == Floor.id)
         .group_by(Floor.block_id)
     ).all()
-    return {row[0]: (int(row[1] or 0), int(row[2] or 0)) for row in rows}
+    return {row[0]: BlockCounts(*(int(v or 0) for v in row[1:])) for row in rows}
 
 
 def floor_counts(db: Session, block_id: int) -> dict[int, tuple[int, int]]:

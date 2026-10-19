@@ -45,6 +45,9 @@ export function RevealText({
         mask: split === "chars" ? "words" : "lines",
         autoSplit: true,
         onSplit(self) {
+          // Chars are inline-blocks, so a word could otherwise break between letters when it
+          // is wider than the space left on the line. Lines may only break between words.
+          for (const word of self.words) (word as HTMLElement).style.whiteSpace = "nowrap";
           const targets = split === "chars" ? self.chars : self.lines;
           return gsap.from(targets, {
             yPercent: 110,

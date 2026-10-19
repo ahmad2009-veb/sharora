@@ -36,7 +36,7 @@ export function FloorList({ floors, loading, value, onChange }: Props) {
       <div className="-mx-4 mt-3 [scrollbar-width:none] overflow-x-auto px-4 pb-1 lg:mx-0 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
         <ul className="flex min-w-max gap-1.5 lg:min-w-0 lg:flex-col">
           {loading || !floors
-            ? Array.from({ length: 11 }, (_, i) => (
+            ? Array.from({ length: 9 }, (_, i) => (
                 <li key={i}>
                   <Skeleton className="h-12 w-32 lg:w-full" />
                 </li>
@@ -58,7 +58,7 @@ export function FloorList({ floors, loading, value, onChange }: Props) {
                       aria-pressed={active}
                       onClick={() => onChange(f.number)}
                       className={cn(
-                        "relative flex h-12 w-40 items-center justify-between gap-3 rounded-xl px-3.5 text-left transition-all duration-200 lg:w-full",
+                        "relative flex h-12 min-w-40 items-center justify-between gap-3 rounded-xl px-3.5 text-left transition-all duration-200 lg:w-full",
                         active ? "bg-ink text-white shadow-lift" : "text-ink hover:bg-sand",
                       )}
                     >
@@ -76,15 +76,22 @@ export function FloorList({ floors, loading, value, onChange }: Props) {
                             aria-hidden
                           />
                         )}
-                        <span className={cn(active && "text-gold")}>{f.label}</span>
+                        <span className={cn(active && "text-gold")}>
+                          {t("floorN", { n: f.number })}
+                          {commercial && (
+                            <span className={cn("ml-1.5 font-normal", !active && "text-muted")}>
+                              · {t("shop")}
+                            </span>
+                          )}
+                        </span>
                       </span>
                       <span
                         className={cn(
-                          "rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums",
+                          "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold whitespace-nowrap tabular-nums",
                           active ? "bg-gold/15 text-gold" : "text-muted",
                         )}
                       >
-                        {commercial ? f.total_count : `${f.free_count} ${t("freeShort")}`}
+                        {`${f.free_count} ${t("freeShort")}`}
                       </span>
                       <span className="sr-only">{t("freeCount", { count: f.free_count })}</span>
                     </button>

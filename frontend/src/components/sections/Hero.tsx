@@ -79,7 +79,7 @@ export function Hero() {
 
           <h1
             id="hero-title"
-            className="mt-7 font-display text-h1 font-extrabold tracking-tight uppercase"
+            className="mt-7 font-display text-h1 font-extrabold tracking-tight uppercase max-[400px]:text-[2.1rem]"
           >
             {/* Masked line rise: per-letter splitting would break background-clip:text. */}
             <span className="block overflow-hidden pb-1">

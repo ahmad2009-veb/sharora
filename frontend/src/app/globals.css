@@ -7,6 +7,9 @@
    ------------------------------------------------------------------ */
 
 @theme {
+  /* Header shows the full desktop menu from here (7 items at 16px + CTA); below, the burger. */
+  --breakpoint-nav: 87.5rem;
+
   /* Navy & champagne-gold palette (Zarafshon Residence design) */
   --color-ink: #131b2e;
   --color-night: #0a0f1c;

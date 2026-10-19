@@ -31,7 +31,7 @@ function toInt(value: string | null): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Selection and filters live in the URL: ?block=А&floor=2&apt=3&rooms=2&min_area=40&free=1 */
+/** Selection and filters live in the URL: ?block=1&floor=2&apt=3&rooms=2&min_area=42&free=1 */
 export function useApartmentParams() {
   const searchParams = useSearchParams();
   const router = useRouter();

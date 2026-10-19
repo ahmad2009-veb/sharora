@@ -3,21 +3,36 @@ from fastapi.testclient import TestClient
 
 def test_stats_counts_every_unit(client: TestClient) -> None:
     stats = client.get("/api/stats").json()
-    assert stats["total"] == 12 * (2 + 9 * 8)
+    assert stats["total"] == 2 * (1 + 8 * 7)
     assert stats["free"] + stats["reserved"] + stats["sold"] == stats["total"]
 
 
 def test_blocks_are_ordered_with_free_counts(client: TestClient) -> None:
     blocks = client.get("/api/blocks").json()
-    assert [b["letter"] for b in blocks] == list("АБВГДЕЖИКЛМН")
-    assert all(0 <= b["free_count"] <= b["total_count"] == 74 for b in blocks)
+    assert [(b["letter"], b["name"]) for b in blocks] == [("1", "Блок 1"), ("2", "Блок 2")]
+    assert all(0 <= b["free_count"] <= b["total_count"] == 57 for b in blocks)
+    assert all(
+        b["free_count"] + b["reserved_count"] + b["sold_count"] == b["total_count"] for b in blocks
+    )
 
 
 def test_block_floors(client: TestClient) -> None:
-    floors = client.get("/api/blocks/А/floors").json()
-    assert [f["label"] for f in floors[:3]] == ["-1 Мағоза", "Мағоза 1", "Этаж 2"]
-    assert [f["number"] for f in floors] == [-1, 1, *range(2, 11)]
+    floors = client.get("/api/blocks/1/floors").json()
+    assert [f["label"] for f in floors[:2]] == ["Этаж 1", "Этаж 2"]
+    assert [f["number"] for f in floors] == list(range(1, 10))
     assert floors[0]["kind"] == "commercial"
+
+
+def test_every_block_has_a_shop_and_seven_apartments_per_floor(client: TestClient) -> None:
+    for block in client.get("/api/blocks").json():
+        floors = client.get(f"/api/blocks/{block['letter']}/floors").json()
+        assert len(floors) == 9
+        for floor in floors:
+            units = client.get(f"/api/floors/{floor['id']}/units").json()["units"]
+            if floor["number"] == 1:
+                assert [(u["kind"], u["name"]) for u in units] == [("commercial", "Мағоза 1")]
+            else:
+                assert [u["kind"] for u in units] == ["apartment"] * 7
 
 
 def test_unknown_block_returns_404(client: TestClient) -> None:
@@ -25,27 +40,28 @@ def test_unknown_block_returns_404(client: TestClient) -> None:
 
 
 def test_floor_units_have_areas_and_polygons(client: TestClient) -> None:
-    floor = client.get("/api/blocks/А/floors").json()[2]
+    floor = client.get("/api/blocks/1/floors").json()[1]
     data = client.get(f"/api/floors/{floor['id']}/units").json()
-    assert data["plan_image"].endswith("plan_residential.png")
-    areas = [u["area"] for u in data["units"]]
-    assert areas == [75.7, 89.7, 82.6, 45.6, 45.6, 79.2, 89.0, 60.1]
+    assert "plan_typical.svg" in data["plan_image"]
+    assert [u["name"] for u in data["units"]] == [f"Хонаи {n}" for n in range(1, 8)]
+    assert [u["area"] for u in data["units"]] == [42.0, 56.0, 64.0, 75.0, 83.0, 94.0, 103.0]
+    assert [u["rooms"] for u in data["units"]] == [1, 1, 2, 2, 3, 3, 4]
     assert all(len(u["polygon"]) == 4 for u in data["units"])
 
 
 def test_unit_detail(client: TestClient) -> None:
-    unit = client.get("/api/units", params={"block": "Б", "floor": 3}).json()[0]
+    unit = client.get("/api/units", params={"block": "2", "floor": 3}).json()[0]
     detail = client.get(f"/api/units/{unit['id']}").json()
-    assert detail["block_letter"] == "Б"
+    assert detail["block_letter"] == "2"
     assert detail["floor_number"] == 3
     assert round(sum(r["area"] for r in detail["rooms_detail"]), 1) == detail["area"]
 
 
 def test_search_filters(client: TestClient) -> None:
-    one_room = client.get("/api/units", params={"block": "А", "rooms": 1}).json()
-    assert len(one_room) == 9 * 2
-    big = client.get("/api/units", params={"min_area": 85, "max_area": 90}).json()
-    assert big and all(85 <= u["area"] <= 90 for u in big)
+    one_room = client.get("/api/units", params={"block": "1", "rooms": 1}).json()
+    assert len(one_room) == 2 * 8  # apartments 1 and 2 on floors 2–9
+    big = client.get("/api/units", params={"min_area": 80, "max_area": 95}).json()
+    assert big and all(80 <= u["area"] <= 95 for u in big)
     free = client.get("/api/units", params={"status": "free"}).json()
     assert len(free) == client.get("/api/stats").json()["free"]
 

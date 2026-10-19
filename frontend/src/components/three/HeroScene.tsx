@@ -28,7 +28,7 @@ export type HeroSceneProps = {
   onReady?: () => void;
 };
 
-const CAMERA_HOME = new THREE.Vector3(10, 12.5, 19);
+const CAMERA_HOME = new THREE.Vector3(7.5, 7.8, 12);
 
 export default function HeroScene(props: HeroSceneProps) {
   const [dpr, setDpr] = useState(1.6);
@@ -106,7 +106,6 @@ function City({
   const group = useRef<THREE.Group>(null);
   const controls = useRef<OrbitControlsImpl>(null);
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
-  const size = useThree((s) => s.size);
   const [hovered, setHovered] = useState<string | null>(null);
   const [introDone, setIntroDone] = useState(false);
   const flight = useRef<{
@@ -116,13 +115,7 @@ function City({
     look: THREE.Vector3;
   } | null>(null);
 
-  // Push the city towards the right so the headline on the left stays readable.
-  useEffect(() => {
-    camera.filmOffset = size.width > 1280 ? -5.5 : -3.5;
-    camera.updateProjectionMatrix();
-  }, [camera, size.width]);
-
-  const lastGrow = introDelay + 0.12 + 11 * 0.085 + 0.95;
+  const lastGrow = introDelay + 0.12 + (BLOCKS.length - 1) * 0.085 + 0.95;
   useEffect(() => {
     const id = window.setTimeout(() => setIntroDone(true), (lastGrow + 1.4) * 1000);
     return () => window.clearTimeout(id);
@@ -149,7 +142,9 @@ function City({
     if (f && controls.current) {
       f.t = Math.min(1, f.t + delta / 1.1);
       const k = 1 - Math.pow(1 - f.t, 3);
-      const dest = new THREE.Vector3(f.target.x + 2.2, BUILDING.h + 3.2, f.target.z + 5.2);
+      // Approach from the block's outer side so the other block never hides it.
+      const side = Math.sign(f.target.z) || 1;
+      const dest = new THREE.Vector3(f.target.x + 2.4, BUILDING.h + 3, f.target.z + side * 5.6);
       camera.position.lerpVectors(f.from, dest, k);
       controls.current.target.lerpVectors(
         f.look,
@@ -192,7 +187,7 @@ function City({
       />
       <group ref={group}>
         <Ground />
-        <Trees count={170} />
+        <Trees count={140} />
         {BLOCKS.map((spot) => (
           <Building
             key={spot.letter}

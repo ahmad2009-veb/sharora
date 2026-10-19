@@ -19,13 +19,16 @@ sys.path.insert(0, str(ROOT))
 
 from seed_data import (  # noqa: E402
     APARTMENTS,
-    COMMERCIAL_UNITS,
+    COMMERCIAL_UNIT,
+    CORE,
     CORRIDOR_BOTTOM,
     CORRIDOR_TOP,
     PLAN_BOTTOM,
     PLAN_LEFT,
     PLAN_RIGHT,
     PLAN_TOP,
+    SHOP_PLAN,
+    TYPICAL_PLAN,
     apartment_rects,
 )
 
@@ -90,50 +93,87 @@ def room_fill(name: str) -> tuple[int, int, int]:
 # ---------- floor plans ----------
 
 
-def floor_plan(path: Path, commercial: bool) -> None:
+def svg_color(rgb: tuple[int, int, int]) -> str:
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+
+def floor_plan_svg(path: Path, commercial: bool) -> None:
+    """Placeholder floor plan as SVG; unit polygons (percent) line up with its 16:10 frame."""
     w, h = 1600, 1000
-    img = Image.new("RGB", (w, h), PAPER)
-    d = ImageDraw.Draw(img)
+    wall, muted, paper = svg_color(WALL), svg_color(MUTED), svg_color(PAPER)
+    out: list[str] = []
 
     def px(r: Sequence[float]) -> tuple[float, float, float, float]:
         return (r[0] * w / 100, r[1] * h / 100, r[2] * w / 100, r[3] * h / 100)
 
+    def rect(r: Sequence[float], **attrs: str | float) -> None:
+        x1, y1, x2, y2 = r
+        extra = " ".join(f'{k.replace("_", "-")}="{v}"' for k, v in attrs.items())
+        out.append(
+            f'<rect x="{x1:.1f}" y="{y1:.1f}" width="{x2 - x1:.1f}" '
+            f'height="{y2 - y1:.1f}" {extra}/>'
+        )
+
+    def text(x: float, y: float, value: str, size: int, fill: str, weight: int = 400) -> None:
+        out.append(
+            f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size}" font-weight="{weight}" '
+            f'fill="{fill}" text-anchor="middle" dominant-baseline="central">{value}</text>'
+        )
+
+    rect((0, 0, w, h), fill=paper)
     outline = px((PLAN_LEFT, PLAN_TOP, PLAN_RIGHT, PLAN_BOTTOM))
-    d.rectangle(outline, fill=ROOM, outline=WALL, width=10)
+    rect(outline, fill="#ffffff")
 
     if commercial:
         x1, y1, x2, y2 = outline
         for gx in range(int(x1) + 160, int(x2), 160):
-            d.line([(gx, y1 + 8), (gx, y2 - 8)], fill=(226, 230, 238), width=2)
-        for gx in range(int(x1) + 160, int(x2), 160):
             for gy in (y1 + (y2 - y1) / 3, y1 + 2 * (y2 - y1) / 3):
-                d.rectangle((gx - 9, gy - 9, gx + 9, gy + 9), fill=WALL)
-        centered_text(d, ((x1 + x2) / 2, (y1 + y2) / 2), "Толори савдо", fill=MUTED, font=font(40))
+                rect((gx - 9, gy - 9, gx + 9, gy + 9), fill=wall)
+        text((x1 + x2) / 2, y1 + (y2 - y1) * 0.2, COMMERCIAL_UNIT[0], 48, wall, 700)
+        text((x1 + x2) / 2, y1 + (y2 - y1) * 0.2 + 56, "Толори савдо", 30, muted)
     else:
         corridor = px((PLAN_LEFT, CORRIDOR_TOP, PLAN_RIGHT, CORRIDOR_BOTTOM))
-        d.rectangle(corridor, fill=(238, 234, 226))
-        d.line([(corridor[0], corridor[1]), (corridor[2], corridor[1])], fill=WALL, width=6)
-        d.line([(corridor[0], corridor[3]), (corridor[2], corridor[3])], fill=WALL, width=6)
-        core = (w / 2 - 70, corridor[1] + 8, w / 2 + 70, corridor[3] - 8)
-        d.rectangle(core, outline=WALL, width=3)
-        for i in range(1, 7):
-            x = core[0] + i * 20
-            d.line([(x, core[1]), (x, core[3])], fill=WALL, width=1)
-
+        rect(corridor, fill=svg_color((238, 234, 226)), stroke=wall, stroke_width=4)
         apt_by_number = {a.number: a for a in APARTMENTS}
-        for number, rect in apartment_rects().items():
-            r = px(rect)
-            d.rectangle(r, outline=WALL, width=6)
-            inner = (r[0] + 14, r[1] + 14, r[2] - 14, r[3] - 14)
-            rooms = apt_by_number[number].rooms_detail
-            for rr, name, _ in treemap(inner, sorted(rooms, key=lambda t: -t[1])):
-                d.rectangle(rr, fill=room_fill(name), outline=(180, 188, 204), width=2)
-            cx, cy = (r[0] + r[2]) / 2, (r[1] + r[3]) / 2
-            d.ellipse((cx - 34, cy - 34, cx + 34, cy + 34), fill=WALL)
-            centered_text(d, (cx, cy), str(number), fill=(255, 255, 255), font=font(34, True))
+        for number, r in apartment_rects().items():
+            x1, y1, x2, y2 = px(r)
+            inner = (x1 + 14, y1 + 14, x2 - 14, y2 - 14)
+            rooms = sorted(apt_by_number[number].rooms_detail, key=lambda t: -t[1])
+            for rr, name, _ in treemap(inner, rooms):
+                rect(rr, fill=svg_color(room_fill(name)), stroke="#b4bccc", stroke_width=2)
+            rect((x1, y1, x2, y2), fill="none", stroke=wall, stroke_width=6)
+            cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+            out.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="38" fill="{wall}"/>')
+            text(cx, cy, str(number), 38, "#ffffff", 700)
 
-    d.text((40, 30), "Схемаи ошёна · заглушка", fill=MUTED, font=font(24))
-    img.save(path, optimize=True)
+    # Stair and lift core: one entrance per block, on every floor.
+    cx1, cy1, cx2, cy2 = px(CORE)
+    rect((cx1, cy1, cx2, cy2), fill=svg_color(OUTDOOR), stroke=wall, stroke_width=6)
+    split = cx1 + (cx2 - cx1) * 0.6
+    for i in range(1, 9):
+        x = cx1 + i * (split - cx1) / 9
+        out.append(
+            f'<line x1="{x:.1f}" y1="{cy1 + 6:.1f}" x2="{x:.1f}" y2="{cy2 - 6:.1f}" '
+            f'stroke="{wall}" stroke-width="2"/>'
+        )
+    rect((split, cy1, cx2, cy2), fill="#ffffff", stroke=wall, stroke_width=4)
+    out.append(
+        f'<path d="M{split:.1f} {cy1:.1f} L{cx2:.1f} {cy2:.1f} M{cx2:.1f} {cy1:.1f} '
+        f'L{split:.1f} {cy2:.1f}" stroke="{wall}" stroke-width="2"/>'
+    )
+    rect(outline, fill="none", stroke=wall, stroke_width=10)
+
+    title = "Ошёнаи 1 · мағоза" if commercial else "Ошёнаи намунавӣ 2–9 · 7 хона"
+    out.append(
+        f'<text x="40" y="52" font-size="26" fill="{muted}">{title} · нақшаи муваққатӣ</text>'
+    )
+    path.write_text(
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
+        f'viewBox="0 0 {w} {h}" font-family="DejaVu Sans, Arial, sans-serif">'
+        + "".join(out)
+        + "</svg>\n",
+        encoding="utf-8",
+    )
 
 
 # ---------- unit drawings ----------
@@ -227,8 +267,8 @@ def generate(force: bool = False) -> None:
     (MEDIA / "units").mkdir(parents=True, exist_ok=True)
 
     jobs: list[tuple[Path, object]] = [
-        (MEDIA / "floors/plan_residential.png", lambda p: floor_plan(p, commercial=False)),
-        (MEDIA / "floors/plan_commercial.png", lambda p: floor_plan(p, commercial=True)),
+        (MEDIA / TYPICAL_PLAN, lambda p: floor_plan_svg(p, commercial=False)),
+        (MEDIA / SHOP_PLAN, lambda p: floor_plan_svg(p, commercial=True)),
     ]
     for apt in APARTMENTS:
         title = f"Хонаи {apt.number}"
@@ -244,20 +284,19 @@ def generate(force: bool = False) -> None:
                 lambda p, t=title, a=apt: unit_blueprint(p, t, a.rooms_detail, a.area),
             )
         )
-    for number, (name, area, rooms) in COMMERCIAL_UNITS.items():
-        suffix = "basement" if number < 0 else "ground"
-        jobs.append(
-            (
-                MEDIA / f"units/layout_commercial_{suffix}.png",
-                lambda p, t=name, r=rooms, a=area: unit_layout(p, t, r, a),
-            )
+    name, area, rooms = COMMERCIAL_UNIT
+    jobs.append(
+        (
+            MEDIA / "units/layout_commercial_ground.png",
+            lambda p: unit_layout(p, name, rooms, area),
         )
-        jobs.append(
-            (
-                MEDIA / f"units/blueprint_commercial_{suffix}.png",
-                lambda p, t=name, r=rooms, a=area: unit_blueprint(p, t, r, a),
-            )
+    )
+    jobs.append(
+        (
+            MEDIA / "units/blueprint_commercial_ground.png",
+            lambda p: unit_blueprint(p, name, rooms, area),
         )
+    )
 
     for path, fn in jobs:
         if force or not path.exists():

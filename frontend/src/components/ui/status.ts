@@ -25,28 +25,24 @@ export const statusVars: Record<UnitStatus, { line: string; fill: string; text: 
 // Full literal class names so Tailwind can detect them.
 export const statusClasses: Record<
   UnitStatus,
-  { dot: string; text: string; surface: string; hoverBorder: string; mobileSurface: string }
+  { dot: string; text: string; surface: string; hoverBorder: string }
 > = {
   free: {
     dot: "bg-status-free-line",
     text: "text-status-free-text",
     surface: "border-status-free-line bg-status-free-fill",
     hoverBorder: "hover:border-status-free-text",
-    mobileSurface: "max-sm:border-2 max-sm:border-status-free-line max-sm:bg-status-free-fill",
   },
   reserved: {
     dot: "bg-status-reserved-line",
     text: "text-status-reserved-text",
     surface: "border-status-reserved-line bg-status-reserved-fill",
     hoverBorder: "hover:border-status-reserved-text",
-    mobileSurface:
-      "max-sm:border-2 max-sm:border-status-reserved-line max-sm:bg-status-reserved-fill",
   },
   sold: {
     dot: "bg-status-sold-line",
     text: "text-status-sold-text",
     surface: "border-status-sold-line bg-status-sold-fill",
     hoverBorder: "hover:border-status-sold-text",
-    mobileSurface: "max-sm:border-2 max-sm:border-status-sold-line max-sm:bg-status-sold-fill",
   },
 };

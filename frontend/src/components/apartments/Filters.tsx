@@ -43,7 +43,7 @@ export function Filters({
           <Chip active={rooms === null} onClick={() => onRooms(null)}>
             {t("roomsAny")}
           </Chip>
-          {[1, 2, 3].map((n) => (
+          {[1, 2, 3, 4].map((n) => (
             <Chip key={n} active={rooms === n} onClick={() => onRooms(rooms === n ? null : n)}>
               {t("roomsShort", { count: n })}
             </Chip>

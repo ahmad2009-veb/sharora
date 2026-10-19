@@ -17,12 +17,13 @@ venv/
 
 # databases
 *.db
+*.db.bak*
 *.sqlite3
 
 # uploaded media (generated seed placeholders are committed)
 backend/media/**/*
 !backend/media/*/
-!backend/media/floors/plan_*.png
+!backend/media/floors/plan_*.svg
 !backend/media/units/layout_*.png
 !backend/media/units/blueprint_*.png
 

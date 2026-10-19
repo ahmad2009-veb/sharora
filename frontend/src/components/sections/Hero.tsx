@@ -2,11 +2,11 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, Building2, Phone, ShieldCheck } from "lucide-react";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { CountUp, RevealText } from "@/components/motion/Reveal";
+import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
 import { buttonClasses } from "@/components/ui/Button";
 import { site, tr } from "@/content/site";
 import { Link } from "@/i18n/navigation";
@@ -19,7 +19,7 @@ function preloaderActive() {
 const ease = [0.22, 1, 0.36, 1] as const;
 
 /**
- * Cinematic full-bleed hero: slow Ken Burns render under a navy scrim, a gold-sheen
+ * Cinematic full-bleed hero: animated render (see HeroBackdrop) under a navy scrim, a gold-sheen
  * headline and a frosted metrics bar. The interactive 3D model lives in the genplan.
  */
 export function Hero() {
@@ -31,7 +31,6 @@ export function Hero() {
   );
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
   const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "26%"]);
   const contentOpacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
 
@@ -43,18 +42,7 @@ export function Hero() {
       aria-labelledby="hero-title"
       className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink text-white lg:min-h-[max(100svh,820px)]"
     >
-      <motion.div aria-hidden className="absolute inset-0 -z-20" style={{ y }}>
-        <div className="kenburns absolute inset-0">
-          <Image
-            src={site.hero.image}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-[50%_40%]"
-          />
-        </div>
-      </motion.div>
+      <HeroBackdrop scrollYProgress={scrollYProgress} delay={Math.max(0, textDelay - 0.3)} />
       <span className="sr-only">{tr(site.hero.imageAlt, locale)}</span>
 
       {/* Navy scrims for legibility + warm halo behind the headline */}

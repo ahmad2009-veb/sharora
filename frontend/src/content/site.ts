@@ -105,9 +105,19 @@ export const site = {
       ru: "Широкие дороги, подземный паркинг, торговые центры и всё необходимое для комфортной современной жизни.",
     } satisfies Localized,
     // TODO(client): renders from the design mock-up — replace with the project's own visuals.
-    image: "/renders/hero.jpg",
+    // Real-ESRGAN x4 upscale of renders/hero-building.jpg (kept as the source), graded and
+    // exported as AVIF/WebP at these widths; Vercel serves public/ unoptimized, so the
+    // responsive set is pre-built. Regenerate all files if the render changes.
+    image: {
+      base: "/renders/hero/hero",
+      widths: [1280, 1920, 2560],
+      width: 2560,
+      height: 1863,
+      blurDataURL:
+        "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAAAwBACdASoYABEAPsFMn0unpCKht/qoAPAYCWMAAFFO6tg+UtRIiF+fxAAA/cL8Hnr/prCbXZZudW26Wv1jopkW8BTKYPxppVAdymkAxpIMkoeH/NChHfiZRHQy4SQTc5l7Avv2a1tHHbzbaAPAwAAA",
+    },
     imageAlt: {
-      ru: "Вечерний вид на жилые блоки комплекса «Зарафшон» на фоне гор",
+      ru: "Вид на жилой дом комплекса «Зарафшон» с коммерческими помещениями на первом этаже",
     } satisfies Localized,
     facts: [
       {

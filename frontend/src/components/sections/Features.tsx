@@ -38,11 +38,11 @@ export async function Features() {
           />
         </Reveal>
 
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 md:mt-16 lg:grid-cols-4">
+        <ul className="mt-12 grid gap-5 sm:grid-cols-2 md:mt-16 lg:grid-cols-3">
           {items.map((item, i) => {
             const Icon = FEATURE_ICONS[item.icon];
             return (
-              <Reveal as="li" key={item.icon} delay={(i % 4) * 0.06}>
+              <Reveal as="li" key={item.icon} delay={(i % 3) * 0.06}>
                 <article className="group relative h-full overflow-hidden rounded-card bg-ink p-7 ring-gold-hover hover:-translate-y-1">
                   <span
                     aria-hidden

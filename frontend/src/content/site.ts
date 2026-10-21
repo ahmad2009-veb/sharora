@@ -24,8 +24,7 @@ export function telegramLink(text: string): string {
   return `${site.contact.telegram}?text=${encodeURIComponent(text)}`;
 }
 
-export type FeatureIcon =
-  "sun" | "flame" | "droplets" | "baby" | "mapPin" | "store" | "school" | "building";
+export type FeatureIcon = "sun" | "flame" | "baby" | "mapPin" | "store" | "school" | "building";
 
 export const site = {
   brand: {
@@ -181,7 +180,6 @@ export const site = {
     } satisfies Localized,
     specs: [
       { icon: "sun", label: { ru: "Солнечные панели", tg: "Панелҳои офтобӣ" } },
-      { icon: "droplets", label: { ru: "Своя скважина", tg: "Чоҳи худӣ" } },
       { icon: "flame", label: { ru: "Своя котельная", tg: "Дегхонаи худӣ" } },
       { icon: "store", label: { ru: "Магазины рядом", tg: "Мағозаҳо дар наздикӣ" } },
     ] satisfies { icon: FeatureIcon; label: Localized }[],
@@ -228,7 +226,7 @@ export const site = {
     eyebrow: { ru: "Преимущества и инженерия", tg: "Бартариятҳо ва муҳандисӣ" } satisfies Localized,
     title: { ru: "Продумано до инженерных сетей" } satisfies Localized,
     subtitle: {
-      ru: "Своя энергия, тепло и вода — комплекс не зависит от городских перебоев.",
+      ru: "Своя энергия и тепло — комплекс не зависит от городских перебоев.",
     } satisfies Localized,
     items: [
       {
@@ -243,13 +241,6 @@ export const site = {
         title: { ru: "Центральная система отопления" },
         text: {
           ru: "Собственная котельная на территории; по современной инженерной сети теплоноситель подаётся в каждую квартиру — стабильное и эффективное отопление.",
-        },
-      },
-      {
-        icon: "droplets",
-        title: { ru: "Надёжное водоснабжение" },
-        text: {
-          ru: "Собственная водозаборная скважина — чистая и качественная вода, стабильное водоснабжение.",
         },
       },
       {

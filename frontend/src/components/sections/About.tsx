@@ -118,7 +118,7 @@ export async function About() {
               return (
                 <li
                   key={spec.icon}
-                  className="flex items-center gap-3 rounded-2xl bg-sand-deep/70 px-4 py-3.5 text-[15px] font-semibold"
+                  className="flex items-center gap-3 rounded-2xl bg-sand-deep/70 px-4 py-3.5 text-[15px] font-semibold odd:last:col-span-2"
                 >
                   <Icon className="size-5 shrink-0 text-gold-deep" aria-hidden strokeWidth={1.75} />
                   {tr(spec.label, locale)}

@@ -156,7 +156,7 @@ export function Hero() {
                 key={fact.value + i}
                 className="flex flex-col gap-1.5 md:border-l md:border-white/10 md:px-8 md:first:border-l-0 md:first:pl-0"
               >
-                <dt className="flex items-baseline gap-2.5">
+                <dt className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
                   <span className="font-display text-4xl font-extrabold tracking-tight whitespace-nowrap text-gold md:text-5xl">
                     {m ? (
                       <>
@@ -167,7 +167,9 @@ export function Hero() {
                       fact.value
                     )}
                   </span>
-                  <span className="eyebrow text-gold-soft">{tr(fact.label, locale)}</span>
+                  <span className="eyebrow whitespace-nowrap text-gold-soft">
+                    {tr(fact.label, locale)}
+                  </span>
                 </dt>
                 <dd className="text-sm leading-snug text-mist">{tr(fact.text, locale)}</dd>
               </div>

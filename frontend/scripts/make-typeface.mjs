@@ -17,12 +17,17 @@ for (const ch of CHARS) {
   const o = glyph.path.commands
     .map((c) => {
       switch (c.type) {
-        case "M": return `m ${r(c.x)} ${r(c.y)}`;
-        case "L": return `l ${r(c.x)} ${r(c.y)}`;
+        case "M":
+          return `m ${r(c.x)} ${r(c.y)}`;
+        case "L":
+          return `l ${r(c.x)} ${r(c.y)}`;
         // FontLoader expects the end point first, then control point(s).
-        case "Q": return `q ${r(c.x)} ${r(c.y)} ${r(c.x1)} ${r(c.y1)}`;
-        case "C": return `b ${r(c.x)} ${r(c.y)} ${r(c.x1)} ${r(c.y1)} ${r(c.x2)} ${r(c.y2)}`;
-        default: return "";
+        case "Q":
+          return `q ${r(c.x)} ${r(c.y)} ${r(c.x1)} ${r(c.y1)}`;
+        case "C":
+          return `b ${r(c.x)} ${r(c.y)} ${r(c.x1)} ${r(c.y1)} ${r(c.x2)} ${r(c.y2)}`;
+        default:
+          return "";
       }
     })
     .filter(Boolean)
@@ -37,7 +42,12 @@ const json = {
   descender: r(font.descender),
   underlinePosition: r(font.tables.post.underlinePosition),
   underlineThickness: r(font.tables.post.underlineThickness),
-  boundingBox: { xMin: r(font.tables.head.xMin), yMin: r(font.tables.head.yMin), xMax: r(font.tables.head.xMax), yMax: r(font.tables.head.yMax) },
+  boundingBox: {
+    xMin: r(font.tables.head.xMin),
+    yMin: r(font.tables.head.yMin),
+    xMax: r(font.tables.head.xMax),
+    yMax: r(font.tables.head.yMax),
+  },
   resolution: 1000,
   original_font_information: { format: 0, copyright: font.names.copyright?.en ?? "" },
 };

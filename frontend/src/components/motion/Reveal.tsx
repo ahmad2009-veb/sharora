@@ -2,7 +2,7 @@
 
 import { useRef, type ElementType, type ReactNode } from "react";
 
-import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { prefersReducedMotion } from "@/lib/capabilities";
 import { cn } from "@/lib/cn";
 
@@ -71,36 +71,6 @@ export function RevealText({
   );
 }
 
-/** A thin gold rule that draws itself from left to right while scrolling past. */
-export function GoldLine({ className }: { className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useGSAP(
-    () => {
-      if (!ref.current || prefersReducedMotion()) return;
-      gsap.fromTo(
-        ref.current,
-        { scaleX: 0 },
-        {
-          scaleX: 1,
-          ease: "none",
-          scrollTrigger: { trigger: ref.current, start: "top 95%", end: "top 55%", scrub: 0.6 },
-        },
-      );
-    },
-    { scope: ref },
-  );
-  return (
-    <div
-      ref={ref}
-      aria-hidden
-      className={cn(
-        "h-px origin-left bg-gradient-to-r from-gold via-gold/60 to-transparent",
-        className,
-      )}
-    />
-  );
-}
-
 /** Animated counter; renders the final value on the server so no-JS/SEO see real numbers. */
 export function CountUp({
   value,
@@ -136,5 +106,3 @@ export function CountUp({
     </span>
   );
 }
-
-export { ScrollTrigger };

@@ -29,7 +29,7 @@ export const site = {
   brand: {
     name: "Zarafshon Sokhtmon",
     project: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
-    logo: "/logo.svg",
+    logo: "/logo.png",
   },
 
   contact: {

@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 
-export const queryKeys = {
+const queryKeys = {
   stats: ["stats"] as const,
   blocks: ["blocks"] as const,
   floors: (letter: string) => ["floors", letter] as const,

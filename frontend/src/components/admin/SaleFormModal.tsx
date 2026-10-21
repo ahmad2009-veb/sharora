@@ -40,8 +40,8 @@ export const today = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-export const shortDate = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" });
-export const isoDay = (iso: string) => new Date(`${iso}T00:00:00`);
+const shortDate = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium" });
+const isoDay = (iso: string) => new Date(`${iso}T00:00:00`);
 
 const TERM_PRESETS = [6, 12, 24] as const;
 const PREVIEW_HEAD = 4;
@@ -89,7 +89,7 @@ export function MoneyInput({
   );
 }
 
-export function Field({
+function Field({
   label,
   htmlFor,
   error,

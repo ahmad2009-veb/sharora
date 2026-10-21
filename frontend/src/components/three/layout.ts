@@ -15,7 +15,7 @@ export const BLOCKS: BlockSpot[] = [
 export const PLOT = { x: 3.4, z: 3.1 } as const;
 
 /** Deterministic pseudo-random generator so tree placement is stable between renders. */
-export function seeded(seed: number) {
+function seeded(seed: number) {
   let s = seed;
   return () => {
     s = (s * 16807) % 2147483647;

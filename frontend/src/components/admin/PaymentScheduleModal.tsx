@@ -34,7 +34,7 @@ const STATUS_STYLES: Record<PaymentStatus, string> = {
   overdue: "bg-status-sold-fill text-status-sold-text",
 };
 
-export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   return (
     <span
       className={cn(

@@ -6,7 +6,6 @@ import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import {
-  BLOCKS,
   BUILDING,
   clamp01,
   easeOutBack,
@@ -280,5 +279,3 @@ function RoofLetter({ char, hovered }: { char: string; hovered: boolean }) {
     </group>
   );
 }
-
-export { BLOCKS };

@@ -75,7 +75,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
           "fixed inset-x-0 top-0 z-40 transition-[background-color,box-shadow,backdrop-filter,translate] duration-500 ease-out-soft",
           hidden && !menuOpen && "-translate-y-full",
           solid
-            ? "bg-ink/70 shadow-[0_8px_32px_rgb(0_0_0/0.35)] backdrop-blur-2xl backdrop-saturate-150"
+            ? "bg-ink/80 shadow-[0_8px_32px_rgb(0_0_0/0.35)] backdrop-blur-md backdrop-saturate-150"
             : "bg-gradient-to-b from-night/70 to-transparent",
         )}
       >

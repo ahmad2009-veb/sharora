@@ -85,7 +85,7 @@ export function InteriorGallery({ heading }: { heading: ReactNode }) {
 
       <ul
         ref={trackRef}
-        data-lenis-prevent-wheel
+        data-lenis-prevent-horizontal
         className="mt-10 mr-[calc(50%-50vw)] flex snap-x snap-mandatory [scrollbar-width:none] gap-5 overflow-x-auto pr-[calc(50vw-50%)] pb-4 [&::-webkit-scrollbar]:hidden"
       >
         {images.map((img, i) => (
@@ -119,7 +119,7 @@ export function InteriorGallery({ heading }: { heading: ReactNode }) {
                   {img.alt}
                 </span>
               </span>
-              <span className="absolute top-5 right-5 grid size-11 place-items-center rounded-full text-gold opacity-0 glass-dark transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+              <span className="absolute top-5 right-5 grid size-11 place-items-center rounded-full bg-ink/70 text-gold opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
                 <Expand className="size-[18px]" aria-hidden />
               </span>
             </button>

@@ -10,5 +10,3 @@ if (typeof window !== "undefined") {
 }
 
 export { gsap, ScrollTrigger, SplitText, useGSAP };
-
-export const EASE_OUT = "expo.out";

@@ -8,12 +8,12 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
   overdue: "Просрочено",
 };
 
-export const longDate = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long" });
+const longDate = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long" });
 export const numericDate = new Intl.DateTimeFormat("ru-RU");
 export const day = (iso: string) => new Date(`${iso}T00:00:00`);
 
 /** "Блок 1, Этаж 3, Хонаи 5" */
-export function apartmentLabel(sale: Sale): string {
+function apartmentLabel(sale: Sale): string {
   if (sale.unit_name === null) return "Помещение удалено";
   return `Блок ${sale.block_letter}, Этаж ${sale.floor_number}, ${sale.unit_name}`;
 }

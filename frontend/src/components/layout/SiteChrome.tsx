@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Cursor } from "@/components/motion/Cursor";
+import { PauseOffscreen } from "@/components/motion/PauseOffscreen";
 import { Preloader } from "@/components/motion/Preloader";
 
 import { FeedbackFab } from "./FeedbackMenu";
@@ -27,6 +28,7 @@ export async function SiteChrome({
       <FeedbackFab />
       <MobileTabBar />
       <Cursor />
+      <PauseOffscreen />
     </>
   );
 }

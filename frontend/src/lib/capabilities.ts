@@ -33,17 +33,3 @@ export function canRender3D(): boolean {
     return false;
   }
 }
-
-/** Runs `cb` when the main thread is idle (falls back to a timeout). */
-export function whenIdle(cb: () => void, timeout = 1500): () => void {
-  const w = window as Window & {
-    requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
-    cancelIdleCallback?: (id: number) => void;
-  };
-  if (w.requestIdleCallback) {
-    const id = w.requestIdleCallback(cb, { timeout });
-    return () => w.cancelIdleCallback?.(id);
-  }
-  const id = window.setTimeout(cb, 300);
-  return () => window.clearTimeout(id);
-}

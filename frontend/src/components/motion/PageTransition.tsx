@@ -1,13 +1,12 @@
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
 import { prefersReducedMotion } from "@/lib/capabilities";
 import { gsap } from "@/lib/gsap";
 
 type Navigate = (href: string) => void;
-const TransitionContext = createContext<Navigate | null>(null);
 
 const COVER = 0.5;
 const REVEAL = 0.65;
@@ -78,7 +77,7 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   return (
-    <TransitionContext.Provider value={navigate}>
+    <>
       {children}
       <div
         ref={curtain}
@@ -87,13 +86,6 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
       >
         <div className="absolute inset-x-0 top-1/2 mx-auto h-px w-40 -translate-y-1/2 bg-gradient-to-r from-transparent via-gold to-transparent" />
       </div>
-    </TransitionContext.Provider>
+    </>
   );
-}
-
-/** Programmatic navigation with the page curtain (e.g. after the 3D camera fly-to). */
-export function useTransitionNavigate(): Navigate {
-  const ctx = useContext(TransitionContext);
-  const router = useRouter();
-  return ctx ?? ((href: string) => router.push(href));
 }

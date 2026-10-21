@@ -37,7 +37,7 @@ export function LoginForm() {
     <div className="w-full max-w-md">
       <div className="mb-8 flex items-center gap-3">
         <span className="grid size-12 place-items-center rounded-[14px] bg-white shadow-soft ring-1 ring-gold/30">
-          <Image src="/logo.svg" alt="" width={38} height={38} unoptimized />
+          <Image src="/logo.png" alt="" width={38} height={38} unoptimized />
         </span>
         <div>
           <p className="font-display text-lg font-extrabold tracking-[0.16em] uppercase">

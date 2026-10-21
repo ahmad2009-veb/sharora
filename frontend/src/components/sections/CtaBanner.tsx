@@ -22,8 +22,8 @@ export async function CtaBanner() {
               aria-hidden
               className="absolute -right-24 -bottom-24 size-[500px] rounded-full bg-gold/10 blur-[140px]"
             />
-            <div className="relative grid items-center gap-12 lg:grid-cols-2">
-              <div>
+            <div className="relative grid items-center gap-12 max-md:grid-cols-1 lg:grid-cols-2">
+              <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 rounded-full bg-night px-4 py-2 eyebrow text-gold">
                   <KeyRound className="size-4" aria-hidden />
                   {tr(cta.badge, locale)}

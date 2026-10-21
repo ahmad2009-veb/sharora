@@ -176,9 +176,29 @@ html.lenis body {
   overscroll-behavior: contain;
 }
 /* Cards slide under a resting cursor while the page scrolls; without this their
-   hover lift/zoom fires on and off and the sections jitter. */
-html.lenis-scrolling main {
-  pointer-events: none;
+   hover lift/zoom fires on and off and the sections jitter. Mouse only: Lenis also
+   flags native touch scrolling, and on phones this rule swallowed every touch that
+   followed a scroll (horizontal rows, the floor picker, taps) until momentum ended. */
+@media (hover: hover) and (pointer: fine) {
+  html.lenis-scrolling main {
+    pointer-events: none;
+  }
+}
+
+/* Tajik words are long: on phones text breaks inside the screen instead of
+   overflowing, and buttons wrap to two lines instead of running off the edge. */
+@media (width < 48rem) {
+  html[lang="tg"] body {
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+  html[lang="tg"] .btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
 }
 /* Sections out of view (see components/motion/PauseOffscreen.tsx) stop their loops. */
 [data-offscreen] *,

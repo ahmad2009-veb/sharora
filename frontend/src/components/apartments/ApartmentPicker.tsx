@@ -1,10 +1,11 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Calculator, Headset, Layers, Phone, SearchX } from "lucide-react";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 
 import { Button, buttonClasses } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -19,6 +20,7 @@ import { CallbackModal } from "./CallbackModal";
 import { ErrorState } from "./ErrorState";
 import { Filters } from "./Filters";
 import { FloorList } from "./FloorList";
+import { FloorPicker } from "./FloorPicker";
 import { FloorPlan } from "./FloorPlan";
 import { unitTotal } from "./price";
 import { useBlocks, useFloors, useFloorUnits } from "./queries";
@@ -29,6 +31,10 @@ import { useApartmentParams } from "./useApartmentParams";
 
 type Sort = "number" | "areaAsc" | "areaDesc" | "price";
 
+const PHONE = "(width < 48rem)";
+/** A swipe: mostly sideways and long enough not to be a tap or a scroll. */
+const SWIPE_MIN = 56;
+
 export function ApartmentPicker() {
   const t = useTranslations("apartments");
   const unitName = useUnitName();
@@ -38,6 +44,9 @@ export function ApartmentPicker() {
   const [calcOpen, setCalcOpen] = useState(false);
   const [callbackOpen, setCallbackOpen] = useState(false);
   const [sort, setSort] = useState<Sort>("number");
+  // Phones: which way the floor content slides in (0 = no animation, e.g. desktop).
+  const [slideDir, setSlideDir] = useState<-1 | 0 | 1>(0);
+  const touch = useRef<{ x: number; y: number; multi: boolean } | null>(null);
   const searchParams = useSearchParams();
 
   // Deep link from the mobile «Ещё» menu: /apartments?calc=1 opens the calculator.
@@ -113,6 +122,40 @@ export function ApartmentPicker() {
   const select = (u: UnitListItem) =>
     update({ block: blockLetter, floor: floor?.number, apt: u.number });
 
+  const goFloor = (n: number, dir: -1 | 1) => {
+    setSlideDir(dir);
+    update({ block: blockLetter, floor: n, apt: null });
+  };
+  const stepFloor = (dir: -1 | 1) => {
+    const ordered = [...(floors.data ?? [])].sort((a, b) => a.number - b.number);
+    const next = ordered[ordered.findIndex((f) => f.id === floor?.id) + dir];
+    if (next) goFloor(next.number, dir);
+  };
+
+  // Phones: swiping the cards / plan area sideways changes the floor (left = up).
+  function onTouchStart(e: TouchEvent) {
+    const p = e.touches[0];
+    const zoomed = (e.target as Element).closest(".react-transform-component");
+    const scaled =
+      zoomed && !/^(none|matrix\(1, 0, 0, 1,)/.test(getComputedStyle(zoomed).transform);
+    touch.current =
+      window.matchMedia(PHONE).matches && !scaled
+        ? { x: p.clientX, y: p.clientY, multi: e.touches.length > 1 }
+        : null;
+  }
+  function onTouchMove(e: TouchEvent) {
+    if (touch.current && e.touches.length > 1) touch.current.multi = true;
+  }
+  function onTouchEnd(e: TouchEvent) {
+    const start = touch.current;
+    touch.current = null;
+    if (!start || start.multi) return;
+    const p = e.changedTouches[0];
+    const dx = p.clientX - start.x;
+    const dy = p.clientY - start.y;
+    if (Math.abs(dx) >= SWIPE_MIN && Math.abs(dx) > Math.abs(dy) * 1.6) stepFloor(dx < 0 ? 1 : -1);
+  }
+
   return (
     <>
       <section aria-labelledby="apartments-title" className="relative bg-ink pt-20 text-white">
@@ -162,7 +205,10 @@ export function ApartmentPicker() {
                 blocks={blocks.data}
                 loading={blocks.isPending}
                 value={blockLetter}
-                onChange={(letter) => update({ block: letter, floor: null, apt: null })}
+                onChange={(letter) => {
+                  setSlideDir(0);
+                  update({ block: letter, floor: null, apt: null });
+                }}
               />
             </div>
           )}
@@ -179,12 +225,25 @@ export function ApartmentPicker() {
                 {floors.isError ? (
                   <ErrorState onRetry={() => floors.refetch()} />
                 ) : (
-                  <FloorList
-                    floors={floors.data}
-                    loading={floors.isPending}
-                    value={floor?.number ?? null}
-                    onChange={(n) => update({ block: blockLetter, floor: n, apt: null })}
-                  />
+                  <>
+                    <FloorPicker
+                      floors={floors.data}
+                      loading={floors.isPending}
+                      value={floor?.number ?? null}
+                      onChange={goFloor}
+                    />
+                    <div className="max-md:hidden">
+                      <FloorList
+                        floors={floors.data}
+                        loading={floors.isPending}
+                        value={floor?.number ?? null}
+                        onChange={(n) => {
+                          setSlideDir(0);
+                          update({ block: blockLetter, floor: n, apt: null });
+                        }}
+                      />
+                    </div>
+                  </>
                 )}
 
                 <div className="hidden overflow-hidden rounded-card bg-white p-4 shadow-soft lg:block">
@@ -275,59 +334,73 @@ export function ApartmentPicker() {
                   />
                 )}
 
-                {floorUnits.isError ? (
-                  <ErrorState onRetry={() => floorUnits.refetch()} />
-                ) : floorUnits.isPending || !floorUnits.data ? (
-                  <div aria-busy="true" className="space-y-6">
-                    <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
-                      {Array.from({ length: 7 }, (_, i) => (
-                        <Skeleton key={i} className="h-[360px] rounded-card" />
-                      ))}
-                    </div>
-                    <Skeleton className="aspect-[16/10] w-full rounded-card" />
-                  </div>
-                ) : (
-                  <>
-                    {visible.length === 0 ? (
-                      <div className="flex flex-col items-center rounded-card bg-white px-6 py-14 text-center shadow-soft">
-                        <span className="grid size-14 place-items-center rounded-full bg-sand text-muted">
-                          <SearchX className="size-7" aria-hidden />
-                        </span>
-                        <p className="mt-5 font-display text-xl font-extrabold">
-                          {t("emptyTitle")}
-                        </p>
-                        <p className="mt-1 text-[15px] text-muted">{t("emptyText")}</p>
-                        <Button variant="secondary" className="mt-6" onClick={resetFilters}>
-                          {t("resetFilters")}
-                        </Button>
-                      </div>
-                    ) : (
-                      <ul className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
-                        {visible.map((u) => (
-                          <li key={u.id}>
-                            <UnitCard
-                              unit={u}
-                              blockName={blockName}
-                              hovered={hoveredId === u.id}
-                              onHover={setHoveredId}
-                              onSelect={select}
-                            />
-                          </li>
+                <motion.div
+                  // Desktop (no slide) keeps one instance, as before; phones remount per floor.
+                  key={slideDir ? (floor?.id ?? "none") : "static"}
+                  initial={slideDir ? { x: slideDir * 56, opacity: 0 } : false}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                  onTouchStart={onTouchStart}
+                  onTouchMove={onTouchMove}
+                  onTouchEnd={onTouchEnd}
+                  // Phones: horizontal swipes here belong to the page (floor change), not to the
+                  // browser's swipe-back navigation; vertical scroll and pinch stay native.
+                  className="space-y-6 max-md:[touch-action:pan-y_pinch-zoom]"
+                >
+                  {floorUnits.isError ? (
+                    <ErrorState onRetry={() => floorUnits.refetch()} />
+                  ) : floorUnits.isPending || !floorUnits.data ? (
+                    <div aria-busy="true" className="space-y-6">
+                      <div className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
+                        {Array.from({ length: 7 }, (_, i) => (
+                          <Skeleton key={i} className="h-[360px] rounded-card" />
                         ))}
-                      </ul>
-                    )}
+                      </div>
+                      <Skeleton className="aspect-[16/10] w-full rounded-card" />
+                    </div>
+                  ) : (
+                    <>
+                      {visible.length === 0 ? (
+                        <div className="flex flex-col items-center rounded-card bg-white px-6 py-14 text-center shadow-soft">
+                          <span className="grid size-14 place-items-center rounded-full bg-sand text-muted">
+                            <SearchX className="size-7" aria-hidden />
+                          </span>
+                          <p className="mt-5 font-display text-xl font-extrabold">
+                            {t("emptyTitle")}
+                          </p>
+                          <p className="mt-1 text-[15px] text-muted">{t("emptyText")}</p>
+                          <Button variant="secondary" className="mt-6" onClick={resetFilters}>
+                            {t("resetFilters")}
+                          </Button>
+                        </div>
+                      ) : (
+                        <ul className="grid grid-cols-2 gap-3 md:gap-4 xl:grid-cols-3">
+                          {visible.map((u) => (
+                            <li key={u.id}>
+                              <UnitCard
+                                unit={u}
+                                blockName={blockName}
+                                hovered={hoveredId === u.id}
+                                onHover={setHoveredId}
+                                onSelect={select}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
-                    <FloorPlan
-                      planImage={floorUnits.data.plan_image}
-                      floorLabel={`${blockName} · ${floorName}`}
-                      units={units}
-                      matches={matches}
-                      hoveredId={hoveredId}
-                      onHover={setHoveredId}
-                      onSelect={select}
-                    />
-                  </>
-                )}
+                      <FloorPlan
+                        planImage={floorUnits.data.plan_image}
+                        floorLabel={`${blockName} · ${floorName}`}
+                        units={units}
+                        matches={matches}
+                        hoveredId={hoveredId}
+                        onHover={setHoveredId}
+                        onSelect={select}
+                      />
+                    </>
+                  )}
+                </motion.div>
               </section>
             </div>
           )}

@@ -9,6 +9,7 @@ import { CountUp, RevealText } from "@/components/motion/Reveal";
 import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
 import { buttonClasses } from "@/components/ui/Button";
 import { site, tr } from "@/content/site";
+import { cn } from "@/lib/cn";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 
@@ -150,26 +151,41 @@ export function Hero() {
           className="grid grid-cols-2 gap-x-6 gap-y-7 rounded-panel p-6 glass-dark md:grid-cols-4 md:gap-0 md:p-8"
         >
           {site.hero.facts.map((fact, i) => {
-            const m = fact.value.match(/^(\d+)(.*)$/);
+            const word = typeof fact.value === "string" ? null : tr(fact.value, locale);
+            const m = typeof fact.value === "string" ? fact.value.match(/^(\d+)(.*)$/) : null;
             return (
               <div
-                key={fact.value + i}
-                className="flex flex-col gap-1.5 md:border-l md:border-white/10 md:px-8 md:first:border-l-0 md:first:pl-0"
+                key={i}
+                className={cn(
+                  "flex flex-col gap-1.5 md:border-l md:border-white/10 md:px-8 md:first:border-l-0 md:first:pl-0",
+                  // Phones: the wide «100 км» and the word fact get a full row each.
+                  i >= 2 && "max-md:col-span-2",
+                  word && "@container",
+                )}
               >
                 <dt className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                  <span className="font-display text-4xl font-extrabold tracking-tight whitespace-nowrap text-gold md:text-5xl">
-                    {m ? (
-                      <>
-                        <CountUp value={Number(m[1])} />
-                        {m[2]}
-                      </>
-                    ) : (
-                      fact.value
+                  <span
+                    className={cn(
+                      "font-display text-4xl font-extrabold tracking-tight whitespace-nowrap text-gold md:text-5xl",
+                      // A word is ~6em wide: same figure size, shrunk only as far as needed to fit.
+                      word && "text-[min(2.25rem,16cqi)] md:text-[min(3rem,16cqi)]",
                     )}
+                  >
+                    {word ??
+                      (m ? (
+                        <>
+                          <CountUp value={Number(m[1])} />
+                          {m[2]}
+                        </>
+                      ) : (
+                        (fact.value as string)
+                      ))}
                   </span>
-                  <span className="eyebrow whitespace-nowrap text-gold-soft">
-                    {tr(fact.label, locale)}
-                  </span>
+                  {fact.label && (
+                    <span className="eyebrow whitespace-nowrap text-gold-soft">
+                      {tr(fact.label, locale)}
+                    </span>
+                  )}
                 </dt>
                 <dd className="text-sm leading-snug text-mist">{tr(fact.text, locale)}</dd>
               </div>

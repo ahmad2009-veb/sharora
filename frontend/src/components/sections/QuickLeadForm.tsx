@@ -147,7 +147,7 @@ export function QuickLeadForm() {
           <Button
             type="submit"
             size="lg"
-            className="w-full tracking-wider uppercase"
+            className="w-full tracking-wider uppercase max-md:tracking-wide max-md:whitespace-normal"
             disabled={mutation.isPending}
           >
             {mutation.isPending && <Loader2 className="size-4 animate-spin" aria-hidden />}

@@ -33,16 +33,17 @@ export const site = {
   },
 
   contact: {
-    phoneDisplay: "+992 20 643 1001",
-    phoneHref: "tel:+992206431001",
+    // The one company number: header, footer, hero, tab bar, sheets and modals all read it here.
+    phoneDisplay: "+992 300 00 00 59",
+    phoneHref: "tel:+992300000059",
     phoneNote: {
       ru: "Ответственное лицо — звоните для связи",
       tg: "Шахси масъул — барои тамос занг занед",
     } satisfies Localized,
     // Messengers: change the number / username here only — links are built from these.
-    whatsappNumber: "992206431001",
-    whatsapp: "https://wa.me/992206431001",
-    telegram: "https://t.me/+992206431001", // TODO: replace with the company's Telegram username
+    whatsappNumber: "992300000059",
+    whatsapp: "https://wa.me/992300000059",
+    telegram: "https://t.me/+992300000059",
     hours: { ru: "Пн–Сб, 9:00–18:00", tg: "Дш–Шн, 9:00–18:00" } satisfies Localized,
     greeting: {
       ru: "Здравствуйте! Хочу узнать о квартирах в ЖК «Зарафшон».",
@@ -55,11 +56,11 @@ export const site = {
     } satisfies Localized,
     // TODO(client): add the street once known.
     address: {
-      ru: "Согдийская область, Айнинский район, пос. Равшан-1",
-      tg: "Вилояти Суғд, ноҳияи Айнӣ, шаҳраки Равшан-1",
+      ru: "Согдийская область, Айнинский район, пос. Зарафшан",
+      tg: "Вилояти Суғд, ноҳияи Айнӣ, шаҳраки Зарафшон",
     } satisfies Localized,
     distance: { ru: "100 км от Душанбе", tg: "100 км аз Душанбе" } satisfies Localized,
-    // TODO(client): pin the exact construction site in Ravshan-1; this is the centre of Ayni.
+    // TODO(client): pin the exact construction site in Zarafshan; this is the centre of Ayni.
     map: { lat: 39.39, lon: 68.54 },
   },
 
@@ -148,11 +149,11 @@ export const site = {
         },
       },
       {
-        value: "1",
-        label: { ru: "детский сад", tg: "боғча" },
+        // A word instead of a number: shown in the big figure style, without a label.
+        value: { ru: "Детский сад", tg: "Кӯдакистон" },
         text: { ru: "Детский сад рядом с комплексом", tg: "Боғчаи бачагона дар наздикии маҷмаа" },
       },
-    ] satisfies { value: string; label: Localized; text: Localized }[],
+    ] satisfies { value: string | Localized; label?: Localized; text: Localized }[],
   },
 
   about: {
@@ -181,7 +182,7 @@ export const site = {
       tg: "Ҳавлӣ бо фаввора ва намои блокҳои истиқоматии маҷмааи «Зарафшон»",
     } satisfies Localized,
     developerLabel: { ru: "Застройщик", tg: "Сохтмончӣ" } satisfies Localized,
-    developerName: { ru: "Васли Точик", tg: "Васли Тоҷик" } satisfies Localized,
+    developerName: { ru: "Vasli Tojik", tg: "Vasli Tojik" } satisfies Localized,
     safety: { ru: "Безопасность", tg: "Амният" } satisfies Localized,
     safetyText: {
       ru: "Закрытые дворы и видеонаблюдение",
@@ -467,8 +468,8 @@ export const site = {
 
   footer: {
     rights: {
-      ru: "© 2026 Zarafshon Sokhtmon. Все права защищены.",
-      tg: "© 2026 Zarafshon Sokhtmon. Ҳамаи ҳуқуқҳо ҳифз шудаанд.",
+      ru: "© 2026 Vasli Tojik. Все права защищены.",
+      tg: "© 2026 Vasli Tojik. Ҳамаи ҳуқуқҳо ҳифз шудаанд.",
     } satisfies Localized,
     sections: { ru: "Разделы", tg: "Бахшҳо" } satisfies Localized,
     contacts: { ru: "Контакты", tg: "Тамос" } satisfies Localized,

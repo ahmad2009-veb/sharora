@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useId, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -39,12 +40,13 @@ export function Modal({
   title,
   description,
   children,
-  closeLabel = "Закрыть",
+  closeLabel,
   size = "md",
   className,
   actions,
   flush = false,
 }: Props) {
+  const tc = useTranslations("common");
   const mounted = useMounted();
   const titleId = useId();
   const descId = useId();
@@ -104,7 +106,7 @@ export function Modal({
                 <button
                   type="button"
                   onClick={onClose}
-                  aria-label={closeLabel}
+                  aria-label={closeLabel ?? tc("close")}
                   className="ml-1 grid size-10 place-items-center rounded-full bg-sand text-ink transition-all hover:scale-105 hover:bg-sand-deep"
                 >
                   <X className="size-5" aria-hidden />

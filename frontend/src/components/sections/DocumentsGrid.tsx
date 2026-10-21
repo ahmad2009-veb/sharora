@@ -23,7 +23,7 @@ export function DocumentsGrid() {
   const images = active
     ? Array.from({ length: active.pages }, (_, i) => ({
         src: `/docs/${active.slug}-${i + 1}.jpg`,
-        alt: `${active.titleTj} — ${i + 1}`,
+        alt: `${tr(active.title, locale)} — ${i + 1}`,
       }))
     : [];
 
@@ -53,14 +53,8 @@ export function DocumentsGrid() {
                   {verified}
                 </span>
               </span>
-              <span
-                lang="tg"
-                className="mt-6 block font-display text-xl leading-snug font-extrabold"
-              >
-                {doc.titleTj}
-              </span>
-              <span lang="ru" className="mt-1.5 block text-[15px] text-muted">
-                {doc.titleRu}
+              <span className="mt-6 block font-display text-xl leading-snug font-extrabold">
+                {tr(doc.title, locale)}
               </span>
               <span aria-hidden className="block min-h-6 flex-1" />
               <span className="flex items-center justify-between border-t border-line pt-4 text-sm font-semibold text-gold-deep">
@@ -85,8 +79,7 @@ export function DocumentsGrid() {
           setActive(null);
           setPage(null);
         }}
-        title={active?.titleTj}
-        caption={active?.titleRu}
+        title={active ? tr(active.title, locale) : undefined}
         zoomable
         labels={{
           close: t("close"),

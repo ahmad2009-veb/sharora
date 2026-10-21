@@ -34,7 +34,7 @@ export async function About() {
               <div>
                 <p className="eyebrow text-muted">{tr(about.developerLabel, locale)}</p>
                 <p className="mt-1 font-display text-lg font-extrabold md:text-xl">
-                  {site.brand.name}
+                  {tr(about.developerName, locale)}
                 </p>
               </div>
               <span className="grid size-12 shrink-0 place-items-center rounded-full bg-gold text-on-gold shadow-glow">

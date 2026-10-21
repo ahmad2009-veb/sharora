@@ -11,6 +11,7 @@ import { ZoomControls } from "@/components/ui/ZoomControls";
 import { mediaUrl } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatArea } from "@/lib/format";
+import { useUnitName } from "@/lib/unit-names";
 import type { UnitListItem } from "@/lib/types";
 
 type Props = {
@@ -34,6 +35,7 @@ export function FloorPlan({
 }: Props) {
   const t = useTranslations("apartments");
   const ts = useTranslations("status");
+  const unitName = useUnitName();
   const [fullscreen, setFullscreen] = useState(false);
   const src = mediaUrl(planImage);
 
@@ -121,7 +123,7 @@ export function FloorPlan({
                 if (!u.polygon?.length) return null;
                 const match = matches(u);
                 const hovered = hoveredId === u.id;
-                const label = `${u.name}, ${formatArea(u.area)}, ${ts(u.status)}`;
+                const label = `${unitName(u.name)}, ${formatArea(u.area)}, ${ts(u.status)}`;
                 const colors = statusVars[u.status];
                 return (
                   <polygon

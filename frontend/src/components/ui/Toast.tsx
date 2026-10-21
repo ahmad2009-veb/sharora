@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { CircleAlert, CircleCheck, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
@@ -12,6 +13,7 @@ type ToastItem = { id: number; message: string; tone: ToastTone };
 const ToastContext = createContext<((message: string, tone?: ToastTone) => void) | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const tc = useTranslations("common");
   const [items, setItems] = useState<ToastItem[]>([]);
 
   const dismiss = useCallback(
@@ -57,7 +59,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => dismiss(t.id)}
-                aria-label="Закрыть уведомление"
+                aria-label={tc("closeNotification")}
                 className="-m-1 grid size-7 place-items-center rounded-full hover:bg-white/10"
               >
                 <X className="size-4" aria-hidden />

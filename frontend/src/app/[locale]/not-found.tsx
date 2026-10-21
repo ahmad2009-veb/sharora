@@ -9,6 +9,7 @@ export default async function NotFound() {
   const ta = await getTranslations("apartments");
   return (
     <SiteChrome>
+      <title>{t("notFoundTitle")}</title>
       <section className="bg-sand pt-[72px]">
         <div className="container-page flex min-h-[60vh] flex-col items-start justify-center py-20">
           <p className="eyebrow text-gold-deep">404</p>

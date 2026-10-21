@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { site, tr } from "@/content/site";
 import type { Locale } from "@/i18n/routing";
 import type { UnitListItem } from "@/lib/types";
+import { useUnitName } from "@/lib/unit-names";
 
 import { BlockSelector } from "./BlockSelector";
 import { CalculatorModal } from "./CalculatorModal";
@@ -30,6 +31,7 @@ type Sort = "number" | "areaAsc" | "areaDesc" | "price";
 
 export function ApartmentPicker() {
   const t = useTranslations("apartments");
+  const unitName = useUnitName();
   const locale = useLocale() as Locale;
   const [params, update] = useApartmentParams();
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -345,7 +347,7 @@ export function ApartmentPicker() {
         unitId={selectedUnit?.id ?? null}
         unitLabel={
           selectedUnit && floor
-            ? `${blockName} · ${t("floorN", { n: floor.number })} · ${selectedUnit.name}`
+            ? `${blockName} · ${t("floorN", { n: floor.number })} · ${unitName(selectedUnit.name)}`
             : null
         }
       />

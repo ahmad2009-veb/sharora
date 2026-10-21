@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
@@ -19,6 +19,7 @@ export function LocaleSwitcher({
   className?: string;
 }) {
   const locale = useLocale() as Locale;
+  const tc = useTranslations("common");
   const pathname = usePathname();
   const router = useRouter();
 
@@ -32,7 +33,7 @@ export function LocaleSwitcher({
   return (
     <div
       role="group"
-      aria-label="Язык / Забон"
+      aria-label={tc("language")}
       className={cn(
         "inline-flex rounded-full p-1 text-[11px] font-bold tracking-wider",
         tone === "dark" ? "bg-night/70 ring-1 ring-white/10" : "bg-sand",

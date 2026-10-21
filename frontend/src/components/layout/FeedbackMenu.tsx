@@ -66,20 +66,20 @@ export function FeedbackFab() {
   const channels = [
     {
       href: site.contact.phoneHref,
-      label: site.feedback.channels.call,
+      label: tr(site.feedback.channels.call, locale),
       sub: site.contact.phoneDisplay,
       Icon: Phone,
     },
     {
       href: site.contact.whatsapp,
-      label: site.feedback.channels.whatsapp,
+      label: tr(site.feedback.channels.whatsapp, locale),
       sub: "wa.me",
       Icon: MessageCircle,
       external: true,
     },
     {
       href: site.contact.telegram,
-      label: site.feedback.channels.telegram,
+      label: tr(site.feedback.channels.telegram, locale),
       sub: "t.me",
       Icon: Send,
       external: true,

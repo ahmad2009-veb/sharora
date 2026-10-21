@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useId } from "react";
 
 type Props = {
@@ -22,6 +23,7 @@ export function RangeSlider({
   label,
   format = String,
 }: Props) {
+  const tc = useTranslations("common");
   const id = useId();
   const [lo, hi] = value;
   const span = max - min || 1;
@@ -52,7 +54,7 @@ export function RangeSlider({
           max={max}
           step={step}
           value={lo}
-          aria-label={`${label}: от`}
+          aria-label={tc("rangeFrom", { label })}
           aria-valuetext={format(lo)}
           onChange={(e) => onChange([Math.min(Number(e.target.value), hi), hi])}
           className={thumb}
@@ -63,7 +65,7 @@ export function RangeSlider({
           max={max}
           step={step}
           value={hi}
-          aria-label={`${label}: до`}
+          aria-label={tc("rangeTo", { label })}
           aria-valuetext={format(hi)}
           onChange={(e) => onChange([lo, Math.max(Number(e.target.value), lo)])}
           className={thumb}

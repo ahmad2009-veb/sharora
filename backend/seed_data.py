@@ -173,4 +173,4 @@ def residential_price(floor_number: int) -> int:
 
 # Appended to placeholder image URLs; bump it whenever the generated drawings change so
 # browsers and the CDN don't keep showing cached copies under the same file name.
-MEDIA_VERSION = "?v=2"
+MEDIA_VERSION = "?v=3"

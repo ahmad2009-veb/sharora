@@ -126,7 +126,7 @@ cd backend
 
 # frontend
 cd frontend
-npm run typecheck && npm run lint && npm run format:check
+npm run typecheck && npm run lint && npm run format:check && npm run check:i18n
 npm run build
 ```
 
@@ -218,7 +218,7 @@ sharora/
 ## Как менять контент
 
 - **Тексты главной, телефоны, ссылки WhatsApp/Telegram, координаты карты** — `frontend/src/content/site.ts`. Каждая строка — `{ ru, tg? }`; если `tg` нет, показывается русский текст.
-- **TODO (перевод)**: таджикские версии длинных текстов и части строк в `src/messages/tg.json` пока не заполнены — отображается русский. Ключи для перевода — записи без `tg` в `site.ts` и отсутствующие ключи в `tg.json`.
+- **Два языка без смешения**: в `site.ts` у каждого текста обязательны `ru` и `tg` (иначе ошибка TypeScript), а `npm run check:i18n` падает, если ключа нет в `ru.json` или `tg.json`, плейсхолдеры различаются или в тексте буквы чужого алфавита. Названия квартир и комнат из API («Хонаи 3», «Ҳ/Б») переводятся на фронтенде (`src/lib/unit-names.ts`); нестандартное название, введённое в админке, показывается как есть. Заглушки чертежей — без слов, только цифры и м².
 - **Изображения** — замените файлы в `frontend/public` с теми же именами: `logo.svg`, `hero.jpg` (генплан 16:9), `about.jpg`, `og.jpg` (1200×630), `interior/01–09.jpg`, `docs/<slug>-<n>.jpg`. Текущие файлы — сгенерированные заглушки.
 - **Фон первого экрана** — исходник `public/renders/hero-building.jpg` (1150×837, хранится как резервная копия). На сайте показываются `public/renders/hero/hero-{1280,1920,2560}.{avif,webp}`: апскейл ×4 через [Real-ESRGAN ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN) (модель `realesrgan-x4plus`, лицензия BSD-3-Clause), лёгкая резкость/контраст в `sharp`, экспорт AVIF/WebP. Vercel отдаёт `public/` без оптимизации, поэтому набор собран заранее и подключён через `<picture>`; при замене рендера пересоберите все файлы и обновите `blurDataURL`, `width`, `height` в `site.hero.image`.
 - **Анимация первого экрана** (`HeroBackdrop.tsx`, `globals.css`) — Ken Burns, параллакс, золотой блик и «светящиеся частицы» сделаны на CSS/Framer Motion без сторонних ассетов (Lottie и т. п. не используются).

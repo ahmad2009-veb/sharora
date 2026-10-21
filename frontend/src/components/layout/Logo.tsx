@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
 import { site } from "@/content/site";
@@ -14,13 +15,14 @@ export function Logo({
   size?: "md" | "lg";
   className?: string;
 }) {
+  const tc = useTranslations("common");
   const dark = tone === "dark";
   const lg = size === "lg";
   return (
     <Link
       href="/"
       className={cn("group flex items-center gap-3", className)}
-      aria-label={`${site.brand.name} — на главную`}
+      aria-label={tc("homeLink", { name: site.brand.name })}
     >
       <span
         className={cn(

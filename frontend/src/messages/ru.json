@@ -11,7 +11,14 @@
     "sqm": "м²",
     "notFoundTitle": "Страница не найдена",
     "notFoundText": "Возможно, ссылка устарела. Вернитесь на главную или перейдите к выбору квартиры.",
-    "toHome": "На главную"
+    "toHome": "На главную",
+    "mainNav": "Основная навигация",
+    "mobileNav": "Мобильная навигация",
+    "closeNotification": "Закрыть уведомление",
+    "rangeFrom": "{label}: от",
+    "rangeTo": "{label}: до",
+    "homeLink": "{name} — на главную",
+    "language": "Язык"
   },
   "status": {
     "free": "Свободно",
@@ -72,13 +79,15 @@
     "sortPrice": "По цене",
     "levels": "{count, plural, one {# уровень} few {# уровня} many {# уровней} other {# уровня}}",
     "price": "Стоимость",
-    "unavailable": "Недоступно"
+    "unavailable": "Недоступно",
+    "unitName": "Квартира {n}",
+    "shopName": "Магазин {n}"
   },
   "unit": {
     "block": "Блок",
     "floor": "Этаж",
     "area": "Площадь",
-    "rooms": "Комнат",
+    "rooms": "Комнаты",
     "price": "Стоимость",
     "pricePerSqm": "Цена за м²",
     "status": "Статус",
@@ -144,9 +153,7 @@
     "result": "Итоговый расчёт",
     "trust": "Рассрочка напрямую от Zarafshon Sokhtmon — по договору с застройщиком.",
     "leadLabel": "Получить расчёт у менеджера",
-    "leadSubmit": "Отправить",
-    "leadName": "Расчёт рассрочки",
-    "leadMessage": "Калькулятор: {area} м², стоимость {total}, взнос {down}, срок {term} мес., платёж {monthly}/мес."
+    "leadSubmit": "Отправить"
   },
   "home": {
     "sceneLabel": "Интерактивная 3D-модель комплекса: Блок 1 и Блок 2",
@@ -177,5 +184,15 @@
     "telegram": "Написать в Telegram",
     "whatsapp": "Написать в WhatsApp",
     "call": "Позвонить"
+  },
+  "roomNames": {
+    "living": "Гостиная",
+    "bedroom": "Спальня",
+    "kitchen": "Кухня",
+    "hall": "Прихожая",
+    "bathroom": "Санузел",
+    "balcony": "Балкон",
+    "salesFloor": "Торговый зал",
+    "storage": "Склад"
   }
 }

@@ -2,6 +2,8 @@
 
 The drawings are deliberately schematic: they exist so the apartment picker works
 end-to-end before the client uploads real architectural images via the admin panel.
+They carry no words — only numbers and m² — so they read the same on the Russian and
+the Tajik site (room names are listed, translated, next to the drawing).
 
 Usage: python scripts/generate_media.py [--force]
 """
@@ -129,8 +131,7 @@ def floor_plan_svg(path: Path, commercial: bool) -> None:
         for gx in range(int(x1) + 160, int(x2), 160):
             for gy in (y1 + (y2 - y1) / 3, y1 + 2 * (y2 - y1) / 3):
                 rect((gx - 9, gy - 9, gx + 9, gy + 9), fill=wall)
-        text((x1 + x2) / 2, y1 + (y2 - y1) * 0.2, COMMERCIAL_UNIT[0], 48, wall, 700)
-        text((x1 + x2) / 2, y1 + (y2 - y1) * 0.2 + 56, "Толори савдо", 30, muted)
+        text((x1 + x2) / 2, y1 + (y2 - y1) * 0.2, f"{COMMERCIAL_UNIT[1]:.0f} м²", 44, wall, 700)
     else:
         corridor = px((PLAN_LEFT, CORRIDOR_TOP, PLAN_RIGHT, CORRIDOR_BOTTOM))
         rect(corridor, fill=svg_color((238, 234, 226)), stroke=wall, stroke_width=4)
@@ -163,10 +164,8 @@ def floor_plan_svg(path: Path, commercial: bool) -> None:
     )
     rect(outline, fill="none", stroke=wall, stroke_width=10)
 
-    title = "Ошёнаи 1 · мағоза" if commercial else "Ошёнаи намунавӣ 2–9 · 7 хона"
-    out.append(
-        f'<text x="40" y="52" font-size="26" fill="{muted}">{title} · нақшаи муваққатӣ</text>'
-    )
+    title = "1" if commercial else "2–9"
+    out.append(f'<text x="40" y="52" font-size="26" fill="{muted}">{title}</text>')
     path.write_text(
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
         f'viewBox="0 0 {w} {h}" font-family="DejaVu Sans, Arial, sans-serif">'
@@ -198,16 +197,11 @@ def unit_layout(path: Path, title: str, rooms: Sequence[tuple[str, float]], area
         d.rectangle(rect, fill=room_fill(name), outline=WALL, width=5)
         cx, cy = (rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2
         small = (rect[2] - rect[0]) < 170
-        centered_text(d, (cx, cy - 16), name, fill=INK, font=font(20 if small else 26, True))
-        centered_text(
-            d, (cx, cy + 18), f"{room_area:.1f} м²", fill=MUTED, font=font(20 if small else 24)
-        )
+        centered_text(d, (cx, cy), f"{room_area:.1f} м²", fill=INK, font=font(20 if small else 26))
     d.rectangle(outer, outline=WALL, width=12)
 
     d.text((60, 46), title, fill=INK, font=font(40, True))
-    d.text(
-        (60, 98), f"Масоҳати умумӣ {area:.2f} м² · планировка-заглушка", fill=MUTED, font=font(22)
-    )
+    d.text((60, 98), f"{area:.2f} м²", fill=MUTED, font=font(22))
     img.save(path, optimize=True)
 
 
@@ -225,11 +219,10 @@ def unit_blueprint(path: Path, title: str, rooms: Sequence[tuple[str, float]], a
     ox, oy = (w - rw * scale) / 2, (h - rh * scale) / 2 + 20
     outer = (ox, oy, ox + rw * scale, oy + rh * scale)
 
-    for rect, name, room_area in treemap(outer, sorted(rooms, key=lambda t: -t[1])):
+    for rect, _name, room_area in treemap(outer, sorted(rooms, key=lambda t: -t[1])):
         d.rectangle(rect, outline=BP_LINE, width=3)
         cx, cy = (rect[0] + rect[2]) / 2, (rect[1] + rect[3]) / 2
-        centered_text(d, (cx, cy - 12), name, fill=BP_LINE, font=font(18))
-        centered_text(d, (cx, cy + 14), f"{room_area:.1f}", fill=BP_LINE, font=font(18))
+        centered_text(d, (cx, cy), f"{room_area:.1f}", fill=BP_LINE, font=font(18))
     d.rectangle(outer, outline=BP_LINE, width=8)
 
     # Dimension lines (mm)
@@ -255,7 +248,7 @@ def unit_blueprint(path: Path, title: str, rooms: Sequence[tuple[str, float]], a
     d.text((tb[0] + 16, tb[1] + 12), title, fill=BP_LINE, font=font(22, True))
     d.text(
         (tb[0] + 16, tb[1] + 46),
-        "М 1:100 · нақшаи сохтмонӣ · заглушка",
+        f"1:100 · {area:.2f} м²",
         fill=BP_LINE,
         font=font(16),
     )
@@ -271,7 +264,7 @@ def generate(force: bool = False) -> None:
         (MEDIA / SHOP_PLAN, lambda p: floor_plan_svg(p, commercial=True)),
     ]
     for apt in APARTMENTS:
-        title = f"Хонаи {apt.number}"
+        title = f"№ {apt.number}"
         jobs.append(
             (
                 MEDIA / f"units/layout_{apt.number}.png",
@@ -284,17 +277,17 @@ def generate(force: bool = False) -> None:
                 lambda p, t=title, a=apt: unit_blueprint(p, t, a.rooms_detail, a.area),
             )
         )
-    name, area, rooms = COMMERCIAL_UNIT
+    _, area, rooms = COMMERCIAL_UNIT
     jobs.append(
         (
             MEDIA / "units/layout_commercial_ground.png",
-            lambda p: unit_layout(p, name, rooms, area),
+            lambda p: unit_layout(p, "№ 1", rooms, area),
         )
     )
     jobs.append(
         (
             MEDIA / "units/blueprint_commercial_ground.png",
-            lambda p: unit_blueprint(p, name, rooms, area),
+            lambda p: unit_blueprint(p, "№ 1", rooms, area),
         )
     )
 

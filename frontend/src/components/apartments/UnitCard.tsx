@@ -9,6 +9,7 @@ import { mediaUrl } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatArea, formatMoney } from "@/lib/format";
 import type { UnitListItem } from "@/lib/types";
+import { useUnitName } from "@/lib/unit-names";
 
 import { unitTotal } from "./price";
 
@@ -23,6 +24,7 @@ type Props = {
 export function UnitCard({ unit, blockName, hovered, onHover, onSelect }: Props) {
   const t = useTranslations("apartments");
   const ts = useTranslations("status");
+  const unitName = useUnitName();
   const total = unitTotal(unit);
   const sold = unit.status === "sold";
   const image = mediaUrl(unit.layout_image);
@@ -52,7 +54,7 @@ export function UnitCard({ unit, blockName, hovered, onHover, onSelect }: Props)
               sold && "text-muted",
             )}
           >
-            {unit.name}
+            {unitName(unit.name)}
           </span>
         </span>
         <StatusBadge status={unit.status} label={ts(unit.status)} className="shrink-0" />

@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Menu, Phone, X } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { buttonClasses } from "@/components/ui/Button";
@@ -22,6 +22,7 @@ import { Logo } from "./Logo";
  */
 export function Header({ overlay = false }: { overlay?: boolean }) {
   const locale = useLocale() as Locale;
+  const tc = useTranslations("common");
   const pathname = usePathname();
   const { scrollY } = useScroll();
   const [scrolled, setScrolled] = useState(false);
@@ -90,7 +91,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
           <Logo size="lg" className="shrink-0" />
 
           {/* The items at 16px only fit from the `nav` breakpoint (1400px); below it, the burger. */}
-          <nav aria-label="Основная навигация" className="ml-auto hidden nav:block">
+          <nav aria-label={tc("mainNav")} className="ml-auto hidden nav:block">
             <ul className="flex items-center gap-1">
               {/* The logo already links home, so the desktop bar skips «Главная». */}
               {site.nav
@@ -193,7 +194,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             </div>
             <nav
               data-lenis-prevent
-              aria-label="Мобильная навигация"
+              aria-label={tc("mobileNav")}
               className="relative container-page flex-1 overflow-y-auto py-6"
             >
               <ul className="space-y-1">

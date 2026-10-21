@@ -8,6 +8,7 @@ import { useEffect, useId, useState, type FormEvent, type ReactNode } from "reac
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
+import { site } from "@/content/site";
 import { api, ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatMoney, isValidTjPhone, maskTjPhone } from "@/lib/format";
@@ -102,9 +103,9 @@ export function CalculatorModal({
     mutationFn: () =>
       api.createLead({
         unit_id: unitId,
-        name: t("leadName"),
+        name: site.calculatorLead.name,
         phone: phone.replace(/\s/g, ""),
-        message: t("leadMessage", {
+        message: site.calculatorLead.message({
           area: area.toFixed(1),
           total: formatMoney(total),
           down: `${down}% (${formatMoney(downAmount)})`,

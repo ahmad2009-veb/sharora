@@ -28,6 +28,7 @@ import { Link } from "@/i18n/navigation";
 import { mediaUrl } from "@/lib/api";
 import { setInterestUnit } from "@/lib/contact-context";
 import { formatArea, formatMoney } from "@/lib/format";
+import { useRoomName, useUnitName } from "@/lib/unit-names";
 
 import { ErrorState } from "./ErrorState";
 import { LeadForm } from "./LeadForm";
@@ -43,6 +44,8 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
   const ts = useTranslations("status");
   const tc = useTranslations("common");
   const toast = useToast();
+  const unitName = useUnitName();
+  const roomName = useRoomName();
   const [view, setView] = useState<View>("layout");
   // Keep showing the last unit while the modal animates out.
   const [shownId, setShownId] = useState(unitId);
@@ -55,7 +58,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
   // Lets the mobile «Заявка» sheet prefill messenger texts with this apartment.
   const interest =
     unitId !== null && unit
-      ? `${unit.name}, ${ta("blockN", { n: unit.block_letter })}, ${ta("floorN", { n: unit.floor_number })}, ${unit.area.toFixed(2)} м²`
+      ? `${unitName(unit.name)}, ${ta("blockN", { n: unit.block_letter })}, ${ta("floorN", { n: unit.floor_number })}, ${unit.area.toFixed(2)} м²`
       : null;
   useEffect(() => {
     setInterestUnit(interest);
@@ -74,7 +77,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: unit?.name, url });
+        await navigator.share({ title: unit ? unitName(unit.name) : undefined, url });
       } else {
         await navigator.clipboard.writeText(url);
         toast(t("linkCopied"), "success");
@@ -95,7 +98,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
       title={
         unit ? (
           <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            {unit.name}
+            {unitName(unit.name)}
             <span className="text-base font-semibold text-muted">
               {ta("blockN", { n: unit.block_letter })} · {ta("floorN", { n: unit.floor_number })}
             </span>
@@ -214,7 +217,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
                     {/* eslint-disable-next-line @next/next/no-img-element -- zoomable drawing served by the API */}
                     <img
                       src={image}
-                      alt={`${t(view)}: ${unit.name}`}
+                      alt={`${t(view)}: ${unitName(unit.name)}`}
                       className="block h-auto w-full"
                       draggable={false}
                     />
@@ -260,9 +263,9 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
                 <ul className="mt-3 space-y-2 rounded-2xl bg-sand p-4 text-[15px]">
                   {unit.rooms_detail.map((r, i) => (
                     <li key={`${r.name}-${i}`} className="flex items-center justify-between gap-4">
-                      <span lang="tg" className="flex items-center gap-2 text-muted">
+                      <span className="flex items-center gap-2 text-muted">
                         <span aria-hidden className="size-1.5 rounded-full bg-gold-soft" />
-                        {r.name}
+                        {roomName(r.name)}
                       </span>
                       <span className="font-semibold tabular-nums">{formatArea(r.area)}</span>
                     </li>

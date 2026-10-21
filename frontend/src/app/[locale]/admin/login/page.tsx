@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
           </p>
         </div>
       </div>
-      <div className="grid place-items-center px-4 py-12">
+      <div className="grid place-items-center px-4 py-12 max-md:pt-[max(2.5rem,env(safe-area-inset-top))] max-md:pb-[max(2rem,env(safe-area-inset-bottom))]">
         <LoginForm />
       </div>
     </main>

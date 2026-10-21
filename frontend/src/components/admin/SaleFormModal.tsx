@@ -20,7 +20,7 @@ import {
 import type { PaymentType, Sale, SaleInput } from "@/lib/types";
 
 import { ConfirmDialog } from "./ConfirmDialog";
-import { inputClass, labelClass } from "./ui";
+import { inputClass, labelClass, sheetActionsClass, sheetContentClass } from "./ui";
 
 export type SaleUnit = {
   id: number;
@@ -120,7 +120,7 @@ function Field({
           {error}
         </p>
       ) : (
-        hint && <p className="mt-1.5 text-xs text-muted">{hint}</p>
+        hint && <p className="mt-1.5 text-xs text-muted max-md:text-sm">{hint}</p>
       )}
     </div>
   );
@@ -149,6 +149,7 @@ export function SaleFormModal({
       title={sale ? "Данные покупателя" : "Продажа квартиры"}
       description={unit ? unitSubtitle(unit) : undefined}
       size="lg"
+      sheet
     >
       {unit && (
         <SaleForm
@@ -339,13 +340,13 @@ function SaleForm({
   );
   const pill = (active: boolean) =>
     cn(
-      "h-11 rounded-xl px-4 text-sm font-bold transition-colors",
+      "h-11 rounded-xl px-4 text-sm font-bold transition-colors max-md:h-12 max-md:px-2 max-md:text-[15px]",
       active ? "bg-ink text-gold" : "bg-sand text-ink hover:bg-sand-deep",
     );
 
   return (
-    <form onSubmit={onSubmit} noValidate className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <form onSubmit={onSubmit} noValidate className={cn("space-y-6", sheetContentClass)}>
+      <div className="grid gap-4 max-md:grid-cols-1 sm:grid-cols-2">
         <Field
           label="ФИО покупателя"
           htmlFor={ids.name}
@@ -414,8 +415,10 @@ function SaleForm({
         </Field>
       </div>
 
-      <fieldset className="space-y-4 rounded-2xl p-4 ring-1 ring-line sm:p-5">
-        <legend className="px-1.5 eyebrow text-gold-deep">Оплата</legend>
+      <fieldset className="space-y-4 rounded-2xl p-4 ring-1 ring-line max-md:-mx-1 max-md:p-3 sm:p-5">
+        <legend className="px-1.5 eyebrow text-gold-deep max-md:text-sm max-md:tracking-[0.1em]">
+          Оплата
+        </legend>
 
         <div role="group" aria-label="Способ оплаты" className="grid grid-cols-2 gap-2">
           {(
@@ -436,7 +439,7 @@ function SaleForm({
           ))}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 max-md:grid-cols-1 sm:grid-cols-2">
           <Field
             label="Общая стоимость квартиры, сомони"
             htmlFor={ids.total}
@@ -497,7 +500,7 @@ function SaleForm({
               )}
               aria-hidden
             />
-            <span id={ids.rest} className="eyebrow">
+            <span id={ids.rest} className="eyebrow max-md:text-sm max-md:tracking-[0.1em]">
               Остаток
             </span>
           </span>
@@ -526,7 +529,7 @@ function SaleForm({
               error={show("term")}
               errorId={`${ids.term}-err`}
             >
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-md:grid max-md:grid-cols-3">
                 {TERM_PRESETS.map((n) => (
                   <button
                     key={n}
@@ -545,12 +548,12 @@ function SaleForm({
                   type="button"
                   aria-pressed={customTerm}
                   onClick={() => setCustomTerm(true)}
-                  className={pill(customTerm)}
+                  className={cn(pill(customTerm), "max-md:col-span-3")}
                 >
                   Другой срок
                 </button>
                 {customTerm && (
-                  <div className="relative w-36">
+                  <div className="relative w-36 max-md:col-span-3 max-md:w-full">
                     <input
                       id={ids.term}
                       inputMode="numeric"
@@ -574,7 +577,7 @@ function SaleForm({
               </div>
             </Field>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 max-md:grid-cols-1 sm:grid-cols-2">
               <Field
                 label="Дата первого платежа"
                 htmlFor={ids.first}
@@ -651,7 +654,12 @@ function SaleForm({
         </p>
       )}
 
-      <div className="flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end">
+      <div
+        className={cn(
+          "flex flex-col-reverse gap-3 border-t border-line pt-5 sm:flex-row sm:justify-end",
+          sheetActionsClass,
+        )}
+      >
         <Button variant="ghost" onClick={onCancel}>
           Отмена
         </Button>
@@ -701,7 +709,9 @@ function SchedulePreview({
     <div className="overflow-hidden rounded-2xl bg-sand" aria-live="polite">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 px-5 pt-4 pb-3">
         <div>
-          <p className="eyebrow text-muted">Ежемесячный платёж</p>
+          <p className="eyebrow text-muted max-md:text-sm max-md:tracking-[0.06em]">
+            Ежемесячный платёж
+          </p>
           <p className="mt-1 font-display text-3xl font-extrabold text-gold-deep tabular-nums">
             {fresh.length ? formatMoney(fresh[0].amount) : "—"}
           </p>

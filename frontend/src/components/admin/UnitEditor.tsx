@@ -1,29 +1,38 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, UserRound } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { adminApi, ApiError } from "@/lib/api";
+import { cn } from "@/lib/cn";
 import type { RoomDetail, UnitDetail, UnitStatus } from "@/lib/types";
+import { statusClasses } from "@/components/ui/status";
 
 import { ConfirmDialog } from "./ConfirmDialog";
 import { ImageUpload } from "./ImageUpload";
-import { inputClass, labelClass, STATUS_LABELS } from "./ui";
+import { inputClass, labelClass, sheetActionsClass, sheetContentClass, STATUS_LABELS } from "./ui";
+
+type ExtraActions = {
+  /** Phones: the card list has no row buttons, so delete / buyer live in the editor. */
+  onRequestDelete?: (unit: UnitDetail) => void;
+  onShowBuyer?: (unit: UnitDetail) => void;
+};
 
 export function UnitEditor({
   unit,
   onClose,
   onRequestSell,
+  ...extra
 }: {
   unit: UnitDetail | null;
   onClose: () => void;
   /** Called after the other fields are saved when «Продано» was chosen: buyer data comes next. */
   onRequestSell: (unit: UnitDetail) => void;
-}) {
+} & ExtraActions) {
   return (
     <Modal
       open={unit !== null}
@@ -31,9 +40,16 @@ export function UnitEditor({
       title={unit ? `${unit.name}` : ""}
       description={unit ? `Блок ${unit.block_letter} · ${unit.floor_label}` : undefined}
       size="lg"
+      sheet
     >
       {unit && (
-        <UnitEditorForm key={unit.id} unit={unit} onDone={onClose} onRequestSell={onRequestSell} />
+        <UnitEditorForm
+          key={unit.id}
+          unit={unit}
+          onDone={onClose}
+          onRequestSell={onRequestSell}
+          {...extra}
+        />
       )}
     </Modal>
   );
@@ -43,11 +59,13 @@ function UnitEditorForm({
   unit,
   onDone,
   onRequestSell,
+  onRequestDelete,
+  onShowBuyer,
 }: {
   unit: UnitDetail;
   onDone: () => void;
   onRequestSell: (unit: UnitDetail) => void;
-}) {
+} & ExtraActions) {
   const ids = { name: useId(), rooms: useId(), area: useId(), price: useId(), status: useId() };
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -99,8 +117,45 @@ function UnitEditorForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <form onSubmit={onSubmit} className={cn("space-y-6", sheetContentClass)}>
+      {/* Phones: a large status selector first — the most frequent change. */}
+      <fieldset className="md:hidden">
+        <legend className={labelClass}>Статус</legend>
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.keys(STATUS_LABELS) as UnitStatus[]).map((s) => {
+            const active = form.status === s;
+            return (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setForm({ ...form, status: s })}
+                className={cn(
+                  "flex h-14 flex-col items-center justify-center gap-1 rounded-2xl border-2 text-[15px] font-bold transition-colors",
+                  active
+                    ? cn(statusClasses[s].surface, statusClasses[s].text)
+                    : "border-transparent bg-sand text-muted",
+                )}
+              >
+                <span className={cn("size-2 rounded-full", statusClasses[s].dot)} aria-hidden />
+                {STATUS_LABELS[s]}
+              </button>
+            );
+          })}
+        </div>
+        {becomingSold && (
+          <p className="mt-2 text-sm text-muted">
+            После сохранения откроется форма продажи с данными покупателя.
+          </p>
+        )}
+        {leavingSold && (
+          <p className="mt-2 text-sm text-status-reserved-text">
+            Данные покупателя будут перенесены в архив.
+          </p>
+        )}
+      </fieldset>
+
+      <div className="grid gap-4 max-md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <label htmlFor={ids.name} className={labelClass}>
             Название
@@ -120,6 +175,7 @@ function UnitEditorForm({
           <input
             id={ids.rooms}
             type="number"
+            inputMode="numeric"
             min={0}
             max={10}
             className={inputClass}
@@ -134,6 +190,7 @@ function UnitEditorForm({
           <input
             id={ids.area}
             type="number"
+            inputMode="decimal"
             min={1}
             step={0.01}
             className={inputClass}
@@ -149,6 +206,7 @@ function UnitEditorForm({
           <input
             id={ids.price}
             type="number"
+            inputMode="numeric"
             min={0}
             step={10}
             placeholder="по запросу"
@@ -159,7 +217,7 @@ function UnitEditorForm({
         </div>
       </div>
 
-      <div className="max-w-xs">
+      <div className="max-w-xs max-md:hidden">
         <label htmlFor={ids.status} className={labelClass}>
           Статус
         </label>
@@ -187,7 +245,7 @@ function UnitEditorForm({
         )}
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-6 max-md:grid-cols-1 sm:grid-cols-2">
         <ImageUpload
           label="Планировка"
           subdir="units"
@@ -205,7 +263,7 @@ function UnitEditorForm({
       <fieldset>
         <legend className="flex w-full items-baseline justify-between text-sm font-medium">
           Экспликация помещений
-          <span className="text-xs font-normal text-muted tabular-nums">
+          <span className="text-xs font-normal text-muted tabular-nums max-md:text-sm">
             Сумма: {roomsSum.toFixed(2)} м²
           </span>
         </legend>
@@ -223,9 +281,10 @@ function UnitEditorForm({
               <input
                 aria-label={`Помещение ${i + 1}: площадь`}
                 type="number"
+                inputMode="decimal"
                 step={0.1}
                 min={0}
-                className={`${inputClass} w-28 shrink-0`}
+                className={`${inputClass} w-28 shrink-0 max-md:w-24`}
                 value={r.area}
                 onChange={(e) =>
                   setRooms(
@@ -247,7 +306,7 @@ function UnitEditorForm({
         <Button
           variant="ghost"
           size="sm"
-          className="mt-2"
+          className="mt-2 max-md:h-11"
           onClick={() => setRooms([...rooms, { name: "", area: 0 }])}
         >
           <Plus className="size-4" aria-hidden />
@@ -255,7 +314,26 @@ function UnitEditorForm({
         </Button>
       </fieldset>
 
-      <div className="flex justify-end gap-3 border-t border-line pt-5">
+      <div className="space-y-2 md:hidden">
+        {unit.status === "sold" && onShowBuyer && (
+          <Button variant="secondary" className="h-12 w-full" onClick={() => onShowBuyer(unit)}>
+            <UserRound className="size-4" aria-hidden />
+            Покупатель и график платежей
+          </Button>
+        )}
+        {unit.status !== "sold" && onRequestDelete && (
+          <Button
+            variant="ghost"
+            className="h-12 w-full text-status-sold-text"
+            onClick={() => onRequestDelete(unit)}
+          >
+            <Trash2 className="size-4" aria-hidden />
+            {unit.kind === "commercial" ? "Удалить магазин" : "Удалить квартиру"}
+          </Button>
+        )}
+      </div>
+
+      <div className={cn("flex justify-end gap-3 border-t border-line pt-5", sheetActionsClass)}>
         <Button variant="ghost" onClick={onDone}>
           Отмена
         </Button>

@@ -25,14 +25,14 @@ export function ConfirmDialog({
   busy?: boolean;
 }) {
   return (
-    <Modal open={open} onClose={onCancel} title={title} size="sm">
+    <Modal open={open} onClose={onCancel} title={title} size="sm" sheet="auto">
       <div className="flex gap-4">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-status-reserved-fill text-status-reserved-text">
           <TriangleAlert className="size-5" aria-hidden />
         </span>
         <p className="pt-2 text-[15px] leading-relaxed">{message}</p>
       </div>
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="mt-6 flex justify-end gap-3 max-md:grid max-md:grid-cols-2 max-md:pb-[env(safe-area-inset-bottom)] max-md:[&>*]:h-12">
         <Button variant="ghost" onClick={onCancel} data-autofocus>
           Отмена
         </Button>

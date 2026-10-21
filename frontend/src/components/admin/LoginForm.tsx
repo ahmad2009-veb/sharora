@@ -35,8 +35,8 @@ export function LoginForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="mb-8 flex items-center gap-3">
-        <span className="grid size-12 place-items-center rounded-[14px] bg-white shadow-soft ring-1 ring-gold/30">
+      <div className="mb-8 flex items-center gap-3 max-md:mb-6 max-md:flex-col max-md:text-center">
+        <span className="grid size-12 place-items-center rounded-[14px] bg-white shadow-soft ring-1 ring-gold/30 max-md:size-16 max-md:rounded-[20px]">
           <Image src="/logo.png" alt="" width={38} height={38} unoptimized />
         </span>
         <div>
@@ -48,17 +48,19 @@ export function LoginForm() {
       </div>
       <form
         onSubmit={onSubmit}
-        className="space-y-5 rounded-panel bg-white p-7 shadow-lift md:p-9"
+        className="space-y-5 rounded-panel bg-white p-7 shadow-lift max-md:rounded-[24px] max-md:p-5 md:p-9"
         noValidate
       >
         <div>
-          <h1 className="flex items-center gap-2.5 font-display text-2xl font-extrabold">
+          <h1 className="flex items-center gap-2.5 font-display text-2xl font-extrabold max-md:text-[22px]">
             <span className="grid size-10 place-items-center rounded-full bg-ink text-gold">
               <LockKeyhole className="size-5" aria-hidden />
             </span>
             Вход в панель
           </h1>
-          <p className="mt-2 text-sm text-muted">Фонд квартир, заявки и настройки калькулятора.</p>
+          <p className="mt-2 text-sm text-muted max-md:text-[15px]">
+            Фонд квартир, заявки и настройки калькулятора.
+          </p>
         </div>
         <div>
           <label htmlFor={ids.user} className={labelClass}>
@@ -103,7 +105,10 @@ export function LoginForm() {
           Войти
         </Button>
       </form>
-      <Link href="/" className="mt-6 block text-center text-sm text-muted hover:text-ink">
+      <Link
+        href="/"
+        className="mt-6 block text-center text-sm text-muted hover:text-ink max-md:mt-4 max-md:flex max-md:h-11 max-md:items-center max-md:justify-center max-md:text-[15px]"
+      >
         ← Вернуться на сайт
       </Link>
     </div>

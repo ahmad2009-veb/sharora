@@ -24,6 +24,11 @@ type Props = {
   actions?: ReactNode;
   /** Removes the body padding (content manages its own layout). */
   flush?: boolean;
+  /**
+   * Phones (< md), admin: `true` — full-screen sheet with the header pinned on top;
+   * `"auto"` — bottom sheet at content height. Both get 44px touch targets.
+   */
+  sheet?: boolean | "auto";
 };
 
 const widths = {
@@ -45,7 +50,9 @@ export function Modal({
   className,
   actions,
   flush = false,
+  sheet = false,
 }: Props) {
+  const fullSheet = sheet === true;
   const tc = useTranslations("common");
   const mounted = useMounted();
   const titleId = useId();
@@ -57,7 +64,12 @@ export function Modal({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="tabbar-offset fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
+        <div
+          className={cn(
+            "tabbar-offset fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6",
+            fullSheet && "max-md:p-0",
+          )}
+        >
           <motion.div
             className="absolute inset-0 bg-ink/80 backdrop-blur-xl"
             initial={{ opacity: 0 }}
@@ -80,6 +92,8 @@ export function Modal({
             className={cn(
               "relative flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-t-panel bg-white shadow-deep outline-none sm:max-h-[92dvh] sm:rounded-panel",
               widths[size],
+              fullSheet &&
+                "max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:max-w-none max-md:rounded-none",
               className,
             )}
           >
@@ -87,11 +101,20 @@ export function Modal({
               aria-hidden
               className="h-1 w-full shrink-0 bg-gradient-to-r from-on-gold via-gold to-on-gold"
             />
-            <header className="flex items-center justify-between gap-4 border-b border-line px-5 py-4 md:px-8 md:py-5">
+            <header
+              className={cn(
+                "flex items-center justify-between gap-4 border-b border-line px-5 py-4 md:px-8 md:py-5",
+                fullSheet &&
+                  "max-md:px-4 max-md:py-3 max-md:pt-[max(0.75rem,env(safe-area-inset-top))]",
+              )}
+            >
               <div className="min-w-0">
                 <h2
                   id={titleId}
-                  className="font-display text-xl font-extrabold tracking-tight md:text-2xl"
+                  className={cn(
+                    "font-display text-xl font-extrabold tracking-tight md:text-2xl",
+                    fullSheet && "max-md:text-lg max-md:leading-tight",
+                  )}
                 >
                   {title}
                 </h2>
@@ -107,7 +130,10 @@ export function Modal({
                   type="button"
                   onClick={onClose}
                   aria-label={closeLabel ?? tc("close")}
-                  className="ml-1 grid size-10 place-items-center rounded-full bg-sand text-ink transition-all hover:scale-105 hover:bg-sand-deep"
+                  className={cn(
+                    "ml-1 grid size-10 place-items-center rounded-full bg-sand text-ink transition-all hover:scale-105 hover:bg-sand-deep",
+                    sheet && "max-md:size-11",
+                  )}
                 >
                   <X className="size-5" aria-hidden />
                 </button>
@@ -118,6 +144,7 @@ export function Modal({
               className={cn(
                 "overflow-y-auto overscroll-contain",
                 !flush && "px-5 py-5 md:px-8 md:py-6",
+                fullSheet && "max-md:flex max-md:flex-1 max-md:flex-col max-md:px-4",
               )}
             >
               {children}

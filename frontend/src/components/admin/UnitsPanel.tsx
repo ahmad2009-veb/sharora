@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarClock,
+  ChevronRight,
   CircleDollarSign,
   Clock,
   KeyRound,
@@ -10,11 +11,15 @@ import {
   PhoneCall,
   Plus,
   Search,
+  SlidersHorizontal,
   Trash2,
   UserRound,
+  X,
 } from "lucide-react";
-import { useId, useState } from "react";
+import { useId, useState, type CSSProperties } from "react";
 
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { statusClasses } from "@/components/ui/status";
 import { useToast } from "@/components/ui/Toast";
@@ -27,7 +32,15 @@ import { BuyerInfoModal, type BuyerTarget } from "./BuyerInfoModal";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { SaleFormModal, type SaleUnit } from "./SaleFormModal";
 import { UnitEditor } from "./UnitEditor";
-import { inputClass, labelClass, STATUS_LABELS } from "./ui";
+import {
+  chipClass,
+  chipRowClass,
+  inputClass,
+  labelClass,
+  sheetActionsClass,
+  sheetContentClass,
+  STATUS_LABELS,
+} from "./ui";
 
 function NumberCell({
   value,
@@ -82,6 +95,7 @@ function Kpi({
   color,
   Icon,
   onClick,
+  className,
 }: {
   label: string;
   value: string;
@@ -90,27 +104,96 @@ function Kpi({
   Icon: typeof KeyRound;
   /** Makes the whole card a button (e.g. jump to the filtered list). */
   onClick?: () => void;
+  className?: string;
 }) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
       {...(onClick ? { type: "button" as const, onClick } : {})}
-      className="block w-full rounded-card bg-white p-5 text-left shadow-soft transition-shadow hover:shadow-lift focus-visible:ring-2 focus-visible:ring-gold-soft focus-visible:outline-none md:p-6"
+      // --kpi tints the icon on phones.
+      style={{ "--kpi": color } as CSSProperties}
+      className={cn(
+        "block w-full rounded-card bg-white p-5 text-left shadow-soft transition-shadow hover:shadow-lift focus-visible:ring-2 focus-visible:ring-gold-soft focus-visible:outline-none max-md:rounded-[20px] max-md:p-4 md:p-6",
+        className,
+      )}
     >
-      <span className="flex items-center justify-between">
-        <span className="eyebrow text-muted">{label}</span>
-        <span className="grid size-9 place-items-center rounded-full bg-sand">
+      <span className="flex items-center justify-between max-md:items-start max-md:gap-2">
+        <span className="eyebrow text-muted max-md:text-sm max-md:leading-tight max-md:font-semibold max-md:tracking-normal max-md:normal-case">
+          {label}
+        </span>
+        <span className="grid size-9 place-items-center rounded-full bg-sand max-md:shrink-0 max-md:bg-[color-mix(in_oklab,var(--kpi)_12%,white)] max-md:text-[var(--kpi)]">
           <Icon className="size-4" aria-hidden />
         </span>
       </span>
       <span
-        className="mt-4 block font-display text-4xl font-extrabold tracking-tight tabular-nums"
+        className="mt-4 block font-display text-4xl font-extrabold tracking-tight tabular-nums max-md:mt-2 max-md:text-[2rem]"
         style={{ color }}
       >
         {value}
       </span>
       <span className="mt-1 block text-sm text-muted">{sub}</span>
     </Tag>
+  );
+}
+
+function UnitStatusChip({ status }: { status: UnitStatus }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-sm font-bold",
+        statusClasses[status].surface,
+        statusClasses[status].text,
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", statusClasses[status].dot)} aria-hidden />
+      {STATUS_LABELS[status]}
+    </span>
+  );
+}
+
+const ROOMS_OPTIONS: { value: RoomsFilter; label: string }[] = [
+  { value: "", label: "Все" },
+  { value: "1", label: "1-комн." },
+  { value: "2", label: "2-комн." },
+  { value: "3", label: "3-комн." },
+  { value: "4", label: "4-комн." },
+  { value: "commercial", label: "Магазин" },
+];
+
+/** Big option buttons for the phone filter sheet. */
+function OptionGrid<T extends string | number | undefined>({
+  label,
+  options,
+  value,
+  onChange,
+  cols,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+  cols: string;
+}) {
+  return (
+    <fieldset>
+      <legend className={labelClass}>{label}</legend>
+      <div className={cn("grid gap-2", cols)}>
+        {options.map((o) => (
+          <button
+            key={String(o.value)}
+            type="button"
+            aria-pressed={o.value === value}
+            onClick={() => onChange(o.value)}
+            className={cn(
+              "h-12 rounded-xl px-2 text-[15px] font-bold transition-colors",
+              o.value === value ? "bg-ink text-gold" : "bg-sand text-ink active:bg-sand-deep",
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 
@@ -142,6 +225,7 @@ export function UnitsPanel({
   const [selling, setSelling] = useState<SaleUnit | null>(null);
   const [unselling, setUnselling] = useState<{ unit: UnitDetail; status: UnitStatus } | null>(null);
   const [buyer, setBuyer] = useState<BuyerTarget | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function changeStatus(u: UnitDetail, next: UnitStatus) {
     if (next === u.status) return;
@@ -174,6 +258,14 @@ export function UnitsPanel({
           ? u.kind === "commercial"
           : u.kind === "apartment" && u.rooms === Number(roomsFilter))),
   );
+  const activeFilters = [floorNumber !== undefined, !!status, roomsFilter !== ""].filter(
+    Boolean,
+  ).length;
+  const resetFilters = () => {
+    setFloorNumber(undefined);
+    setStatus(undefined);
+    setRoomsFilter("");
+  };
   const soldValue = units.data
     ?.filter((u) => u.status === "sold" && u.price_per_m2)
     .reduce((sum, u) => sum + u.area * u.price_per_m2!, 0);
@@ -227,7 +319,7 @@ export function UnitsPanel({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      <div className="grid gap-4 max-md:grid-cols-2 max-md:gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <Kpi
           label="Свободно к продаже"
           value={stats.data ? formatNumber(stats.data.free) : "—"}
@@ -261,6 +353,7 @@ export function UnitsPanel({
           Icon={PhoneCall}
         />
         <Kpi
+          className="max-md:col-span-2"
           onClick={onOverdueClick}
           label="Просроченные платежи"
           value={overdue ? formatNumber(overdue.count) : "—"}
@@ -274,7 +367,197 @@ export function UnitsPanel({
         />
       </div>
 
-      <div className="flex flex-col gap-4 rounded-card bg-white p-4 shadow-soft md:p-5">
+      {/* Phones: search, sticky filter chips and a list of cards instead of the table. */}
+      <section aria-label={`Квартиры блока ${block}`} className="space-y-3 md:hidden">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted"
+            aria-hidden
+          />
+          <input
+            type="search"
+            aria-label="Поиск"
+            placeholder="Номер квартиры или этаж…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={cn(inputClass, "bg-white pl-12 shadow-soft")}
+          />
+        </div>
+        <div className="sticky top-[calc(3.75rem+env(safe-area-inset-top))] z-30 -mx-4 bg-sand/90 py-2 backdrop-blur-md">
+          <div className={chipRowClass}>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className={cn(chipClass(activeFilters > 0), "pr-3")}
+            >
+              <SlidersHorizontal className="size-4" aria-hidden />
+              Фильтры
+              {activeFilters > 0 && (
+                <span className="grid size-5 place-items-center rounded-full bg-gold text-[11px] text-on-gold">
+                  {activeFilters}
+                </span>
+              )}
+            </button>
+            {blocks.data?.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                aria-pressed={b.letter === block}
+                onClick={() => {
+                  setBlock(b.letter);
+                  setFloorNumber(undefined);
+                }}
+                className={chipClass(b.letter === block)}
+              >
+                Блок {b.letter}
+                <span
+                  className={cn(
+                    "text-[13px] font-semibold tabular-nums",
+                    b.letter === block ? "text-mist" : "text-muted",
+                  )}
+                >
+                  {b.free_count} своб.
+                </span>
+              </button>
+            ))}
+            {selectedFloor && (
+              <button
+                type="button"
+                onClick={() => setFloorNumber(undefined)}
+                aria-label={`Сбросить фильтр: ${floorName(selectedFloor)}`}
+                className={chipClass(true)}
+              >
+                {floorName(selectedFloor)}
+                <X className="size-4" aria-hidden />
+              </button>
+            )}
+            {status && (
+              <button
+                type="button"
+                onClick={() => setStatus(undefined)}
+                aria-label={`Сбросить фильтр: ${STATUS_LABELS[status]}`}
+                className={chipClass(true)}
+              >
+                {STATUS_LABELS[status]}
+                <X className="size-4" aria-hidden />
+              </button>
+            )}
+            {roomsFilter && (
+              <button
+                type="button"
+                onClick={() => setRoomsFilter("")}
+                aria-label="Сбросить фильтр комнат"
+                className={chipClass(true)}
+              >
+                {ROOMS_OPTIONS.find((o) => o.value === roomsFilter)?.label}
+                <X className="size-4" aria-hidden />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <p className="text-sm text-muted">
+            {rows ? (
+              <>
+                Найдено: <span className="font-semibold text-ink">{rows.length}</span> из{" "}
+                {units.data?.length ?? 0}
+              </>
+            ) : (
+              ""
+            )}
+          </p>
+          {selectedFloor && (
+            <button
+              type="button"
+              onClick={() => create.mutate(selectedFloor)}
+              disabled={create.isPending}
+              className="flex h-11 items-center gap-2 rounded-full bg-ink px-4 text-sm font-bold text-white disabled:opacity-60"
+            >
+              <Plus className="size-4" aria-hidden />
+              {selectedFloor.kind === "commercial" ? "Магазин" : "Квартира"}
+            </button>
+          )}
+        </div>
+
+        <ul className="space-y-3">
+          {units.isPending
+            ? Array.from({ length: 5 }, (_, i) => (
+                <li key={i}>
+                  <Skeleton className="h-32 rounded-[20px]" />
+                </li>
+              ))
+            : rows?.map((u) => (
+                <li
+                  key={u.id}
+                  className={cn(
+                    "relative overflow-hidden rounded-[20px] bg-white p-4 shadow-soft ring-1 ring-ink/5",
+                    u.status === "sold" && "pl-5",
+                  )}
+                >
+                  {u.status === "sold" && (
+                    <span
+                      aria-hidden
+                      className="absolute inset-y-0 left-0 w-1 bg-status-sold-line"
+                    />
+                  )}
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 text-[15px] leading-snug">
+                      {/* The whole card opens the editor; «Покупатель» sits above it. */}
+                      <button
+                        type="button"
+                        onClick={() => setEditing(u)}
+                        className="text-left font-display text-[17px] font-extrabold after:absolute after:inset-0 after:content-['']"
+                      >
+                        {u.name}
+                      </button>
+                      <span className="text-muted">
+                        {" "}
+                        · Блок {u.block_letter} · {u.floor_label}
+                        {u.kind === "commercial" && " · Магазин"}
+                      </span>
+                    </p>
+                    <UnitStatusChip status={u.status} />
+                  </div>
+                  <dl className="mt-3 grid grid-cols-[auto_auto_1fr] gap-x-5 gap-y-0.5 text-sm">
+                    <dt className="text-muted">Площадь</dt>
+                    <dt className="text-muted">Комнат</dt>
+                    <dt className="text-right text-muted">Стоимость</dt>
+                    <dd className="font-semibold tabular-nums">{formatNumber(u.area)} м²</dd>
+                    <dd className="font-semibold tabular-nums">
+                      {u.kind === "commercial" ? "—" : (u.rooms ?? "—")}
+                    </dd>
+                    <dd className="text-right font-display text-base font-extrabold tabular-nums">
+                      {u.price_per_m2 ? formatMoney(u.area * u.price_per_m2) : "по запросу"}
+                    </dd>
+                  </dl>
+                  {u.status === "sold" && (
+                    <button
+                      type="button"
+                      onClick={() => setBuyer({ unit: u })}
+                      className="relative z-10 mt-3 flex h-11 w-full items-center gap-2 rounded-xl bg-status-sold-fill px-3 text-sm font-bold text-status-sold-text"
+                    >
+                      <UserRound className="size-4" aria-hidden />
+                      Покупатель и платежи
+                      <ChevronRight className="ml-auto size-4" aria-hidden />
+                    </button>
+                  )}
+                </li>
+              ))}
+        </ul>
+        {rows?.length === 0 && (
+          <div className="rounded-[20px] bg-white px-5 py-10 text-center shadow-soft">
+            <p className="font-display text-lg font-extrabold">Ничего не найдено</p>
+            {activeFilters > 0 && (
+              <Button variant="ghost" className="mt-3" onClick={resetFilters}>
+                Сбросить фильтры
+              </Button>
+            )}
+          </div>
+        )}
+      </section>
+
+      <div className="flex flex-col gap-4 rounded-card bg-white p-4 shadow-soft max-md:hidden md:p-5">
         <div
           role="group"
           aria-label="Блок"
@@ -415,7 +698,7 @@ export function UnitsPanel({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-card bg-white shadow-soft">
+      <div className="overflow-hidden rounded-card bg-white shadow-soft max-md:hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-[15px]">
             <caption className="sr-only">Квартиры блока {block}</caption>
@@ -560,12 +843,85 @@ export function UnitsPanel({
         </p>
       </div>
 
+      <Modal
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Фильтры"
+        description={`Блок ${block}`}
+        sheet
+      >
+        <div className={cn("space-y-6", sheetContentClass)}>
+          <OptionGrid
+            label="Блок"
+            cols="grid-cols-2"
+            value={block}
+            onChange={(v) => {
+              setBlock(v);
+              setFloorNumber(undefined);
+            }}
+            options={(blocks.data ?? []).map((b) => ({
+              value: b.letter,
+              label: `Блок ${b.letter}`,
+            }))}
+          />
+          <OptionGrid<number | undefined>
+            label="Этаж"
+            cols="grid-cols-5"
+            value={floorNumber}
+            onChange={setFloorNumber}
+            options={[
+              { value: undefined, label: "Все" },
+              ...(floors.data ?? []).map((f) => ({ value: f.number, label: String(f.number) })),
+            ]}
+          />
+          <OptionGrid<UnitStatus | undefined>
+            label="Статус"
+            cols="grid-cols-2"
+            value={status}
+            onChange={setStatus}
+            options={[
+              { value: undefined, label: "Все" },
+              ...(Object.keys(STATUS_LABELS) as UnitStatus[]).map((s) => ({
+                value: s,
+                label: STATUS_LABELS[s],
+              })),
+            ]}
+          />
+          <OptionGrid
+            label="Комнаты"
+            cols="grid-cols-3"
+            value={roomsFilter}
+            onChange={setRoomsFilter}
+            options={ROOMS_OPTIONS}
+          />
+          <p className="text-sm text-muted">
+            Выберите этаж, чтобы добавить на нём квартиру или магазин.
+          </p>
+          <div className={sheetActionsClass}>
+            <Button variant="ghost" onClick={resetFilters} disabled={activeFilters === 0}>
+              Сбросить
+            </Button>
+            <Button variant="dark" onClick={() => setFiltersOpen(false)}>
+              Показать{rows ? `: ${rows.length}` : ""}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       <UnitEditor
         unit={editing}
         onClose={() => setEditing(null)}
         onRequestSell={(u) => {
           setEditing(null);
           setSelling(u);
+        }}
+        onRequestDelete={(u) => {
+          setEditing(null);
+          setRemoving(u);
+        }}
+        onShowBuyer={(u) => {
+          setEditing(null);
+          setBuyer({ unit: u });
         }}
       />
       <SaleFormModal unit={selling} onClose={() => setSelling(null)} />

@@ -32,7 +32,7 @@ export function LeadsPanel() {
     <div className="space-y-6">
       <Tabs
         label="Фильтр заявок"
-        className="bg-white shadow-soft"
+        className="bg-white shadow-soft max-md:flex max-md:w-full max-md:[&>button]:h-11 max-md:[&>button]:flex-1 max-md:[&>button]:px-2"
         value={filter}
         onChange={setFilter}
         items={[
@@ -60,7 +60,7 @@ export function LeadsPanel() {
             <li
               key={lead.id}
               className={cn(
-                "relative flex flex-col gap-4 overflow-hidden rounded-card bg-white p-5 pl-7 shadow-soft transition-shadow hover:shadow-lift md:flex-row md:items-center",
+                "relative flex flex-col gap-4 overflow-hidden rounded-card bg-white p-5 pl-7 shadow-soft transition-shadow hover:shadow-lift max-md:gap-3 max-md:rounded-[20px] max-md:p-4 max-md:pl-5 md:flex-row md:items-center",
                 lead.processed && "opacity-70",
               )}
             >
@@ -79,13 +79,13 @@ export function LeadsPanel() {
                   <span className="font-display text-lg font-extrabold">{lead.name}</span>
                   <a
                     href={`tel:${lead.phone}`}
-                    className="flex items-center gap-1.5 rounded-full bg-sand px-3 py-0.5 text-sm font-semibold text-ink tabular-nums hover:bg-ink hover:text-gold"
+                    className="flex items-center gap-1.5 rounded-full bg-sand px-3 py-0.5 text-sm font-semibold text-ink tabular-nums hover:bg-ink hover:text-gold max-md:mt-1 max-md:h-11 max-md:px-4 max-md:text-[15px]"
                   >
                     <Phone className="size-3.5" aria-hidden />
                     {formatPhone(lead.phone)}
                   </a>
                 </p>
-                <p className="mt-1 text-sm text-muted">
+                <p className="mt-1 text-sm text-muted max-md:mt-2">
                   {dateFormat.format(
                     new Date(lead.created_at + (lead.created_at.endsWith("Z") ? "" : "Z")),
                   )}
@@ -98,6 +98,7 @@ export function LeadsPanel() {
               <Button
                 variant={lead.processed ? "ghost" : "dark"}
                 size="sm"
+                className={cn("max-md:h-11 max-md:w-full", lead.processed && "max-md:bg-sand")}
                 onClick={() => toggle.mutate({ id: lead.id, value: !lead.processed })}
               >
                 {lead.processed ? (

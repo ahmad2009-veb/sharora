@@ -41,7 +41,7 @@ function SettingsForm({ initial }: { initial: CalculatorSettings }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="max-w-xl space-y-5 overflow-hidden rounded-card bg-white p-6 shadow-soft md:p-8"
+      className="max-w-xl space-y-5 overflow-hidden rounded-card bg-white p-6 shadow-soft max-md:rounded-[20px] max-md:p-4 md:p-8"
     >
       <div>
         <h2 className="font-display text-xl font-extrabold">Калькулятор рассрочки</h2>
@@ -56,6 +56,7 @@ function SettingsForm({ initial }: { initial: CalculatorSettings }) {
         <input
           id={ids.price}
           type="number"
+          inputMode="numeric"
           min={1}
           step={10}
           required
@@ -71,6 +72,7 @@ function SettingsForm({ initial }: { initial: CalculatorSettings }) {
         <input
           id={ids.down}
           type="number"
+          inputMode="numeric"
           min={0}
           max={100}
           required
@@ -86,6 +88,7 @@ function SettingsForm({ initial }: { initial: CalculatorSettings }) {
         <input
           id={ids.term}
           type="number"
+          inputMode="numeric"
           min={1}
           max={360}
           required
@@ -94,7 +97,7 @@ function SettingsForm({ initial }: { initial: CalculatorSettings }) {
           onChange={(e) => setForm({ ...form, max_term_months: Number(e.target.value) })}
         />
       </div>
-      <Button type="submit" size="lg" disabled={save.isPending}>
+      <Button type="submit" size="lg" disabled={save.isPending} className="max-md:w-full">
         {save.isPending && <Loader2 className="size-4 animate-spin" aria-hidden />}
         Сохранить
       </Button>

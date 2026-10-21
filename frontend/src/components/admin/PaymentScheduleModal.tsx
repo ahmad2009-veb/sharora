@@ -26,7 +26,8 @@ import type { Payment, PaymentStatus, Schedule } from "@/lib/types";
 
 import { ConfirmDialog } from "./ConfirmDialog";
 import { MoneyInput, today } from "./SaleFormModal";
-import { inputClass } from "./ui";
+import { inputClass, sheetActionsBase } from "./ui";
+import { useIsMobile } from "./useIsMobile";
 
 const STATUS_STYLES: Record<PaymentStatus, string> = {
   pending: "bg-sand text-ink",
@@ -38,7 +39,7 @@ function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap",
+        "inline-flex rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap max-md:text-sm",
         STATUS_STYLES[status],
       )}
     >
@@ -69,6 +70,7 @@ export function PaymentScheduleModal({
       title="График платежей"
       description={data ? data.sale.buyer_name : undefined}
       size="xl"
+      sheet
     >
       {!data ? (
         <div className="space-y-3">
@@ -77,7 +79,7 @@ export function PaymentScheduleModal({
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-md:hidden">
             <a
               href={adminApi.exportUrl(data.sale.id, "xlsx")}
               download
@@ -114,9 +116,47 @@ export function PaymentScheduleModal({
           )}
         </div>
       )}
+      {data && (
+        // Phones: downloads and print pinned to the bottom of the sheet.
+        <div
+          className={cn(
+            "md:hidden",
+            sheetActionsBase,
+            "max-md:grid-cols-3 max-md:[&>*]:flex-col max-md:[&>*]:gap-0.5 max-md:[&>*]:px-1 max-md:[&>*]:text-sm",
+          )}
+        >
+          <a
+            href={adminApi.exportUrl(data.sale.id, "xlsx")}
+            download
+            className={buttonClasses("secondary", "md")}
+          >
+            <FileSpreadsheet className="size-5 text-status-free-text" aria-hidden />
+            Excel
+          </a>
+          <a
+            href={adminApi.exportUrl(data.sale.id, "docx")}
+            download
+            className={buttonClasses("secondary", "md")}
+          >
+            <FileText className="size-5 text-[#2b579a]" aria-hidden />
+            Word
+          </a>
+          <Link
+            href={`/admin/schedule/${data.sale.id}?print=1`}
+            target="_blank"
+            className={buttonClasses("secondary", "md")}
+          >
+            <Printer className="size-5" aria-hidden />
+            Печать
+          </Link>
+        </div>
+      )}
     </Modal>
   );
 }
+
+const summaryLabel =
+  "eyebrow text-muted max-md:text-sm max-md:font-medium max-md:tracking-normal max-md:normal-case";
 
 function ScheduleSummaryGrid({ schedule }: { schedule: Schedule }) {
   const { sale } = schedule;
@@ -131,15 +171,15 @@ function ScheduleSummaryGrid({ schedule }: { schedule: Schedule }) {
           Просрочено платежей: {sale.overdue_count} на сумму {formatMoney(sale.overdue_amount)}
         </p>
       )}
-      <dl className="grid gap-px overflow-hidden rounded-2xl bg-line sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="grid gap-px overflow-hidden rounded-2xl bg-line max-md:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4">
         {scheduleSummary(sale).map(([k, v]) => (
-          <div key={k} className="bg-white px-4 py-3">
-            <dt className="eyebrow text-muted">{k}</dt>
+          <div key={k} className="bg-white px-4 py-3 max-md:px-3">
+            <dt className={summaryLabel}>{k}</dt>
             <dd className="mt-1 font-semibold tabular-nums">{v}</dd>
           </div>
         ))}
-        <div className="bg-white px-4 py-3">
-          <dt className="eyebrow text-muted">Оплачено всего</dt>
+        <div className="bg-white px-4 py-3 max-md:px-3">
+          <dt className={summaryLabel}>Оплачено всего</dt>
           <dd className="mt-1 font-semibold text-status-free-text tabular-nums">
             {formatMoney(sale.paid_total)}
           </dd>
@@ -176,87 +216,227 @@ function ScheduleTable({ schedule }: { schedule: Schedule }) {
 
   const totalAmount = payments.reduce((s, p) => s + p.amount, 0);
   const totalPaid = payments.reduce((s, p) => s + p.paid_amount, 0);
+  const isMobile = useIsMobile();
+  const payingPayment = payments.find((p) => p.id === paying);
 
   return (
-    <div className="overflow-hidden rounded-2xl ring-1 ring-line">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-[15px]">
-          <caption className="sr-only">График платежей</caption>
-          <thead>
-            <tr className="bg-sand text-left text-[11px] font-bold tracking-[0.12em] text-muted uppercase">
-              <th scope="col" className="px-4 py-3">
-                №
-              </th>
-              <th scope="col" className="px-3 py-3">
-                Дата платежа
-              </th>
-              <th scope="col" className="px-3 py-3 text-right">
-                Сумма платежа
-              </th>
-              <th scope="col" className="px-3 py-3 text-right">
-                Оплачено
-              </th>
-              <th scope="col" className="px-3 py-3 text-right">
-                Остаток долга после платежа
-              </th>
-              <th scope="col" className="px-3 py-3">
-                Статус
-              </th>
-              <th scope="col" className="px-4 py-3">
-                <span className="sr-only">Действия</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="tabular-nums">
-            {payments.map((p) => (
-              <PaymentRow
-                key={p.id}
-                payment={p}
-                disabled={sale.is_archived}
-                paying={paying === p.id}
-                onPay={() => setPaying(p.id)}
-                onCancelPay={() => setPaying(null)}
-                onPaid={(next) => {
-                  setPaying(null);
-                  onUpdated(next);
-                }}
-                onReset={() => setResetting(p)}
-              />
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-line bg-sand font-bold">
-              <td className="px-4 py-3" colSpan={2}>
-                Итого
-              </td>
-              <td className="px-3 py-3 text-right tabular-nums">{formatMoney(totalAmount)}</td>
-              <td className="px-3 py-3 text-right text-status-free-text tabular-nums">
-                {formatMoney(totalPaid)}
-              </td>
-              <td className="px-3 py-3 text-right tabular-nums" colSpan={1}>
-                {formatMoney(totalAmount - totalPaid)}
-                <span className="block text-xs font-medium text-muted">осталось</span>
-              </td>
-              <td colSpan={2} />
-            </tr>
-          </tfoot>
-        </table>
+    <>
+      {/* Phones: one card per payment instead of the wide table. */}
+      <div className="md:hidden">
+        <p className="mb-3 flex items-baseline justify-between gap-3 text-sm text-muted">
+          <span>
+            Платежей: <span className="font-semibold text-ink">{payments.length}</span>
+          </span>
+          <span>
+            Осталось:{" "}
+            <span className="font-semibold text-ink tabular-nums">
+              {formatMoney(totalAmount - totalPaid)}
+            </span>
+          </span>
+        </p>
+        <ol className="space-y-2.5">
+          {payments.map((p) => (
+            <PaymentCard
+              key={p.id}
+              payment={p}
+              disabled={sale.is_archived}
+              onPay={() => setPaying(p.id)}
+              onReset={() => setResetting(p)}
+            />
+          ))}
+        </ol>
       </div>
+      <Modal
+        open={isMobile && !!payingPayment}
+        onClose={() => setPaying(null)}
+        title={payingPayment ? `Оплата · платёж №${payingPayment.number}` : ""}
+        size="sm"
+        sheet="auto"
+      >
+        {payingPayment && (
+          <PayForm
+            key={payingPayment.id}
+            payment={payingPayment}
+            onCancel={() => setPaying(null)}
+            onPaid={(next) => {
+              setPaying(null);
+              onUpdated(next);
+            }}
+          />
+        )}
+      </Modal>
 
-      <ConfirmDialog
-        open={resetting !== null}
-        title="Отменить оплату?"
-        message={
-          resetting
-            ? `Платёж №${resetting.number} снова станет неоплаченным (${formatMoney(resetting.paid_amount)}).`
-            : ""
-        }
-        confirmLabel="Отменить оплату"
-        busy={reset.isPending}
-        onConfirm={() => resetting && reset.mutate(resetting)}
-        onCancel={() => setResetting(null)}
-      />
-    </div>
+      <div className="overflow-hidden rounded-2xl ring-1 ring-line max-md:hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-[15px]">
+            <caption className="sr-only">График платежей</caption>
+            <thead>
+              <tr className="bg-sand text-left text-[11px] font-bold tracking-[0.12em] text-muted uppercase">
+                <th scope="col" className="px-4 py-3">
+                  №
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Дата платежа
+                </th>
+                <th scope="col" className="px-3 py-3 text-right">
+                  Сумма платежа
+                </th>
+                <th scope="col" className="px-3 py-3 text-right">
+                  Оплачено
+                </th>
+                <th scope="col" className="px-3 py-3 text-right">
+                  Остаток долга после платежа
+                </th>
+                <th scope="col" className="px-3 py-3">
+                  Статус
+                </th>
+                <th scope="col" className="px-4 py-3">
+                  <span className="sr-only">Действия</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="tabular-nums">
+              {payments.map((p) => (
+                <PaymentRow
+                  key={p.id}
+                  payment={p}
+                  disabled={sale.is_archived}
+                  paying={!isMobile && paying === p.id}
+                  onPay={() => setPaying(p.id)}
+                  onCancelPay={() => setPaying(null)}
+                  onPaid={(next) => {
+                    setPaying(null);
+                    onUpdated(next);
+                  }}
+                  onReset={() => setResetting(p)}
+                />
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-line bg-sand font-bold">
+                <td className="px-4 py-3" colSpan={2}>
+                  Итого
+                </td>
+                <td className="px-3 py-3 text-right tabular-nums">{formatMoney(totalAmount)}</td>
+                <td className="px-3 py-3 text-right text-status-free-text tabular-nums">
+                  {formatMoney(totalPaid)}
+                </td>
+                <td className="px-3 py-3 text-right tabular-nums" colSpan={1}>
+                  {formatMoney(totalAmount - totalPaid)}
+                  <span className="block text-xs font-medium text-muted">осталось</span>
+                </td>
+                <td colSpan={2} />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <ConfirmDialog
+          open={resetting !== null}
+          title="Отменить оплату?"
+          message={
+            resetting
+              ? `Платёж №${resetting.number} снова станет неоплаченным (${formatMoney(resetting.paid_amount)}).`
+              : ""
+          }
+          confirmLabel="Отменить оплату"
+          busy={reset.isPending}
+          onConfirm={() => resetting && reset.mutate(resetting)}
+          onCancel={() => setResetting(null)}
+        />
+      </div>
+    </>
+  );
+}
+
+function PaymentCard({
+  payment: p,
+  disabled,
+  onPay,
+  onReset,
+}: {
+  payment: Payment;
+  disabled: boolean;
+  onPay: () => void;
+  onReset: () => void;
+}) {
+  const overdue = p.status === "overdue";
+  const outstanding = p.amount - p.paid_amount;
+  return (
+    <li
+      className={cn(
+        "rounded-2xl bg-white p-4 ring-1 ring-line",
+        overdue && "bg-status-sold-fill/50 ring-status-sold-line/40",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex items-baseline gap-2">
+          <span className="font-display text-lg font-extrabold">№{p.number}</span>
+          <span
+            className={cn(
+              "text-[15px] tabular-nums",
+              overdue ? "font-semibold text-status-sold-text" : "text-muted",
+            )}
+          >
+            {numericDate.format(day(p.due_date))}
+          </span>
+        </p>
+        <span className="flex items-center gap-1.5">
+          {p.status !== "paid" && p.paid_amount > 0 && (
+            <span className="text-sm text-muted">частично</span>
+          )}
+          <PaymentStatusBadge status={p.status} />
+        </span>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        <div>
+          <dt className="text-muted">Сумма</dt>
+          <dd className="font-display text-base font-extrabold tabular-nums">
+            {formatMoney(p.amount)}
+          </dd>
+        </div>
+        <div className="text-right">
+          <dt className="text-muted">Остаток после</dt>
+          <dd className="font-semibold tabular-nums">{formatMoney(p.balance_after)}</dd>
+        </div>
+        {p.paid_amount > 0 && (
+          <div className="col-span-2">
+            <dt className="sr-only">Оплачено</dt>
+            <dd className={cn("tabular-nums", p.status === "paid" && "text-status-free-text")}>
+              Оплачено {formatMoney(p.paid_amount)}
+              {p.paid_date && (
+                <span className="text-muted"> · {numericDate.format(day(p.paid_date))}</span>
+              )}
+            </dd>
+          </div>
+        )}
+      </dl>
+      {!disabled && (outstanding > 0 || p.paid_amount > 0) && (
+        <div className="mt-3 flex gap-2">
+          {outstanding > 0 && (
+            <Button
+              variant={overdue ? "dark" : "secondary"}
+              className="h-11 flex-1"
+              onClick={onPay}
+            >
+              <Check className="size-4" aria-hidden />
+              Внести оплату
+            </Button>
+          )}
+          {p.paid_amount > 0 && (
+            <Button
+              variant="ghost"
+              className={cn("h-11", outstanding > 0 ? "w-11 px-0" : "flex-1")}
+              onClick={onReset}
+              aria-label={`Отменить оплату платежа №${p.number}`}
+            >
+              <Undo2 className="size-4" aria-hidden />
+              {outstanding <= 0 && "Отменить оплату"}
+            </Button>
+          )}
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -397,13 +577,20 @@ function PayForm({
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-wrap items-end gap-3">
-      <p className="w-full text-sm font-semibold">
+    <form
+      onSubmit={onSubmit}
+      noValidate
+      className="flex flex-wrap items-end gap-3 max-md:grid max-md:grid-cols-[auto_1fr] max-md:gap-4"
+    >
+      <p className="w-full text-sm font-semibold max-md:col-span-2 max-md:text-[15px]">
         Оплата по платежу №{payment.number}
         <span className="font-normal text-muted"> · к оплате {formatMoney(outstanding)}</span>
       </p>
-      <div className="w-48">
-        <label htmlFor={`${id}-amount`} className="mb-1 block text-xs font-semibold text-muted">
+      <div className="w-48 max-md:col-span-2 max-md:w-full">
+        <label
+          htmlFor={`${id}-amount`}
+          className="mb-1 block text-xs font-semibold text-muted max-md:text-sm"
+        >
           Сумма
         </label>
         <MoneyInput
@@ -413,8 +600,11 @@ function PayForm({
           invalid={touched && !!error}
         />
       </div>
-      <div className="w-44">
-        <label htmlFor={`${id}-date`} className="mb-1 block text-xs font-semibold text-muted">
+      <div className="w-44 max-md:col-span-2 max-md:w-full">
+        <label
+          htmlFor={`${id}-date`}
+          className="mb-1 block text-xs font-semibold text-muted max-md:text-sm"
+        >
           Дата оплаты
         </label>
         <input
@@ -426,7 +616,12 @@ function PayForm({
           className={cn(inputClass, "bg-white")}
         />
       </div>
-      <Button type="submit" size="md" disabled={pay.isPending}>
+      <Button
+        type="submit"
+        size="md"
+        disabled={pay.isPending}
+        className="max-md:order-2 max-md:h-12"
+      >
         {pay.isPending ? (
           <Loader2 className="size-4 animate-spin" aria-hidden />
         ) : (
@@ -434,12 +629,12 @@ function PayForm({
         )}
         Сохранить
       </Button>
-      <Button variant="ghost" onClick={onCancel}>
+      <Button variant="ghost" onClick={onCancel} className="max-md:order-1 max-md:h-12">
         <X className="size-4" aria-hidden />
         Отмена
       </Button>
       {touched && error && (
-        <p role="alert" className="w-full text-sm text-status-sold-text">
+        <p role="alert" className="w-full text-sm text-status-sold-text max-md:col-span-2">
           {error}
         </p>
       )}

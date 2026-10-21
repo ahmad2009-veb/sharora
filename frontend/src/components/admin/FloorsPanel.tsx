@@ -11,7 +11,10 @@ import { cn } from "@/lib/cn";
 import { FloorPlanEditor } from "./FloorPlanEditor";
 
 const pill =
-  "flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-bold transition-colors";
+  "flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-bold transition-colors max-md:h-11";
+// Phones: one sideways-scrolling row instead of wrapping.
+const pillRow =
+  "flex flex-wrap gap-1.5 max-md:-mx-4 max-md:flex-nowrap max-md:overflow-x-auto max-md:px-4 max-md:[scrollbar-width:none]";
 
 /** «Этажи и схемы»: pick a block and floor, upload its plan and outline every unit on it. */
 export function FloorsPanel() {
@@ -32,8 +35,8 @@ export function FloorsPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4 rounded-card bg-white p-4 shadow-soft md:p-5">
-        <div role="group" aria-label="Блок" className="flex flex-wrap gap-1.5">
+      <div className="space-y-4 rounded-card bg-white p-4 shadow-soft max-md:rounded-[20px] md:p-5">
+        <div role="group" aria-label="Блок" className={pillRow}>
           {blocks.data?.map((b) => (
             <button
               key={b.id}
@@ -49,7 +52,7 @@ export function FloorsPanel() {
             </button>
           ))}
         </div>
-        <div role="group" aria-label="Этаж" className="flex flex-wrap gap-1.5">
+        <div role="group" aria-label="Этаж" className={pillRow}>
           {floors.isPending
             ? Array.from({ length: 9 }, (_, i) => (
                 <Skeleton key={i} className="h-10 w-24 rounded-full" />
@@ -81,7 +84,7 @@ export function FloorsPanel() {
                 );
               })}
         </div>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted max-md:hidden">
           Схема и контуры хранятся для каждого этажа отдельно. Добавить или удалить квартиру на
           этаже можно во вкладке «Фонд квартир» (выберите этаж в фильтре).
         </p>

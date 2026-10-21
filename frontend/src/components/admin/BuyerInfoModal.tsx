@@ -25,6 +25,7 @@ import type { Sale } from "@/lib/types";
 
 import { PaymentScheduleModal } from "./PaymentScheduleModal";
 import { SaleFormModal, unitSubtitle, type SaleUnit } from "./SaleFormModal";
+import { sheetActionsBase, sheetContentClass } from "./ui";
 
 const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "long" });
 const dateTimeFormat = new Intl.DateTimeFormat("ru-RU", {
@@ -77,6 +78,7 @@ export function BuyerInfoModal({
         title="Информация о покупателе"
         description={unit ? unitSubtitle(unit) : undefined}
         size="md"
+        sheet
       >
         {!sale && !missing && fetched.isPending ? (
           <div className="space-y-3">
@@ -93,7 +95,7 @@ export function BuyerInfoModal({
               Квартира отмечена проданной до учёта покупателей. Добавьте данные, чтобы сделка
               появилась в разделе «Покупатели».
             </p>
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6 flex gap-3 max-md:grid max-md:w-full max-md:grid-cols-[auto_1fr] max-md:[&>*]:h-12">
               <Button variant="ghost" onClick={onClose}>
                 Закрыть
               </Button>
@@ -161,7 +163,7 @@ function SaleDetails({
   }
 
   return (
-    <div className="space-y-5">
+    <div className={cn("space-y-5", sheetContentClass)}>
       {sale.is_archived && (
         <p className="flex items-center gap-2 rounded-xl bg-sand px-4 py-2.5 text-sm font-medium text-muted">
           <Archive className="size-4" aria-hidden />
@@ -178,7 +180,7 @@ function SaleDetails({
           <div className="mt-1 flex items-center gap-2">
             <a
               href={`tel:${sale.buyer_phone}`}
-              className="flex items-center gap-1.5 font-semibold text-gold tabular-nums hover:text-white"
+              className="flex items-center gap-1.5 font-semibold text-gold tabular-nums hover:text-white max-md:h-11"
             >
               <Phone className="size-3.5" aria-hidden />
               {formatPhone(sale.buyer_phone)}
@@ -188,7 +190,7 @@ function SaleDetails({
               onClick={copy}
               aria-label="Скопировать номер"
               title="Скопировать номер"
-              className="grid size-8 place-items-center rounded-full text-mist transition-colors hover:bg-white/10 hover:text-white"
+              className="grid size-8 place-items-center rounded-full text-mist transition-colors hover:bg-white/10 hover:text-white max-md:size-11"
             >
               {copied ? (
                 <Check className="size-4 text-[#86efac]" aria-hidden />
@@ -203,7 +205,7 @@ function SaleDetails({
         </div>
       </div>
 
-      <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-line">
+      <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl bg-line max-md:grid-cols-1">
         {[
           ["Оплачено", formatMoney(sale.paid_total), "text-status-free-text"],
           ["Стоимость", sale.total_price === null ? "—" : formatMoney(sale.total_price), ""],
@@ -213,9 +215,21 @@ function SaleDetails({
             sale.remaining ? "text-gold-deep" : "",
           ],
         ].map(([k, v, cls]) => (
-          <div key={k} className="bg-white px-4 py-3.5">
-            <dt className="eyebrow text-muted">{k}</dt>
-            <dd className={cn("mt-1.5 font-display font-extrabold tabular-nums", cls)}>{v}</dd>
+          <div
+            key={k}
+            className="bg-white px-4 py-3.5 max-md:flex max-md:items-baseline max-md:justify-between max-md:gap-4"
+          >
+            <dt className="eyebrow text-muted max-md:text-sm max-md:font-medium max-md:tracking-normal max-md:normal-case">
+              {k}
+            </dt>
+            <dd
+              className={cn(
+                "mt-1.5 font-display font-extrabold tabular-nums max-md:mt-0 max-md:text-lg",
+                cls,
+              )}
+            >
+              {v}
+            </dd>
           </div>
         ))}
       </dl>
@@ -227,7 +241,9 @@ function SaleDetails({
               style={{ width: `${paidPct}%` }}
             />
           </div>
-          <p className="mt-1.5 text-xs text-muted">Оплачено {Math.round(paidPct)}%</p>
+          <p className="mt-1.5 text-xs text-muted max-md:text-sm">
+            Оплачено {Math.round(paidPct)}%
+          </p>
         </div>
       )}
 
@@ -281,7 +297,7 @@ function SaleDetails({
         )}
       </dl>
 
-      <p className="border-t border-line pt-4 text-xs text-muted">
+      <p className="border-t border-line pt-4 text-xs text-muted max-md:text-sm">
         Оформил: <span className="font-semibold text-ink">{sale.created_by_username ?? "—"}</span>
         {" · "}
         {dateTimeFormat.format(utc(sale.created_at))}
@@ -290,13 +306,21 @@ function SaleDetails({
         )}
       </p>
 
-      <div className="flex flex-wrap justify-end gap-3">
-        <Button variant="ghost" onClick={onClose}>
+      <div
+        className={cn(
+          "flex flex-wrap justify-end gap-3",
+          sheetActionsBase,
+          // Phones: «Закрыть» is the ✕ in the header.
+          sale.is_archived ? "max-md:grid-cols-1" : "max-md:grid-cols-2",
+        )}
+      >
+        <Button variant="ghost" onClick={onClose} className="max-md:hidden">
           Закрыть
         </Button>
         <Button variant="secondary" onClick={onSchedule}>
           <TableProperties className="size-4" aria-hidden />
-          График платежей
+          <span className="max-md:hidden">График платежей</span>
+          <span className="md:hidden">График</span>
         </Button>
         {!sale.is_archived && (
           <Button variant="dark" onClick={onEdit}>

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  motion,
+  m,
   useMotionValue,
   useReducedMotion,
   useSpring,
@@ -22,7 +22,6 @@ const WEBP_SRCSET = srcSet("webp");
 
 /** Max image shift, px, opposite to the cursor. The layer is oversized by 24px per side. */
 const PARALLAX_PX = 18;
-const ease = [0.22, 1, 0.36, 1] as const;
 
 type NavigatorExtras = Navigator & {
   deviceMemory?: number;
@@ -63,13 +62,7 @@ const MOTES = (() => {
  * parallax elsewhere, a periodic gold light sweep and drifting golden motes in the sky.
  * Everything animated is transform or opacity; reduced motion keeps only the fade.
  */
-export function HeroBackdrop({
-  scrollYProgress,
-  delay,
-}: {
-  scrollYProgress: MotionValue<number>;
-  delay: number;
-}) {
+export function HeroBackdrop({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const reduce = useReducedMotion();
   const [motes, setMotes] = useState(false);
 
@@ -103,17 +96,11 @@ export function HeroBackdrop({
   }, [reduce, pointerX, pointerY]);
 
   return (
-    <motion.div aria-hidden className="absolute inset-0 -z-20" style={{ y: scrollY }}>
-      <motion.div className="absolute -inset-6" style={{ x, y }}>
-        <motion.div
-          initial={{ opacity: 0, scale: 1.1 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            opacity: { duration: 0.6, delay },
-            scale: { duration: 2.4, delay, ease },
-          }}
-          className="absolute inset-0"
-        >
+    <m.div aria-hidden className="absolute inset-0 -z-20" style={{ y: scrollY }}>
+      <m.div className="absolute -inset-6" style={{ x, y }}>
+        {/* Entrance in CSS (globals.css → .hero-backdrop-in): it runs from the first paint, so
+            the photo — the page's largest element — does not wait for hydration. */}
+        <div className="hero-backdrop-in absolute inset-0">
           <div className="hero-kenburns absolute inset-0 overflow-hidden">
             <div
               className="absolute inset-0 scale-110 bg-cover bg-[58%_45%] blur-xl"
@@ -123,22 +110,19 @@ export function HeroBackdrop({
               <source type="image/avif" srcSet={AVIF_SRCSET} sizes={SIZES} />
               <source type="image/webp" srcSet={WEBP_SRCSET} sizes={SIZES} />
               {/* Not next/image: it is unoptimized on Vercel, so AVIF/WebP + srcset are pre-built. */}
-              <motion.img
+              <img
                 src={`${base}-1920.webp`}
                 alt=""
                 width={width}
                 height={height}
                 fetchPriority="high"
                 decoding="async"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.4, delay: delay + 0.15, ease: "easeOut" }}
-                className="absolute inset-0 size-full object-cover object-[58%_45%]"
+                className="hero-img-in absolute inset-0 size-full object-cover object-[58%_45%]"
               />
             </picture>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </m.div>
 
       {/* Facade lighting: warm glow breathing over the windows + a periodic gold sweep. */}
       <div className="hero-glow pointer-events-none absolute inset-0" />
@@ -166,6 +150,6 @@ export function HeroBackdrop({
           ))}
         </div>
       )}
-    </motion.div>
+    </m.div>
   );
 }

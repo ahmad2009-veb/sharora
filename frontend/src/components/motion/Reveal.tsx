@@ -20,9 +20,10 @@ type TextProps = {
 };
 
 /**
- * Text that rises out of a mask as it enters the viewport. SplitText adds aria-labels so
- * screen readers still get the whole sentence. Without JS / with reduced motion the text
- * is simply rendered.
+ * Text that rises out of a mask as it enters the viewport. The animated copy is hidden
+ * from screen readers and a visually hidden copy carries the sentence (an aria-label on
+ * a <p> / <span> is not valid ARIA). Without JS / with reduced motion the text is simply
+ * rendered.
  */
 export function RevealText({
   as: Tag = "p",
@@ -43,6 +44,7 @@ export function RevealText({
       SplitText.create(el, {
         type: split === "chars" ? "words,chars" : "lines",
         mask: split === "chars" ? "words" : "lines",
+        aria: "none",
         autoSplit: true,
         onSplit(self) {
           // Chars are inline-blocks, so a word could otherwise break between letters when it
@@ -65,9 +67,12 @@ export function RevealText({
   );
 
   return (
-    <Tag ref={ref} id={id} className={className}>
-      {children}
-    </Tag>
+    <>
+      <Tag ref={ref} id={id} className={className} aria-hidden>
+        {children}
+      </Tag>
+      <Tag className="sr-only">{children}</Tag>
+    </>
   );
 }
 

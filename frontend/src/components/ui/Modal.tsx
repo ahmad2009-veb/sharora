@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useId, type ReactNode } from "react";
@@ -70,14 +70,14 @@ export function Modal({
             fullSheet && "max-md:p-0",
           )}
         >
-          <motion.div
+          <m.div
             className="absolute inset-0 bg-ink/80 backdrop-blur-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             ref={ref}
             data-dialog
             role="dialog"
@@ -149,7 +149,7 @@ export function Modal({
             >
               {children}
             </div>
-          </motion.div>
+          </m.div>
         </div>
       )}
     </AnimatePresence>,

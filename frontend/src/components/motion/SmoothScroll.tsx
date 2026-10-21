@@ -1,10 +1,9 @@
 "use client";
 
-import Lenis from "lenis";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-import { prefersReducedMotion } from "@/lib/capabilities";
+import { hasFinePointer, prefersReducedMotion } from "@/lib/capabilities";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { getLenis, setLenis } from "@/lib/smooth-scroll";
 
@@ -12,23 +11,34 @@ import { getLenis, setLenis } from "@/lib/smooth-scroll";
 export function SmoothScroll() {
   const pathname = usePathname();
 
+  // Mouse / trackpad only: Lenis smooths the wheel, while touch scrolling stays native
+  // anyway — on phones it would only add a per-frame loop (and its download).
   useEffect(() => {
-    if (prefersReducedMotion()) return;
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      anchors: { offset: -80 },
+    if (prefersReducedMotion() || !hasFinePointer()) return;
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    void import("lenis").then(({ default: Lenis }) => {
+      if (cancelled) return;
+      const lenis = new Lenis({
+        duration: 1.15,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        anchors: { offset: -80 },
+      });
+      setLenis(lenis);
+      lenis.on("scroll", ScrollTrigger.update);
+      const tick = (time: number) => lenis.raf(time * 1000);
+      gsap.ticker.add(tick);
+      gsap.ticker.lagSmoothing(0);
+      cleanup = () => {
+        gsap.ticker.remove(tick);
+        lenis.destroy();
+        setLenis(null);
+      };
     });
-    setLenis(lenis);
-    lenis.on("scroll", ScrollTrigger.update);
-    const tick = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(tick);
-    gsap.ticker.lagSmoothing(0);
     return () => {
-      gsap.ticker.remove(tick);
-      lenis.destroy();
-      setLenis(null);
+      cancelled = true;
+      cleanup?.();
     };
   }, []);
 

@@ -48,7 +48,7 @@ export function LocaleSwitcher({
             type="button"
             lang={l}
             aria-pressed={active}
-            aria-label={LABELS[l].full}
+            aria-label={`${LABELS[l].short} — ${LABELS[l].full}`}
             onClick={() => switchTo(l)}
             className={cn(
               "h-7 min-w-9 rounded-full px-2.5 transition-colors",

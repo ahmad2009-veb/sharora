@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { m, useScroll, useTransform } from "framer-motion";
 import { ArrowDown, Building2, Phone, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 
 import { CountUp, RevealText } from "@/components/motion/Reveal";
 import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
@@ -17,7 +17,9 @@ function preloaderActive() {
   return document.documentElement.dataset.preloader === "on";
 }
 
-const ease = [0.22, 1, 0.36, 1] as const;
+/** CSS entrance (.hero-rise): rise by `px` over `duration` s, `at` s after the hero start. */
+const rise = (px: number, duration: number, at = 0) =>
+  ({ "--rise": `${px}px`, "--dur": `${duration}s`, "--at": `${at}s` }) as CSSProperties;
 
 /**
  * Cinematic full-bleed hero: animated render (see HeroBackdrop) under a navy scrim, a gold-sheen
@@ -43,7 +45,7 @@ export function Hero() {
       aria-labelledby="hero-title"
       className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-ink text-white lg:min-h-[max(100svh,820px)]"
     >
-      <HeroBackdrop scrollYProgress={scrollYProgress} delay={Math.max(0, textDelay - 0.3)} />
+      <HeroBackdrop scrollYProgress={scrollYProgress} />
       <span className="sr-only">{tr(site.hero.imageAlt, locale)}</span>
 
       {/* Navy scrims for legibility + warm halo behind the headline */}
@@ -60,23 +62,23 @@ export function Hero() {
         className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[560px] w-[1200px] -translate-x-1/2 rounded-full bg-gold/10 blur-[140px]"
       />
 
-      <motion.div
+      <m.div
         style={{ y: contentY, opacity: contentOpacity }}
         className="container-page flex flex-1 flex-col justify-center pt-36 pb-12 md:pt-40"
       >
         <div className="max-w-[1040px]">
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: textDelay, ease }}
-            className="inline-flex items-center gap-3 rounded-full bg-night/70 px-4 py-2 shadow-lg ring-1 ring-gold/20 backdrop-blur-md"
+          {/* Entrances below are CSS (globals.css → .hero-rise), so they start with the first
+              paint instead of after hydration; the split-text reveals stay in GSAP. */}
+          <p
+            className="hero-rise inline-flex items-center gap-3 rounded-full bg-night/70 px-4 py-2 shadow-lg ring-1 ring-gold/20 backdrop-blur-md"
+            style={rise(12, 0.7)}
           >
             <span className="relative flex size-2">
               <span className="absolute inset-0 animate-ping rounded-full bg-gold/70" />
               <span className="relative size-2 rounded-full bg-gold" />
             </span>
             <span className="eyebrow text-gold">{tr(site.hero.badge, locale)}</span>
-          </motion.p>
+          </p>
 
           <h1
             id="hero-title"
@@ -84,14 +86,7 @@ export function Hero() {
           >
             {/* Masked line rise: per-letter splitting would break background-clip:text. */}
             <span className="block overflow-hidden pb-1">
-              <motion.span
-                initial={{ y: "105%" }}
-                animate={{ y: "0%" }}
-                transition={{ duration: 1.1, delay: textDelay, ease: [0.16, 1, 0.3, 1] }}
-                className="block text-gold-gradient"
-              >
-                {tr(line1, locale)}
-              </motion.span>
+              <span className="hero-mask-rise block text-gold-gradient">{tr(line1, locale)}</span>
             </span>
             <RevealText
               as="span"
@@ -112,11 +107,9 @@ export function Hero() {
             {tr(site.hero.subtitle, locale)}
           </RevealText>
 
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: textDelay + 0.8, ease }}
-            className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center"
+          <div
+            className="hero-rise mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center"
+            style={rise(16, 0.8, 0.8)}
           >
             <Link
               href="/apartments"
@@ -138,17 +131,15 @@ export function Hero() {
               <ShieldCheck className="size-[18px] text-gold" aria-hidden />
               {tr(site.hero.salesNote, locale)}
             </span>
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Floating glass metrics bar */}
       <div className="container-page pb-8 md:pb-12">
-        <motion.dl
-          initial={{ opacity: 0, y: 28 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: textDelay + 0.95, ease }}
-          className="grid grid-cols-2 gap-x-6 gap-y-7 rounded-panel p-6 glass-dark md:grid-cols-4 md:gap-0 md:p-8"
+        <dl
+          style={rise(28, 0.9, 0.95)}
+          className="hero-rise grid grid-cols-2 gap-x-6 gap-y-7 rounded-panel p-6 glass-dark md:grid-cols-4 md:gap-0 md:p-8"
         >
           {site.hero.facts.map((fact, i) => {
             const word = typeof fact.value === "string" ? null : tr(fact.value, locale);
@@ -191,7 +182,7 @@ export function Hero() {
               </div>
             );
           })}
-        </motion.dl>
+        </dl>
 
         <a
           href="#about"

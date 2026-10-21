@@ -90,3 +90,20 @@ def test_lead_rate_limit(client: TestClient) -> None:
     codes = [client.post("/api/leads", json=payload).status_code for _ in range(6)]
     assert codes[:5] == [201] * 5
     assert codes[5] == 429
+
+
+def test_public_catalogue_is_briefly_cacheable(client: TestClient) -> None:
+    for path in ("/api/stats", "/api/blocks", "/api/blocks/1/floors", "/api/settings"):
+        res = client.get(path)
+        assert res.status_code == 200
+        assert res.headers["cache-control"] == "public, max-age=10, stale-while-revalidate=50"
+
+
+def test_admin_requests_to_the_catalogue_are_not_cached(admin_client: TestClient) -> None:
+    assert admin_client.get("/api/stats").headers["cache-control"] == "private, no-store"
+
+
+def test_lead_responses_are_not_cached(client: TestClient) -> None:
+    res = client.post("/api/leads", json={"name": "Тест", "phone": "+992931234567"})
+    assert res.status_code == 201
+    assert "cache-control" not in res.headers

@@ -14,9 +14,10 @@ export function StatsBar() {
   if (isError) return null;
   if (isPending) {
     return (
-      <div className="flex gap-2" aria-busy="true">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-11 w-36 rounded-full bg-white/10" />
+      // Sized like the three badges and wrapping the same way, so nothing jumps on load.
+      <div className="flex flex-wrap gap-2 xl:flex-nowrap" aria-busy="true">
+        {["w-44", "w-48", "w-36"].map((w) => (
+          <Skeleton key={w} className={`h-11 ${w} rounded-full bg-white/10`} />
         ))}
       </div>
     );

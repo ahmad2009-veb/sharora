@@ -31,7 +31,7 @@ export type HeroSceneProps = {
 const CAMERA_HOME = new THREE.Vector3(7.5, 7.8, 12);
 
 export default function HeroScene(props: HeroSceneProps) {
-  const [dpr, setDpr] = useState(1.6);
+  const [dpr, setDpr] = useState(1.5);
   const [shadows, setShadows] = useState(true);
 
   return (

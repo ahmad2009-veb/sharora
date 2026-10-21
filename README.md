@@ -156,7 +156,6 @@ sharora/
     seed.py, seed_data.py                  сид и эталонные данные (2 блока, 7 квартир на этаже)
     scripts/generate_media.py              заглушки планов этажей, планировок и чертежей
     tests/
-  tools/generate_public_placeholders.py    заглушки hero/интерьеров/документов
   docker-compose.yml
   vercel.json                              Vercel Services: frontend + backend, публичные rewrites
 ```
@@ -219,7 +218,7 @@ sharora/
 
 - **Тексты главной, телефон, ссылки WhatsApp/Telegram, координаты карты** — `frontend/src/content/site.ts`. Телефон компании один на весь сайт: **+992 300 00 00 59** (`site.contact`: `tel:+992300000059`, `wa.me/992300000059`, `t.me/+992300000059`). Каждая строка — `{ ru, tg? }`; если `tg` нет, показывается русский текст.
 - **Два языка без смешения**: в `site.ts` у каждого текста обязательны `ru` и `tg` (иначе ошибка TypeScript), а `npm run check:i18n` падает, если ключа нет в `ru.json` или `tg.json`, плейсхолдеры различаются или в тексте буквы чужого алфавита. Названия квартир и комнат из API («Хонаи 3», «Ҳ/Б») переводятся на фронтенде (`src/lib/unit-names.ts`); нестандартное название, введённое в админке, показывается как есть. Заглушки чертежей — без слов, только цифры и м².
-- **Изображения** — замените файлы в `frontend/public` с теми же именами: `logo.png` (эмблема Vasli Tojik, прозрачный фон), `hero.jpg` (генплан 16:9), `about.jpg`, `og.jpg` (1200×630), `interior/01–09.jpg`, `docs/<slug>-<n>.jpg`. Текущие файлы — сгенерированные заглушки.
+- **Изображения** — замените файлы в `frontend/public` с теми же именами: `logo.png` (эмблема Vasli Tojik, прозрачный фон), `og.jpg` (1200×630), `renders/*.jpg` (пути — в `site.ts`), `docs/<slug>-<n>.jpg`. Уменьшенные WebP-копии для сайта собираются автоматически при `npm run build` (см. «Изображения и производительность»).
 - **Фон первого экрана** — исходник `public/renders/hero-building.jpg` (1150×837, хранится как резервная копия). На сайте показываются `public/renders/hero/hero-{1280,1920,2560}.{avif,webp}`: апскейл ×4 через [Real-ESRGAN ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN) (модель `realesrgan-x4plus`, лицензия BSD-3-Clause), лёгкая резкость/контраст в `sharp`, экспорт AVIF/WebP. Vercel отдаёт `public/` без оптимизации, поэтому набор собран заранее и подключён через `<picture>`; при замене рендера пересоберите все файлы и обновите `blurDataURL`, `width`, `height` в `site.hero.image`.
 - **Анимация первого экрана** (`HeroBackdrop.tsx`, `globals.css`) — Ken Burns, параллакс, золотой блик и «светящиеся частицы» сделаны на CSS/Framer Motion без сторонних ассетов (Lottie и т. п. не используются).
 - **Блоки** — структура (2 блока, 1-й этаж — магазин, 2–9 — по 7 квартир, площади) задаётся в `backend/seed_data.py`; на главной — `site.genplan.blocks` (номера блоков) и 3D-модель в `src/components/three/layout.ts`. Площади, цены и статусы квартир правьте в админке.

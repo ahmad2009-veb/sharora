@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Suspense } from "react";
 
 import { ApartmentPicker } from "@/components/apartments/ApartmentPicker";
+import { ApartmentsShell } from "@/components/apartments/ApartmentsHeader";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 
 export async function generateMetadata({
@@ -28,7 +29,7 @@ export default async function ApartmentsPage({ params }: { params: Promise<{ loc
   setRequestLocale(locale);
   return (
     <SiteChrome>
-      <Suspense fallback={<div className="min-h-[100svh] bg-sand" />}>
+      <Suspense fallback={<ApartmentsShell />}>
         <ApartmentPicker />
       </Suspense>
     </SiteChrome>

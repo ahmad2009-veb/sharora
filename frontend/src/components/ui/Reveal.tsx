@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import type { ReactNode } from "react";
 
 type Props = {
@@ -12,7 +12,7 @@ type Props = {
 
 /** Fades content in with a 16px rise when it enters the viewport. */
 export function Reveal({ children, delay = 0, className, as = "div" }: Props) {
-  const Component = motion[as];
+  const Component = m[as];
   return (
     <Component
       className={className}

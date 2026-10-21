@@ -22,7 +22,8 @@ export function Logo({
     <Link
       href="/"
       className={cn("group flex items-center gap-3", className)}
-      aria-label={tc("homeLink", { name: site.brand.name })}
+      // The name starts with the visible wordmark (WCAG «label in name»).
+      aria-label={tc("homeLink", { name: `${site.brand.name} · Residence` })}
     >
       <span
         className={cn(
@@ -37,7 +38,6 @@ export function Logo({
           width={34}
           height={34}
           priority
-          unoptimized
           className={cn(lg && "lg:size-10")}
         />
       </span>
@@ -50,7 +50,7 @@ export function Logo({
           )}
         >
           Zarafshon
-        </span>
+        </span>{" "}
         <span
           className={cn(
             "mt-1.5 text-[9.5px] font-semibold tracking-[0.24em] uppercase",

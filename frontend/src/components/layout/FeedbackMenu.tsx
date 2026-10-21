@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { MessageCircle, MessageSquareText, Phone, Send, X } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
@@ -93,7 +93,7 @@ export function FeedbackFab() {
     >
       <AnimatePresence>
         {open && (
-          <motion.div
+          <m.div
             id={panelId}
             role="region"
             aria-label={tr(site.feedback.title, locale)}
@@ -124,7 +124,7 @@ export function FeedbackFab() {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 

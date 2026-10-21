@@ -48,7 +48,6 @@ export function BlockSelector({ blocks, loading, value, onChange }: Props) {
                 type="button"
                 aria-pressed={active}
                 onClick={() => onChange(b.letter)}
-                aria-label={`${t("blockN", { n: b.letter })}: ${t("freeCount", { count: b.free_count })}`}
                 className={cn(
                   "relative z-10 flex min-h-14 flex-col items-center justify-center rounded-xl px-2 py-2 transition-colors duration-300",
                   active ? "text-on-gold" : "text-white",
@@ -92,7 +91,6 @@ export function BlockSelector({ blocks, loading, value, onChange }: Props) {
                     type="button"
                     aria-pressed={active}
                     onClick={() => onChange(b.letter)}
-                    aria-label={`${t("blockN", { n: b.letter })}: ${counts.map((c) => `${c.count} ${c.label}`).join(", ")}`}
                     className={cn(
                       "relative flex min-h-[92px] flex-col items-center justify-center gap-2.5 rounded-2xl px-2 py-3 transition-all duration-300",
                       active

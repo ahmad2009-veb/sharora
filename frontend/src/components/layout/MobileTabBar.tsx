@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useDragControls, type PanInfo } from "framer-motion";
+import { AnimatePresence, m, useDragControls, type PanInfo } from "framer-motion";
 import {
   Building2,
   Calculator,
@@ -90,7 +90,7 @@ export function MobileTabBar() {
             const inner = (
               <>
                 {isActive && (
-                  <motion.span
+                  <m.span
                     layoutId="tab-capsule"
                     aria-hidden
                     className="absolute inset-0 rounded-[24px] bg-[linear-gradient(180deg,rgb(255_222_164/0.32),rgb(255_222_164/0.12))] shadow-[inset_0_1px_0_rgb(255_255_255/0.35),0_0_22px_rgb(255_222_164/0.25)] ring-1 ring-gold/45"
@@ -175,7 +175,7 @@ function GlassSheet({
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
+          <m.div
             aria-hidden
             className="fixed inset-0 z-[58] bg-night/55 backdrop-blur-[3px] lg:hidden"
             initial={{ opacity: 0 }}
@@ -183,7 +183,7 @@ function GlassSheet({
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
-          <motion.div
+          <m.div
             ref={ref}
             id={id}
             data-dialog
@@ -230,7 +230,7 @@ function GlassSheet({
               </div>
             </div>
             <div className="overflow-y-auto overscroll-contain px-3 pb-3">{children}</div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>,

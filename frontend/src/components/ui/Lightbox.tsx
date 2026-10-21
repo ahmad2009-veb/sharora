@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, type PanInfo } from "framer-motion";
+import { AnimatePresence, m, type PanInfo } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useId, useState } from "react";
@@ -84,7 +84,7 @@ export function Lightbox({
   return createPortal(
     <AnimatePresence>
       {open && image && (
-        <motion.div
+        <m.div
           ref={ref}
           data-dialog
           role="dialog"
@@ -122,7 +122,7 @@ export function Lightbox({
 
           <div className="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-4 md:px-20 md:pb-8">
             <AnimatePresence initial={false} custom={direction} mode="popLayout">
-              <motion.div
+              <m.div
                 key={image.src}
                 custom={direction}
                 className="relative h-full w-full"
@@ -173,7 +173,7 @@ export function Lightbox({
                     priority
                   />
                 )}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
 
             {count > 1 && (
@@ -218,7 +218,7 @@ export function Lightbox({
               </button>
             </div>
           )}
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>,
     document.body,

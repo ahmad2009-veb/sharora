@@ -420,7 +420,7 @@ function MobileTopBar({
         aria-label="Открыть сайт"
         className="grid size-11 shrink-0 place-items-center rounded-xl bg-white ring-1 ring-gold/40"
       >
-        <Image src="/logo.png" alt="" width={30} height={30} unoptimized />
+        <Image src="/logo.png" alt="" width={30} height={30} />
       </Link>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-bold tracking-[0.18em] text-gold uppercase">Зарафшон</p>

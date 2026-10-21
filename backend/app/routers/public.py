@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import select
@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import get_settings
 from app.core.database import get_db
+from app.core.security import ACCESS_TOKEN_COOKIE_NAME
 from app.models import Block, CalculatorSettings, Floor, Lead, Unit, UnitStatus
 from app.schemas.block import BlockOut
 from app.schemas.floor import FloorOut, FloorWithUnits
@@ -24,7 +25,21 @@ from app.services.converters import to_unit_detail
 
 settings = get_settings()
 
-router = APIRouter(prefix="/api", tags=["public"])
+# Visitors' browsers may reuse catalogue answers for a few seconds (and revalidate in the
+# background), which saves repeat requests when moving between pages. Browser-only on
+# purpose: no s-maxage, so the CDN never serves a stale status. The admin panel reads the
+# same endpoints right after editing a unit, so its requests are never cached.
+PUBLIC_CACHE = "public, max-age=10, stale-while-revalidate=50"
+
+
+def cache_headers(request: Request, response: Response) -> None:
+    if request.method != "GET":
+        return
+    admin = ACCESS_TOKEN_COOKIE_NAME in request.cookies
+    response.headers["Cache-Control"] = "private, no-store" if admin else PUBLIC_CACHE
+
+
+router = APIRouter(prefix="/api", tags=["public"], dependencies=[Depends(cache_headers)])
 
 
 def client_ip(request: Request) -> str:

@@ -101,10 +101,7 @@ export async function Footer() {
         <div className="container-page flex flex-col gap-3 pt-6 pb-32 text-sm text-mist md:flex-row md:items-center md:justify-between lg:pb-6">
           <p>{tr(site.footer.rights, locale)}</p>
           {/* Manager entry point lives here only — the public header has no login button. */}
-          <Link
-            href="/admin/login"
-            className="text-xs text-mist/70 transition-colors hover:text-gold"
-          >
+          <Link href="/admin/login" className="text-xs text-mist transition-colors hover:text-gold">
             {tr(site.footer.managerLogin, locale)}
           </Link>
         </div>

@@ -1,19 +1,18 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Calculator, Headset, Layers, Phone, SearchX } from "lucide-react";
+import { m } from "framer-motion";
+import { Headset, Layers, SearchX } from "lucide-react";
 import Image from "next/image";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react";
 
-import { Button, buttonClasses } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { site, tr } from "@/content/site";
-import type { Locale } from "@/i18n/routing";
 import type { UnitListItem } from "@/lib/types";
 import { useUnitName } from "@/lib/unit-names";
 
+import { ApartmentsHeader } from "./ApartmentsHeader";
 import { BlockSelector } from "./BlockSelector";
 import { CalculatorModal } from "./CalculatorModal";
 import { CallbackModal } from "./CallbackModal";
@@ -24,7 +23,6 @@ import { FloorPicker } from "./FloorPicker";
 import { FloorPlan } from "./FloorPlan";
 import { unitTotal } from "./price";
 import { useBlocks, useFloors, useFloorUnits } from "./queries";
-import { StatsBar } from "./StatsBar";
 import { UnitCard } from "./UnitCard";
 import { UnitModal } from "./UnitModal";
 import { useApartmentParams } from "./useApartmentParams";
@@ -38,7 +36,6 @@ const SWIPE_MIN = 56;
 export function ApartmentPicker() {
   const t = useTranslations("apartments");
   const unitName = useUnitName();
-  const locale = useLocale() as Locale;
   const [params, update] = useApartmentParams();
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [calcOpen, setCalcOpen] = useState(false);
@@ -158,62 +155,23 @@ export function ApartmentPicker() {
 
   return (
     <>
-      <section aria-labelledby="apartments-title" className="relative bg-ink pt-20 text-white">
-        <div aria-hidden className="atmosphere" />
-        <div className="relative container-page pt-10 pb-8 md:pt-14">
-          <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <p className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-gold/15 px-3 py-1 eyebrow text-gold">
-                  {t("eyebrow")}
-                </span>
-                <span className="size-1 rounded-full bg-mist/60" />
-                <span className="text-sm text-mist">{tr(site.contact.address, locale)}</span>
-              </p>
-              <div className="mt-4 flex flex-wrap items-baseline gap-x-5 gap-y-2">
-                <h1
-                  id="apartments-title"
-                  className="font-display text-h2 font-extrabold tracking-tight md:text-[3.25rem] md:leading-[1.05]"
-                >
-                  {t("title")}
-                </h1>
-                {blockLetter && floor && (
-                  <span className="font-display text-xl font-bold text-gold md:text-2xl">
-                    {blockName} · {floorName}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 xl:items-end">
-              <StatsBar />
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => setCalcOpen(true)}>
-                  <Calculator className="size-4" aria-hidden />
-                  {t("calculator")}
-                </Button>
-                <a href={site.contact.phoneHref} className={buttonClasses("inverse", "md")}>
-                  <Phone className="size-4 text-gold" aria-hidden />
-                  {site.contact.phoneDisplay}
-                </a>
-              </div>
-            </div>
-          </div>
-
-          {!blocks.isError && (
-            <div className="mt-8">
-              <BlockSelector
-                blocks={blocks.data}
-                loading={blocks.isPending}
-                value={blockLetter}
-                onChange={(letter) => {
-                  setSlideDir(0);
-                  update({ block: letter, floor: null, apt: null });
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </section>
+      <ApartmentsHeader
+        selection={blockLetter && floor ? `${blockName} · ${floorName}` : undefined}
+        onCalculator={() => setCalcOpen(true)}
+        blockSelector={
+          !blocks.isError && (
+            <BlockSelector
+              blocks={blocks.data}
+              loading={blocks.isPending}
+              value={blockLetter}
+              onChange={(letter) => {
+                setSlideDir(0);
+                update({ block: letter, floor: null, apt: null });
+              }}
+            />
+          )
+        }
+      />
 
       <div className="bg-sand">
         <div className="container-page py-8 md:py-10">
@@ -334,7 +292,7 @@ export function ApartmentPicker() {
                   />
                 )}
 
-                <motion.div
+                <m.div
                   // Desktop (no slide) keeps one instance, as before; phones remount per floor.
                   key={slideDir ? (floor?.id ?? "none") : "static"}
                   initial={slideDir ? { x: slideDir * 56, opacity: 0 } : false}
@@ -400,7 +358,7 @@ export function ApartmentPicker() {
                       />
                     </>
                   )}
-                </motion.div>
+                </m.div>
               </section>
             </div>
           )}

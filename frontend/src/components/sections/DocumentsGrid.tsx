@@ -4,7 +4,7 @@ import { Eye, FileText, ShieldCheck } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Lightbox } from "@/components/ui/Lightbox";
+import { LazyLightbox } from "@/components/ui/LazyLightbox";
 import { site, tr } from "@/content/site";
 import type { Locale } from "@/i18n/routing";
 
@@ -71,7 +71,7 @@ export function DocumentsGrid() {
         ))}
       </ul>
 
-      <Lightbox
+      <LazyLightbox
         images={images}
         index={active ? page : null}
         onIndexChange={setPage}

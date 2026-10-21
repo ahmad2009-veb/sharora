@@ -83,32 +83,34 @@ export async function About() {
           </div>
 
           <dl className="mt-8 grid gap-3 sm:grid-cols-2">
-            <div className="flex items-start gap-4 rounded-card bg-white p-5 shadow-soft">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-periwinkle text-ink">
-                <MapPin className="size-5" aria-hidden />
-              </span>
-              <div>
-                <dt className="eyebrow text-muted">{tr(about.addressLabel, locale)}</dt>
-                <dd className="mt-1.5 leading-snug font-semibold">{tr(contact.address, locale)}</dd>
-                <dd className="mt-1 text-sm text-muted">{tr(contact.distance, locale)}</dd>
-              </div>
+            {/* dt/dd sit directly in each group (valid <dl>); the icon is placed in the
+                left gutter (pl-20 = padding + icon + gap). */}
+            <div className="relative rounded-card bg-white p-5 pl-20 shadow-soft">
+              <dt className="eyebrow text-muted">
+                <span className="absolute top-5 left-5 grid size-11 place-items-center rounded-full bg-periwinkle text-ink">
+                  <MapPin className="size-5" aria-hidden />
+                </span>
+                {tr(about.addressLabel, locale)}
+              </dt>
+              <dd className="mt-1.5 leading-snug font-semibold">{tr(contact.address, locale)}</dd>
+              <dd className="mt-1 text-sm text-muted">{tr(contact.distance, locale)}</dd>
             </div>
-            <div className="flex items-start gap-4 rounded-card bg-ink p-5 text-white shadow-soft">
-              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gold text-on-gold">
-                <Phone className="size-5" aria-hidden />
-              </span>
-              <div>
-                <dt className="eyebrow text-mist">{tr(about.responsible, locale)}</dt>
-                <dd className="mt-1.5">
-                  <a
-                    href={contact.phoneHref}
-                    className="font-display text-lg font-extrabold whitespace-nowrap text-gold hover:text-white"
-                  >
-                    {contact.phoneDisplay}
-                  </a>
-                </dd>
-                <dd className="mt-1 text-sm text-mist">{tr(contact.phoneNote, locale)}</dd>
-              </div>
+            <div className="relative rounded-card bg-ink p-5 pl-20 text-white shadow-soft">
+              <dt className="eyebrow text-mist">
+                <span className="absolute top-5 left-5 grid size-11 place-items-center rounded-full bg-gold text-on-gold">
+                  <Phone className="size-5" aria-hidden />
+                </span>
+                {tr(about.responsible, locale)}
+              </dt>
+              <dd className="mt-1.5">
+                <a
+                  href={contact.phoneHref}
+                  className="font-display text-lg font-extrabold whitespace-nowrap text-gold hover:text-white"
+                >
+                  {contact.phoneDisplay}
+                </a>
+              </dd>
+              <dd className="mt-1 text-sm text-mist">{tr(contact.phoneNote, locale)}</dd>
             </div>
           </dl>
 

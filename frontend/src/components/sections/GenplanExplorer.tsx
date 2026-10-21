@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { ArrowRight, Box } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -200,7 +200,7 @@ export function GenplanExplorer() {
             className="absolute -top-16 -right-16 size-48 rounded-full bg-gold/10 blur-3xl"
           />
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={selected}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -269,7 +269,7 @@ export function GenplanExplorer() {
                 {tr(g.openBlock, locale)} {selected}
                 <ArrowRight className="size-[18px]" aria-hidden />
               </Link>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
 

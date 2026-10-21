@@ -3,8 +3,10 @@
  * the letters, a 0→100 % counter ticks, then the curtain lifts. Pure CSS (see
  * globals.css → .preloader) so it animates before hydration; an inline script skips it
  * for returning visitors in the same session and for prefers-reduced-motion.
+ * data-intro delays the CSS hero entrance past the curtain; it is cleared once that entrance
+ * has finished so a later in-app visit to the home page starts without the wait.
  */
-const INIT = `try{var d=document.documentElement;if(matchMedia('(prefers-reduced-motion: reduce)').matches||sessionStorage.getItem('sh-pl')){d.dataset.preloader='off'}else{d.dataset.preloader='on';sessionStorage.setItem('sh-pl','1');setTimeout(function(){d.dataset.preloader='off'},1400)}}catch(e){document.documentElement.dataset.preloader='off'}`;
+const INIT = `try{var d=document.documentElement;if(matchMedia('(prefers-reduced-motion: reduce)').matches||sessionStorage.getItem('sh-pl')){d.dataset.preloader='off'}else{d.dataset.preloader='on';d.dataset.intro='on';sessionStorage.setItem('sh-pl','1');setTimeout(function(){d.dataset.preloader='off'},1400);setTimeout(function(){delete d.dataset.intro},6000)}}catch(e){document.documentElement.dataset.preloader='off'}`;
 
 export function Preloader() {
   return (

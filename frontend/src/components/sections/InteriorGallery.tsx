@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Lightbox } from "@/components/ui/Lightbox";
+import { LazyLightbox } from "@/components/ui/LazyLightbox";
 import { site, tr } from "@/content/site";
 import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
@@ -127,7 +127,7 @@ export function InteriorGallery({ heading }: { heading: ReactNode }) {
         ))}
       </ul>
 
-      <Lightbox
+      <LazyLightbox
         images={images}
         index={index}
         onIndexChange={setIndex}

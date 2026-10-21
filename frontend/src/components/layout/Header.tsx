@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
+import { AnimatePresence, m, useMotionValueEvent, useScroll } from "framer-motion";
 import { Menu, Phone, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -115,7 +115,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                           className="absolute inset-x-2.5 bottom-1 h-px origin-center scale-x-0 bg-gold/60 transition-transform duration-300 ease-out-soft group-hover:scale-x-100"
                         />
                         {active && (
-                          <motion.span
+                          <m.span
                             layoutId="nav-underline"
                             aria-hidden
                             className="absolute inset-x-2.5 bottom-0.5 h-[2px] rounded-full bg-gold shadow-[0_0_10px_rgb(255_222_164/0.8)]"
@@ -165,7 +165,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
 
       <AnimatePresence>
         {menuOpen && (
-          <motion.div
+          <m.div
             ref={menuRef}
             id="mobile-menu"
             data-dialog
@@ -199,7 +199,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
             >
               <ul className="space-y-1">
                 {site.nav.map((item, i) => (
-                  <motion.li
+                  <m.li
                     key={item.href}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -218,7 +218,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                       </span>
                       {tr(item.label, locale)}
                     </Link>
-                  </motion.li>
+                  </m.li>
                 ))}
               </ul>
             </nav>
@@ -241,7 +241,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
                 {tr(site.actions.chooseApartment, locale)}
               </Link>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>

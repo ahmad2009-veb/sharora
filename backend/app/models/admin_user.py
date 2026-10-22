@@ -15,3 +15,9 @@ class AdminUser(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), nullable=False
     )
+    # UTC, naive like created_at.
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Goes into every JWT; bumping it signs out every session issued before.
+    token_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )

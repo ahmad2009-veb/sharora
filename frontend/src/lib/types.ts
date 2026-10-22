@@ -172,6 +172,9 @@ export interface OverdueSummary {
 export interface AdminMe {
   id: number;
   username: string;
+  /** ISO 8601, UTC. */
+  created_at: string;
+  last_login_at: string | null;
 }
 
 export type UnitCreate = Pick<UnitDetail, "floor_id" | "name" | "number" | "kind" | "area"> &

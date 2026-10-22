@@ -21,18 +21,14 @@ settings = get_settings()
 
 
 def ensure_bootstrap_data() -> None:
-    """Creates the settings row and the default admin once migrations have been applied."""
+    """Creates the settings row and, while there is no admin at all, the default admin."""
     if not inspect(engine).has_table("admin_users"):
         return
     with SessionLocal() as db:
         if db.get(CalculatorSettings, 1) is None:
             db.add(CalculatorSettings(id=1))
-        exists = (
-            db.query(AdminUser)
-            .filter(AdminUser.username == settings.default_admin_username)
-            .first()
-        )
-        if exists is None:
+        # Only on an empty table: the admin may have renamed themselves since.
+        if db.query(AdminUser.id).first() is None:
             db.add(
                 AdminUser(
                     username=settings.default_admin_username,

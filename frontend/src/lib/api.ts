@@ -84,6 +84,18 @@ export const adminApi = {
     request<AdminMe>("/api/admin/login", { method: "POST", body: json({ username, password }) }),
   logout: () => request<{ ok: boolean }>("/api/admin/logout", { method: "POST" }),
   me: () => request<AdminMe>("/api/admin/me"),
+  changeUsername: (newUsername: string, currentPassword: string) =>
+    request<AdminMe>("/api/admin/me/username", {
+      method: "PATCH",
+      body: json({ new_username: newUsername, current_password: currentPassword }),
+    }),
+  /** Signs out every other session; this browser gets a fresh cookie. */
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<AdminMe>("/api/admin/me/password", {
+      method: "PATCH",
+      body: json({ current_password: currentPassword, new_password: newPassword }),
+    }),
+  logoutAll: () => request<{ ok: boolean }>("/api/admin/me/logout-all", { method: "POST" }),
   units: (params: { block?: string; floor?: number; status?: UnitStatus }) => {
     const qs = new URLSearchParams();
     if (params.block) qs.set("block", params.block);

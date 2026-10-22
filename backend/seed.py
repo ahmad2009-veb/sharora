@@ -141,10 +141,8 @@ def seed(db: Session, rng: random.Random | None = None) -> None:
     db.add(settings_row)
 
     cfg = get_settings()
-    admin_exists = db.execute(
-        select(AdminUser).where(AdminUser.username == cfg.default_admin_username)
-    ).scalar_one_or_none()
-    if admin_exists is None:
+    # Only on an empty table: the admin may have renamed themselves since.
+    if db.execute(select(AdminUser.id).limit(1)).first() is None:
         db.add(
             AdminUser(
                 username=cfg.default_admin_username,

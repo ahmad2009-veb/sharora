@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
+  ChevronDown,
   ChevronRight,
   Ellipsis,
   ExternalLink,
@@ -14,7 +15,8 @@ import {
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { Logo } from "@/components/layout/Logo";
 import { Modal } from "@/components/ui/Modal";
@@ -24,6 +26,7 @@ import { adminApi, api, ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatNumber } from "@/lib/format";
 
+import { AccountPanel } from "./AccountPanel";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { FloorsPanel } from "./FloorsPanel";
 import { LeadsPanel } from "./LeadsPanel";
@@ -32,6 +35,8 @@ import { SettingsPanel } from "./SettingsPanel";
 import { UnitsPanel } from "./UnitsPanel";
 
 type Tab = "units" | "floors" | "sales" | "leads" | "settings";
+/** «Мой аккаунт» lives on its own route (/admin-dashboard/account), outside the tab list. */
+export type Section = Tab | "account";
 
 const TABS: {
   value: Tab;
@@ -102,10 +107,22 @@ function CountBadge({ count, tone }: { count?: number; tone: "red" | "gold" }) {
   );
 }
 
-export function AdminDashboard() {
+/** /admin-dashboard?tab=sales opens that tab (links from the account page). */
+function tabFromUrl(): Tab {
+  const value = new URLSearchParams(window.location.search).get("tab");
+  return TABS.find((t) => t.value === value)?.value ?? "units";
+}
+
+export function AdminDashboard({ section }: { section?: "account" }) {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<Tab>("units");
+  const ta = useTranslations("adminAccount");
+  const [tab, setTab] = useState<Section>(section ?? "units");
+  // After a client-side navigation the new URL is only in place once the page has committed,
+  // so ?tab= is read here rather than in the initial state (layout effect: no flash).
+  useLayoutEffect(() => {
+    if (!section) setTab(tabFromUrl());
+  }, [section]);
   const me = useQuery({ queryKey: ["admin", "me"], queryFn: adminApi.me, retry: false });
   const newLeads = useQuery({
     queryKey: ["admin", "leads", false],
@@ -124,7 +141,8 @@ export function AdminDashboard() {
   const [confirmLogout, setConfirmLogout] = useState(false);
 
   useEffect(() => {
-    if (me.error instanceof ApiError && me.error.status === 401) router.replace("/admin-dashboard/login");
+    if (me.error instanceof ApiError && me.error.status === 401)
+      router.replace("/admin-dashboard/login");
   }, [me.error, router]);
 
   const logout = useMutation({
@@ -152,11 +170,25 @@ export function AdminDashboard() {
     );
   }
 
-  const current = TABS.find((x) => x.value === tab)!;
-  const openTab = (value: Tab) => {
-    setSalesOverdue(false);
-    setTab(value);
-    window.scrollTo({ top: 0 });
+  const current =
+    tab === "account"
+      ? { title: ta("title"), short: ta("title"), eyebrow: ta("eyebrow") }
+      : TABS.find((x) => x.value === tab)!;
+  /** Tabs switch in place; the account page and the way back from it are route changes. */
+  const go = (value: Section) => {
+    if (value === "account") {
+      if (tab !== "account") router.push("/admin-dashboard/account");
+    } else if (section === "account") {
+      router.push(value === "units" ? "/admin-dashboard" : `/admin-dashboard?tab=${value}`);
+    } else {
+      setSalesOverdue(false);
+      setTab(value);
+      return true;
+    }
+    return false;
+  };
+  const openTab = (value: Section) => {
+    if (go(value)) window.scrollTo({ top: 0 });
   };
   const badge = (value: Tab) =>
     value === "sales" ? (
@@ -199,10 +231,7 @@ export function AdminDashboard() {
                 key={value}
                 type="button"
                 aria-current={active ? "page" : undefined}
-                onClick={() => {
-                  setSalesOverdue(false);
-                  setTab(value);
-                }}
+                onClick={() => go(value)}
                 className={cn(
                   "flex h-12 shrink-0 items-center gap-3 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-all",
                   active
@@ -238,6 +267,20 @@ export function AdminDashboard() {
         </nav>
 
         <div className="hidden space-y-4 p-5 lg:block">
+          <button
+            type="button"
+            aria-current={tab === "account" ? "page" : undefined}
+            onClick={() => go("account")}
+            className={cn(
+              "flex h-12 w-full items-center gap-3 rounded-xl px-4 text-sm font-semibold whitespace-nowrap transition-all",
+              tab === "account"
+                ? "bg-night text-gold ring-1 ring-gold/20"
+                : "text-mist hover:bg-white/[0.05] hover:text-white",
+            )}
+          >
+            <UserRound className="size-5" aria-hidden />
+            {ta("title")}
+          </button>
           <div className="rounded-2xl bg-night p-4 ring-1 ring-gold/15">
             <p className="eyebrow text-gold">Статус проекта</p>
             <p className="mt-2 text-sm text-mist">
@@ -279,14 +322,21 @@ export function AdminDashboard() {
 
       <main className="px-4 py-8 max-md:pt-4 max-md:pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-8 lg:py-10">
         <div className="mx-auto max-w-[1360px]">
-          <div className="mb-8 max-md:hidden">
-            <p className="flex items-center gap-2 eyebrow text-gold-deep">
-              <span className="size-1.5 animate-pulse rounded-full bg-gold-deep" />
-              Консоль · {current.eyebrow}
-            </p>
-            <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight md:text-[2.75rem]">
-              {current.title}
-            </h1>
+          <div className="mb-8 flex items-start justify-between gap-6 max-md:hidden">
+            <div className="min-w-0">
+              <p className="flex items-center gap-2 eyebrow text-gold-deep">
+                <span className="size-1.5 animate-pulse rounded-full bg-gold-deep" />
+                Консоль · {current.eyebrow}
+              </p>
+              <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight md:text-[2.75rem]">
+                {current.title}
+              </h1>
+            </div>
+            <UserMenu
+              username={me.data.username}
+              onAccount={() => go("account")}
+              onLogout={() => setConfirmLogout(true)}
+            />
           </div>
           {tab === "units" && (
             <UnitsPanel
@@ -304,6 +354,7 @@ export function AdminDashboard() {
           )}
           {tab === "leads" && <LeadsPanel />}
           {tab === "settings" && <SettingsPanel />}
+          {tab === "account" && <AccountPanel me={me.data} />}
         </div>
       </main>
 
@@ -330,7 +381,7 @@ export function AdminDashboard() {
             <BottomNavButton
               label="Ещё"
               Icon={Ellipsis}
-              active={MORE_TABS.includes(tab)}
+              active={tab === "account" || MORE_TABS.includes(tab)}
               onClick={() => setMoreOpen(true)}
               expanded={moreOpen}
             />
@@ -363,6 +414,18 @@ export function AdminDashboard() {
               </li>
             );
           })}
+          <li>
+            <MoreItem
+              Icon={UserRound}
+              active={tab === "account"}
+              onClick={() => {
+                setMoreOpen(false);
+                openTab("account");
+              }}
+            >
+              {ta("title")}
+            </MoreItem>
+          </li>
           <li>
             <Link
               href="/"
@@ -399,6 +462,90 @@ export function AdminDashboard() {
         onCancel={() => setConfirmLogout(false)}
         onConfirm={() => logout.mutate()}
       />
+    </div>
+  );
+}
+
+/** md and up: avatar + username in the page header, with «Мой аккаунт» and «Выход». */
+function UserMenu({
+  username,
+  onAccount,
+  onLogout,
+}: {
+  username: string;
+  onAccount: () => void;
+  onLogout: () => void;
+}) {
+  const t = useTranslations("adminAccount");
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const item =
+    "flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-semibold hover:bg-sand";
+  return (
+    <div ref={root} className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("userMenu")}
+        className="flex h-12 items-center gap-2.5 rounded-full bg-white py-1.5 pr-3.5 pl-1.5 shadow-soft ring-1 ring-ink/5 transition-shadow hover:shadow-lift"
+      >
+        <span className="grid size-9 place-items-center rounded-full bg-ink font-display font-extrabold text-gold">
+          {username.charAt(0).toUpperCase() || <UserRound className="size-4" aria-hidden />}
+        </span>
+        <span className="max-w-40 truncate text-sm font-semibold">{username}</span>
+        <ChevronDown
+          className={cn("size-4 text-muted transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute top-full right-0 z-30 mt-2 w-56 rounded-2xl bg-white p-1.5 shadow-deep ring-1 ring-ink/5"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className={item}
+            onClick={() => {
+              setOpen(false);
+              onAccount();
+            }}
+          >
+            <UserRound className="size-4 text-gold-deep" aria-hidden />
+            {t("title")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={cn(item, "text-status-sold-text")}
+            onClick={() => {
+              setOpen(false);
+              onLogout();
+            }}
+          >
+            <LogOut className="size-4" aria-hidden />
+            {t("logout")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

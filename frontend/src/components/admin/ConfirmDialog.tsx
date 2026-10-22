@@ -12,6 +12,7 @@ export function ConfirmDialog({
   title,
   message,
   confirmLabel,
+  cancelLabel = "Отмена",
   onConfirm,
   onCancel,
   busy = false,
@@ -20,6 +21,7 @@ export function ConfirmDialog({
   title: string;
   message: ReactNode;
   confirmLabel: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   busy?: boolean;
@@ -34,7 +36,7 @@ export function ConfirmDialog({
       </div>
       <div className="mt-6 flex justify-end gap-3 max-md:grid max-md:grid-cols-2 max-md:pb-[env(safe-area-inset-bottom)] max-md:[&>*]:h-12">
         <Button variant="ghost" onClick={onCancel} data-autofocus>
-          Отмена
+          {cancelLabel}
         </Button>
         <Button variant="dark" onClick={onConfirm} disabled={busy}>
           {confirmLabel}

@@ -11,11 +11,11 @@ def get_current_admin(request: Request, db: Session = Depends(get_db)) -> AdminU
     if not token:
         raise HTTPException(status_code=401, detail="Не авторизован")
 
-    username = decode_access_token(token)
-    if username is None:
+    claims = decode_access_token(token)
+    if claims is None:
         raise HTTPException(status_code=401, detail="Сессия истекла, войдите снова")
 
-    admin = db.query(AdminUser).filter(AdminUser.username == username).one_or_none()
-    if admin is None:
-        raise HTTPException(status_code=401, detail="Не авторизован")
+    admin = db.get(AdminUser, claims.admin_id)
+    if admin is None or admin.token_version != claims.version:
+        raise HTTPException(status_code=401, detail="Сессия истекла, войдите снова")
     return admin

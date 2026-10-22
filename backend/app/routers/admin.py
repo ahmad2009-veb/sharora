@@ -1,14 +1,20 @@
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_admin
-from app.core.security import ACCESS_TOKEN_COOKIE_NAME, create_access_token, verify_password
+from app.core.security import (
+    ACCESS_TOKEN_COOKIE_NAME,
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.models import (
     AdminUser,
     Block,
@@ -20,7 +26,8 @@ from app.models import (
     Unit,
     UnitStatus,
 )
-from app.schemas.auth import AdminMeOut, LoginRequest
+from app.routers.public import client_ip
+from app.schemas.auth import AdminMeOut, LoginRequest, PasswordChange, UsernameChange
 from app.schemas.block import BlockCreate, BlockOut, BlockUpdate
 from app.schemas.floor import FloorCreate, FloorOut, FloorUpdate
 from app.schemas.lead import LeadAdminOut, LeadUpdate
@@ -36,6 +43,7 @@ from app.schemas.sale import (
 )
 from app.schemas.settings import SettingsOut, SettingsUpdate
 from app.schemas.unit import UnitAdminOut, UnitCreate, UnitStatusUpdate, UnitUpdate
+from app.services import password_attempts
 from app.services.aggregates import BlockCounts, block_counts
 from app.services.converters import to_unit_detail
 from app.services.installments import (
@@ -191,6 +199,35 @@ def _floor_out(floor: Floor) -> FloorOut:
 # ---------- auth ----------
 
 
+def _set_session_cookie(response: Response, admin: AdminUser) -> None:
+    response.set_cookie(
+        key=ACCESS_TOKEN_COOKIE_NAME,
+        value=create_access_token(admin.id, admin.token_version),
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        max_age=settings.access_token_expire_minutes * 60,
+        path="/",
+    )
+
+
+def _end_other_sessions(response: Response, admin: AdminUser) -> None:
+    """Invalidates every token issued so far and gives this browser a fresh one."""
+    admin.token_version += 1
+    _set_session_cookie(response, admin)
+
+
+def _check_current_password(request: Request, admin: AdminUser, password: str) -> None:
+    keys = [f"admin:{admin.id}", f"ip:{client_ip(request)}"]
+    if password_attempts.is_blocked(keys):
+        raise HTTPException(
+            status_code=429, detail="Слишком много неверных попыток. Попробуйте через 15 минут"
+        )
+    if not verify_password(password, admin.password_hash):
+        password_attempts.record_failure(keys)
+        raise HTTPException(status_code=400, detail="Неверный текущий пароль")
+
+
 @router.post("/login", response_model=AdminMeOut)
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> AdminMeOut:
     admin = db.execute(
@@ -199,16 +236,10 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
     if admin is None or not verify_password(payload.password, admin.password_hash):
         raise HTTPException(status_code=401, detail="Неверный логин или пароль")
 
-    response.set_cookie(
-        key=ACCESS_TOKEN_COOKIE_NAME,
-        value=create_access_token(subject=admin.username),
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        max_age=settings.access_token_expire_minutes * 60,
-        path="/",
-    )
-    return AdminMeOut(id=admin.id, username=admin.username)
+    admin.last_login_at = datetime.now(UTC).replace(tzinfo=None)
+    db.commit()
+    _set_session_cookie(response, admin)
+    return AdminMeOut.model_validate(admin)
 
 
 @router.post("/logout")
@@ -219,7 +250,63 @@ def logout(response: Response) -> dict[str, bool]:
 
 @protected.get("/me", response_model=AdminMeOut)
 def me(admin: AdminUser = Depends(get_current_admin)) -> AdminMeOut:
-    return AdminMeOut(id=admin.id, username=admin.username)
+    return AdminMeOut.model_validate(admin)
+
+
+@protected.patch("/me/username", response_model=AdminMeOut)
+def change_username(
+    payload: UsernameChange,
+    request: Request,
+    admin: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> AdminMeOut:
+    _check_current_password(request, admin, payload.current_password)
+    if payload.new_username == admin.username:
+        raise HTTPException(status_code=422, detail="Новый логин совпадает с текущим")
+    # Case-insensitive, so «Admin» and «admin» can't both exist.
+    taken = db.execute(
+        select(AdminUser.id).where(
+            func.lower(AdminUser.username) == payload.new_username.lower(),
+            AdminUser.id != admin.id,
+        )
+    ).first()
+    if taken is not None:
+        raise HTTPException(status_code=409, detail="Такой логин уже занят")
+    admin.username = payload.new_username
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Такой логин уже занят") from None
+    return AdminMeOut.model_validate(admin)
+
+
+@protected.patch("/me/password", response_model=AdminMeOut)
+def change_password(
+    payload: PasswordChange,
+    request: Request,
+    response: Response,
+    admin: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> AdminMeOut:
+    _check_current_password(request, admin, payload.current_password)
+    if payload.new_password == payload.current_password:
+        raise HTTPException(status_code=422, detail="Новый пароль должен отличаться от текущего")
+    admin.password_hash = hash_password(payload.new_password)
+    _end_other_sessions(response, admin)
+    db.commit()
+    return AdminMeOut.model_validate(admin)
+
+
+@protected.post("/me/logout-all")
+def logout_all(
+    response: Response,
+    admin: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+) -> dict[str, bool]:
+    _end_other_sessions(response, admin)
+    db.commit()
+    return {"ok": True}
 
 
 # ---------- blocks ----------

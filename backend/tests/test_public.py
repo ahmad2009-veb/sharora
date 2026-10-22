@@ -97,6 +97,7 @@ def test_public_catalogue_is_briefly_cacheable(client: TestClient) -> None:
         res = client.get(path)
         assert res.status_code == 200
         assert res.headers["cache-control"] == "public, max-age=10, stale-while-revalidate=50"
+        assert res.headers["vercel-cdn-cache-control"] == "no-store"
 
 
 def test_admin_requests_to_the_catalogue_are_not_cached(admin_client: TestClient) -> None:

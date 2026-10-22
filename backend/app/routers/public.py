@@ -27,8 +27,9 @@ settings = get_settings()
 
 # Visitors' browsers may reuse catalogue answers for a few seconds (and revalidate in the
 # background), which saves repeat requests when moving between pages. Browser-only on
-# purpose: no s-maxage, so the CDN never serves a stale status. The admin panel reads the
-# same endpoints right after editing a unit, so its requests are never cached.
+# purpose: Vercel's CDN would otherwise cache them too (it honours stale-while-revalidate)
+# and serve a stale status — also to the admin panel, which reads the same endpoints right
+# after editing a unit. Admin requests are never cached at all.
 PUBLIC_CACHE = "public, max-age=10, stale-while-revalidate=50"
 
 
@@ -37,6 +38,7 @@ def cache_headers(request: Request, response: Response) -> None:
         return
     admin = ACCESS_TOKEN_COOKIE_NAME in request.cookies
     response.headers["Cache-Control"] = "private, no-store" if admin else PUBLIC_CACHE
+    response.headers["Vercel-CDN-Cache-Control"] = "no-store"
 
 
 router = APIRouter(prefix="/api", tags=["public"], dependencies=[Depends(cache_headers)])

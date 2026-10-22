@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import inspect
@@ -79,6 +79,12 @@ app.mount(settings.media_url, StaticFiles(directory=settings.media_dir), name="m
 
 app.include_router(public_router)
 app.include_router(admin_router)
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    # The API has no page of its own; opening the backend address shows its docs.
+    return RedirectResponse("/docs")
 
 
 @app.get("/api/health", tags=["system"])

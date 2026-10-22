@@ -7,7 +7,7 @@
 | Frontend | Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Framer Motion · next-intl · TanStack Query · react-zoom-pan-pinch · lucide-react | `frontend/` |
 | Backend | FastAPI · SQLAlchemy 2 · Pydantic v2 · Alembic · PostgreSQL (SQLite для разработки) | `backend/` |
 
-**Главная страница не обращается к API**: она собирается статически (SSG) из `frontend/src/content/site.ts`. Backend нужен только странице `/apartments` и админке `/admin`.
+**Главная страница не обращается к API**: она собирается статически (SSG) из `frontend/src/content/site.ts`. Backend нужен только странице `/apartments` и админке `/admin-dashboard`.
 
 ---
 
@@ -34,7 +34,7 @@ npm run dev
 
 - Сайт: <http://localhost:3000> (RU) и <http://localhost:3000/tg> (TJ)
 - Выбор квартиры: <http://localhost:3000/apartments?block=А&floor=2>
-- Админка: <http://localhost:3000/admin/login> — логин/пароль из `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` в `backend/.env` (пользователь создаётся при первом запуске API или `seed.py`).
+- Админка: <http://localhost:3000/admin-dashboard/login> — логин/пароль из `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` в `backend/.env` (пользователь создаётся при первом запуске API или `seed.py`).
 
 Браузер обращается к API через тот же домен: Next.js проксирует `/api/*` и `/media/*` на `BACKEND_URL` (см. `next.config.ts`). Поэтому JWT-cookie админки остаётся first-party, а CORS в продакшене не нужен.
 
@@ -103,7 +103,7 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 4. **Остальные переменные** из таблицы: Project → Settings → Environment Variables.
 5. **Миграции и сид — в сборке.** `buildCommand` сервиса `backend` (`python -m scripts.deploy_setup`) при каждой **production**-сборке выполняет `alembic upgrade head` и `seed.py --if-empty` по `DATABASE_URL_UNPOOLED` (или `DATABASE_URL`). Сид срабатывает только на пустой базе и создаёт менеджера из `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` (добавьте их в Vercel как Secret). Preview-сборки базу не трогают: она общая с production. Ошибка миграции валит сборку — сайт остаётся на предыдущем деплое.
 6. **Деплой.** Каждый push в `main` деплоит Production, остальные ветки — Preview. Повторный деплой: Deployments → … → Redeploy (нужен после изменения переменных).
-7. **Проверка.** `https://<домен>/api/health` → `{"status":"ok"}`, затем `/admin/login`. Свой домен: Project → Settings → Domains, затем обновите `NEXT_PUBLIC_SITE_URL` и Redeploy.
+7. **Проверка.** `https://<домен>/api/health` → `{"status":"ok"}`, затем `/admin-dashboard/login`. Свой домен: Project → Settings → Domains, затем обновите `NEXT_PUBLIC_SITE_URL` и Redeploy.
 
 Ограничения: rate-limit заявок (`5/minute`) хранится в памяти инстанса и на serverless работает приблизительно.
 
@@ -111,7 +111,7 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 
 1. Задайте `DEFAULT_ADMIN_USERNAME` и `DEFAULT_ADMIN_PASSWORD` в `backend/.env` (в Docker — `ADMIN_USERNAME` / `ADMIN_PASSWORD` в корневом `.env`).
 2. Примените миграции и запустите API (или `seed.py`) — пользователь создаётся, только если его ещё нет. Смена пароля в `.env` **не меняет** пароль уже созданного пользователя: для этого удалите его из таблицы `admin_users` и перезапустите API.
-3. Откройте <http://localhost:3000/admin/login> (ссылка мелким текстом в футере). Сессия — httpOnly JWT-cookie на `ACCESS_TOKEN_EXPIRE_MINUTES` минут; за HTTPS включите `COOKIE_SECURE=true`.
+3. Откройте <http://localhost:3000/admin-dashboard/login> (ссылка мелким текстом в футере). Сессия — httpOnly JWT-cookie на `ACCESS_TOKEN_EXPIRE_MINUTES` минут; за HTTPS включите `COOKIE_SECURE=true`.
 
 ---
 
@@ -139,7 +139,7 @@ sharora/
   frontend/
     src/app/[locale]/page.tsx              главная (SSG, без API)
     src/app/[locale]/apartments/page.tsx   выбор квартиры (FastAPI через TanStack Query)
-    src/app/[locale]/admin/                вход и панель менеджера
+    src/app/[locale]/admin-dashboard/      вход и панель менеджера
     src/app/sitemap.ts, robots.ts, icon.png, apple-icon.png
     src/components/ui/                     дизайн-система (см. ниже)
     src/components/layout/                 Header, Footer, LocaleSwitcher, FeedbackFab
@@ -148,7 +148,7 @@ sharora/
     src/components/admin/                  таблица квартир, разметка полигонов, заявки, настройки
     src/content/site.ts                    ВЕСЬ контент главной (RU/TJ)
     src/messages/{ru,tg}.json              строки интерфейса выбора квартир
-    src/lib/api.ts                         клиент FastAPI (только apartments/admin)
+    src/lib/api.ts                         клиент FastAPI (только apartments/admin-dashboard)
     public/                                logo.png, og.jpg, renders/ (визуализации из макета), docs/
   backend/
     app/main.py, core/, models/, schemas/, routers/, services/
@@ -229,5 +229,5 @@ sharora/
 
 - Locale таджикского языка — `tg` (код ISO 639-1); в переключателе он подписан «TJ», адреса — `/tg/...`.
 - Сетка преимуществ — 8 карточек (4 × 2) и цитата под ними; карточка «городок из 44 блоков» и паркинг убраны (2026-10).
-- Админка доступна по `/admin/login` (ссылка мелким текстом в футере); middleware перенаправляет без cookie, а API проверяет JWT на каждом запросе.
+- Админка доступна по `/admin-dashboard/login` (ссылка мелким текстом в футере); middleware перенаправляет без cookie, а API проверяет JWT на каждом запросе.
 - Миграции и тесты проверены на SQLite; на PostgreSQL используется драйвер `psycopg` 3 (`postgresql+psycopg://`).

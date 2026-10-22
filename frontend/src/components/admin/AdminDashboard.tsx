@@ -124,14 +124,14 @@ export function AdminDashboard() {
   const [confirmLogout, setConfirmLogout] = useState(false);
 
   useEffect(() => {
-    if (me.error instanceof ApiError && me.error.status === 401) router.replace("/admin/login");
+    if (me.error instanceof ApiError && me.error.status === 401) router.replace("/admin-dashboard/login");
   }, [me.error, router]);
 
   const logout = useMutation({
     mutationFn: adminApi.logout,
     onSettled: () => {
       queryClient.clear();
-      router.replace("/admin/login");
+      router.replace("/admin-dashboard/login");
     },
   });
 

@@ -400,7 +400,7 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
           <LocaleSwitcher className="ml-auto" />
         </li>
         <li>
-          <Link href="/admin/login" onClick={onClose} className={cn(row, "text-white/70")}>
+          <Link href="/admin-dashboard/login" onClick={onClose} className={cn(row, "text-white/70")}>
             {icon(LockKeyhole)}
             {t("managers")}
             {chevron}

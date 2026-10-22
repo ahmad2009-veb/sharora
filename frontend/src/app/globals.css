@@ -439,16 +439,39 @@ html:not([data-preloader="on"]) .preloader {
   transform: translateX(120%);
 }
 
-/* Custom cursor (desktop only, enabled by components/motion/Cursor.tsx) */
-html.has-cursor,
-html.has-cursor * {
-  cursor: none !important;
-}
-html.has-cursor :is(input, textarea, select, [contenteditable="true"]) {
-  cursor: text !important;
-}
-html.has-cursor select {
-  cursor: pointer !important;
+@layer base {
+  /* System cursor everywhere; the hand on everything clickable (Tailwind v4 resets buttons to
+     the arrow). Disabled controls show "not-allowed". */
+  :is(
+    a[href],
+    button,
+    [role="button"],
+    [role="tab"],
+    [role="link"],
+    [role="option"],
+    [role="menuitem"],
+    [role="switch"],
+    [role="checkbox"],
+    [role="radio"],
+    label[for],
+    summary,
+    select,
+    input:is(
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="file"],
+      [type="submit"],
+      [type="button"],
+      [type="reset"],
+      [type="color"]
+    )
+  ) {
+    cursor: pointer;
+  }
+  :is(button, input, select, textarea, [role="button"]):is(:disabled, [aria-disabled="true"]) {
+    cursor: not-allowed;
+  }
 }
 
 @keyframes loader {
@@ -536,6 +559,58 @@ html.has-cursor select {
 .hero-kenburns {
   animation: hero-kenburns 20s ease-in-out infinite alternate;
   will-change: transform;
+}
+
+/* Hero slideshow: photos crossfade, and each new one settles in from a slight zoom. */
+.hero-slide {
+  transition: opacity 1.8s ease-in-out;
+}
+@keyframes hero-slide-zoom {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.hero-slide-zoom {
+  animation: hero-slide-zoom 9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Slide indicator: frosted capsule with a gold rim light, bars fill over each slide. */
+.hero-indicator {
+  background: linear-gradient(180deg, rgb(28 38 65 / 0.55), rgb(10 15 28 / 0.7));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    inset 0 -1px 0 rgb(0 0 0 / 0.4),
+    0 0 0 1px rgb(255 222 164 / 0.22),
+    0 18px 40px -12px rgb(0 0 0 / 0.6),
+    0 0 30px -6px rgb(255 222 164 / 0.25);
+  backdrop-filter: blur(12px);
+}
+@keyframes hero-progress {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.hero-progress {
+  animation: hero-progress linear both;
+}
+@keyframes hero-indicator-num {
+  from {
+    opacity: 0;
+    transform: translateY(8px) rotateX(70deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.hero-indicator-num {
+  animation: hero-indicator-num 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  filter: drop-shadow(0 2px 6px rgb(255 222 164 / 0.35));
 }
 
 /* Golden motes drifting up through the sky of the hero render. */
@@ -702,6 +777,7 @@ html[data-intro="on"] {
 @media (prefers-reduced-motion: reduce) {
   .kenburns,
   .hero-kenburns,
+  .hero-slide-zoom,
   .hero-mote,
   .hero-glow,
   .hero-sheen::before,

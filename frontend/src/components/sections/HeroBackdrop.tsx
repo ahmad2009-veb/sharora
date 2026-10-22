@@ -9,16 +9,11 @@ import {
   type MotionValue,
 } from "framer-motion";
 import { useEffect, useState, type CSSProperties } from "react";
-import { preload } from "react-dom";
 
-import { site } from "@/content/site";
 import { hasFinePointer } from "@/lib/capabilities";
+import { cn } from "@/lib/cn";
 
-const { base, widths, width, height, blurDataURL } = site.hero.image;
-const SIZES = "100vw";
-const srcSet = (ext: "avif" | "webp") => widths.map((w) => `${base}-${w}.${ext} ${w}w`).join(", ");
-const AVIF_SRCSET = srcSet("avif");
-const WEBP_SRCSET = srcSet("webp");
+import { HeroBackground, SLIDE_COUNT, SLIDE_MS, useActiveSlide } from "./HeroBackground";
 
 /** Max image shift, px, opposite to the cursor. The layer is oversized by 24px per side. */
 const PARALLAX_PX = 18;
@@ -57,23 +52,13 @@ const MOTES = (() => {
 })();
 
 /**
- * Hero render with layered motion: blur-to-sharp entrance (the blurred placeholder sits
- * under the photo, which fades in), CSS Ken Burns, cursor parallax on desktop / scroll
- * parallax elsewhere, a periodic gold light sweep and drifting golden motes in the sky.
- * Everything animated is transform or opacity; reduced motion keeps only the fade.
+ * Hero backdrop: the photo slideshow (HeroBackground) with cursor parallax on desktop /
+ * scroll parallax elsewhere, a periodic gold light sweep and drifting golden motes in the sky.
+ * Everything animated is transform or opacity.
  */
 export function HeroBackdrop({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) {
   const reduce = useReducedMotion();
   const [motes, setMotes] = useState(false);
-
-  // Pre-built responsive set; the AVIF preload is skipped by browsers that cannot decode it.
-  preload(`${base}-1920.avif`, {
-    as: "image",
-    imageSrcSet: AVIF_SRCSET,
-    imageSizes: SIZES,
-    type: "image/avif",
-    fetchPriority: "high",
-  });
 
   const scrollY = useTransform(scrollYProgress, [0, 1], ["0%", reduce ? "0%" : "22%"]);
 
@@ -98,34 +83,11 @@ export function HeroBackdrop({ scrollYProgress }: { scrollYProgress: MotionValue
   return (
     <m.div aria-hidden className="absolute inset-0 -z-20" style={{ y: scrollY }}>
       <m.div className="absolute -inset-6" style={{ x, y }}>
-        {/* Entrance in CSS (globals.css → .hero-backdrop-in): it runs from the first paint, so
-            the photo — the page's largest element — does not wait for hydration. */}
-        <div className="hero-backdrop-in absolute inset-0">
-          <div className="hero-kenburns absolute inset-0 overflow-hidden">
-            <div
-              className="absolute inset-0 scale-110 bg-cover bg-[58%_45%] blur-xl"
-              style={{ backgroundImage: `url("${blurDataURL}")` }}
-            />
-            <picture>
-              <source type="image/avif" srcSet={AVIF_SRCSET} sizes={SIZES} />
-              <source type="image/webp" srcSet={WEBP_SRCSET} sizes={SIZES} />
-              {/* Not next/image: it is unoptimized on Vercel, so AVIF/WebP + srcset are pre-built. */}
-              <img
-                src={`${base}-1920.webp`}
-                alt=""
-                width={width}
-                height={height}
-                fetchPriority="high"
-                decoding="async"
-                className="hero-img-in absolute inset-0 size-full object-cover object-[58%_45%]"
-              />
-            </picture>
-          </div>
-        </div>
+        <HeroBackground />
       </m.div>
 
-      {/* Facade lighting: warm glow breathing over the windows + a periodic gold sweep. */}
-      <div className="hero-glow pointer-events-none absolute inset-0" />
+      {/* A periodic gold light sweep. (No soft-light glow layer: blending a full-screen layer
+          over the moving photos every frame dropped ~40% of frames on desktop.) */}
       <div className="hero-sheen pointer-events-none absolute inset-0" />
 
       {motes && (
@@ -151,5 +113,49 @@ export function HeroBackdrop({ scrollYProgress }: { scrollYProgress: MotionValue
         </div>
       )}
     </m.div>
+  );
+}
+
+/**
+ * Slide counter and progress bars for the hero photos (desktop): a frosted, softly lit
+ * capsule on the right edge. Decorative, so hidden from screen readers.
+ */
+export function HeroSlideIndicator() {
+  const reduce = useReducedMotion();
+  const active = useActiveSlide();
+  if (reduce || SLIDE_COUNT < 2) return null;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    <div
+      aria-hidden
+      className="hero-indicator pointer-events-none absolute top-1/2 right-6 z-0 hidden -translate-y-1/2 flex-col items-center gap-4 rounded-full px-3 py-5 lg:flex xl:right-10"
+    >
+      <span
+        key={active}
+        className="hero-indicator-num text-gold-gradient font-display text-2xl font-extrabold tabular-nums"
+      >
+        {pad(active + 1)}
+      </span>
+      <span className="flex flex-col gap-2">
+        {Array.from({ length: SLIDE_COUNT }, (_, i) => (
+          <span
+            key={i}
+            className="relative block h-9 w-[5px] overflow-hidden rounded-full bg-white/15 shadow-[inset_0_1px_2px_rgb(0_0_0/0.5)]"
+          >
+            <span
+              key={i === active ? `run-${active}` : "idle"}
+              className={cn(
+                "absolute inset-0 origin-top rounded-full bg-[linear-gradient(180deg,#fff3d6,#ffdea4_40%,#e8c176_75%,#b8913f)] shadow-[0_0_10px_rgb(255_222_164/0.75)]",
+                i === active ? "hero-progress" : i < active ? "" : "scale-y-0",
+              )}
+              style={i === active ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
+            />
+          </span>
+        ))}
+      </span>
+      <span className="text-[11px] font-bold tracking-[0.2em] text-white/55 tabular-nums">
+        {pad(SLIDE_COUNT)}
+      </span>
+    </div>
   );
 }

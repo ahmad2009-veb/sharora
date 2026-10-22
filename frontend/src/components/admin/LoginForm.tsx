@@ -19,7 +19,7 @@ export function LoginForm() {
 
   const login = useMutation({
     mutationFn: () => adminApi.login(username.trim(), password),
-    onSuccess: () => router.replace("/admin"),
+    onSuccess: () => router.replace("/admin-dashboard"),
   });
 
   function onSubmit(e: FormEvent) {

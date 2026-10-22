@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
-import { site } from "@/content/site";
+import { site, tr } from "@/content/site";
+import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
 
 export function Logo({
@@ -16,6 +17,8 @@ export function Logo({
   className?: string;
 }) {
   const tc = useTranslations("common");
+  const locale = useLocale() as Locale;
+  const tagline = tr(site.brand.tagline, locale);
   const dark = tone === "dark";
   const lg = size === "lg";
   return (
@@ -23,7 +26,7 @@ export function Logo({
       href="/"
       className={cn("group flex items-center gap-3", className)}
       // The name starts with the visible wordmark (WCAG «label in name»).
-      aria-label={tc("homeLink", { name: `${site.brand.name} · Residence` })}
+      aria-label={tc("homeLink", { name: `${site.brand.wordmark} · ${tagline}` })}
     >
       <span
         className={cn(
@@ -49,7 +52,7 @@ export function Logo({
             dark ? "text-gold" : "text-ink",
           )}
         >
-          Zarafshon
+          {site.brand.wordmark}
         </span>{" "}
         <span
           className={cn(
@@ -58,7 +61,7 @@ export function Logo({
             dark ? "text-mist" : "text-muted",
           )}
         >
-          Sokhtmon · Residence
+          {tagline}
         </span>
       </span>
     </Link>

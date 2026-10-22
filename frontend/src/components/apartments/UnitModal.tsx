@@ -237,7 +237,7 @@ export function UnitModal({ unitId, onClose, onCalculator }: Props) {
               className="group flex items-center gap-4 rounded-card bg-white p-3 pr-5 shadow-soft transition-shadow hover:shadow-lift"
             >
               <span className="relative h-20 w-32 shrink-0 overflow-hidden rounded-2xl">
-                <Image src="/renders/show.jpg" alt="" fill sizes="128px" className="object-cover" />
+                <Image src="/renders/gallery/01-corner-day.jpg" alt="" fill sizes="128px" className="object-cover" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block eyebrow text-gold-deep">{t("showroom")}</span>

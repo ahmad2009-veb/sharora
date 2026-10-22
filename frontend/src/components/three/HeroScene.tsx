@@ -35,7 +35,14 @@ export default function HeroScene(props: HeroSceneProps) {
   const [shadows, setShadows] = useState(true);
 
   return (
-    <div className="absolute inset-0" role="img" aria-label={props.sceneLabel}>
+    <div
+      // Touch screens: the canvas wrapper gets touch-action: none (inline, from the 3D
+      // controls), which blocks page scrolling over the scene. Vertical swipes scroll the
+      // page; horizontal swipes still turn the model. No effect on mouse input.
+      className="absolute inset-0 [&>div]:!touch-pan-y"
+      role="img"
+      aria-label={props.sceneLabel}
+    >
       <Canvas
         frameloop={props.active ? "always" : "never"}
         dpr={dpr}

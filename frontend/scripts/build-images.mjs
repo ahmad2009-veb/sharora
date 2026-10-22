@@ -22,7 +22,7 @@ const MANIFEST = path.join(ROOT, "src", "generated", "images.json");
 const WIDTHS = [64, 128, 256, 384, 640, 828, 1080, 1280, 1920];
 const QUALITY = 76;
 // Pre-built elsewhere (hero <picture> set), only for social previews, or not images.
-const SKIP = [/^_img\//, /^renders\/hero\//, /^og\.jpg$/, /^fonts\//];
+const SKIP = [/^_img\//, /^hero\//, /^og\.jpg$/, /^fonts\//];
 
 async function* walk(dir) {
   for (const entry of await fs.readdir(dir, { withFileTypes: true })) {

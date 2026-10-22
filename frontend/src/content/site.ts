@@ -30,6 +30,9 @@ export const site = {
     name: "Zarafshon Sokhtmon",
     project: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
     logo: "/logo.png",
+    // Header/footer logo text: wordmark (Latin in both languages) and the slogan under it.
+    wordmark: "Vasli Tojik",
+    tagline: { ru: "Строим ваше будущее", tg: "Бунёди фардои шумо" } satisfies Localized,
   },
 
   contact: {
@@ -68,7 +71,7 @@ export const site = {
     { href: "/", label: { ru: "Главная", tg: "Асосӣ" } },
     { href: "/#about", label: { ru: "О проекте", tg: "Дар бораи лоиҳа" } },
     { href: "/#features", label: { ru: "Преимущества", tg: "Бартариятҳо" } },
-    { href: "/#interior", label: { ru: "Интерьер", tg: "Тарҳи дохилӣ" } },
+    { href: "/#interior", label: { ru: "Архитектура", tg: "Меъморӣ" } },
     { href: "/#documents", label: { ru: "Документы", tg: "Ҳуҷҷатҳо" } },
     { href: "/apartments", label: { ru: "Квартиры", tg: "Хонаҳо" }, highlight: true },
     { href: "/#contacts", label: { ru: "Контакты", tg: "Тамос" } },
@@ -107,18 +110,6 @@ export const site = {
       ru: "Широкие дороги, магазины на первом этаже и всё необходимое для комфортной современной жизни.",
       tg: "Роҳҳои васеъ, мағозаҳо дар ошёнаи якум ва ҳама чизи зарурӣ барои зиндагии бароҳат ва муосир.",
     } satisfies Localized,
-    // TODO(client): renders from the design mock-up — replace with the project's own visuals.
-    // Real-ESRGAN x4 upscale of renders/hero-building.jpg (kept as the source), graded and
-    // exported as AVIF/WebP at these widths; Vercel serves public/ unoptimized, so the
-    // responsive set is pre-built. Regenerate all files if the render changes.
-    image: {
-      base: "/renders/hero/hero",
-      widths: [1280, 1920, 2560],
-      width: 2560,
-      height: 1863,
-      blurDataURL:
-        "data:image/webp;base64,UklGRnwAAABXRUJQVlA4IHAAAAAwBACdASoYABEAPsFMn0unpCKht/qoAPAYCWMAAFFO6tg+UtRIiF+fxAAA/cL8Hnr/prCbXZZudW26Wv1jopkW8BTKYPxppVAdymkAxpIMkoeH/NChHfiZRHQy4SQTc5l7Avv2a1tHHbzbaAPAwAAA",
-    },
     imageAlt: {
       ru: "Вид на жилой дом комплекса «Зарафшон» с коммерческими помещениями на первом этаже",
       tg: "Намуди бинои истиқоматии маҷмааи «Зарафшон» бо биноҳои тиҷоратӣ дар ошёнаи якум",
@@ -176,10 +167,10 @@ export const site = {
         tg: "Ин на танҳо маҷмааи истиқоматӣ, балки фазои зиндагии бароҳат, бехатарӣ ва ояндаи боэътимод аст.",
       },
     ] satisfies Localized[],
-    image: "/renders/about.jpg",
+    image: "/renders/about-aerial.jpg",
     imageAlt: {
-      ru: "Двор с фонтаном и фасады жилых блоков комплекса «Зарафшон»",
-      tg: "Ҳавлӣ бо фаввора ва намои блокҳои истиқоматии маҷмааи «Зарафшон»",
+      ru: "Вид сверху на два 9-этажных блока комплекса «Зарафшон» с солнечными панелями на крыше",
+      tg: "Намои болоӣ ба ду блоки 9-ошёнаи маҷмааи «Зарафшон» бо панелҳои офтобӣ дар бом",
     } satisfies Localized,
     developerLabel: { ru: "Застройщик", tg: "Сохтмончӣ" } satisfies Localized,
     developerName: { ru: "Vasli Tojik", tg: "Vasli Tojik" } satisfies Localized,
@@ -208,7 +199,7 @@ export const site = {
       tg: "Ду блоки 9-ошёна: дар ошёнаи якум мағозаҳо, дар ошёнаҳои 2–9 ҳар кадом 7 хона. Блокро интихоб кунед — интихоби ошёна ва хона кушода мешавад.",
     } satisfies Localized,
     // Phones and devices without WebGL get this render with two block buttons instead of 3D.
-    fallbackImage: "/renders/hero/hero-1280.webp",
+    fallbackImage: "/renders/gallery/07-aerial.jpg",
     fallbackAlt: {
       ru: "Жилой комплекс «Зарафшон»: Блок 1 и Блок 2",
       tg: "Маҷмааи истиқоматии «Зарафшон»: Блоки 1 ва Блоки 2",
@@ -308,67 +299,65 @@ export const site = {
   },
 
   interior: {
-    eyebrow: { ru: "Дизайн интерьера", tg: "Тарҳи дохилӣ" } satisfies Localized,
+    eyebrow: { ru: "Архитектура", tg: "Меъморӣ" } satisfies Localized,
     title: {
       ru: "Пространство, в котором хочется жить",
       tg: "Фазое, ки дар он зиндагӣ кардан мехоҳед",
     } satisfies Localized,
     subtitle: {
-      ru: "Визуализации интерьеров квартир комплекса.",
-      tg: "Тасвирҳои тарҳи дохилии хонаҳои маҷмаа.",
+      ru: "Визуализации фасадов, двора и территории комплекса.",
+      tg: "Тасвирҳои намо, ҳавлӣ ва ҳудуди маҷмаа.",
     } satisfies Localized,
-    // TODO(client): renders from the design mock-up — replace with the project's interiors.
     images: [
       {
-        src: "/renders/int1.jpg",
-        tag: { ru: "Гостиная", tg: "Меҳмонхона" },
+        src: "/renders/gallery/01-corner-day.jpg",
+        tag: { ru: "Фасад", tg: "Намо" },
         alt: {
-          ru: "Гостиная с панорамными окнами на горы",
-          tg: "Меҳмонхона бо тирезаҳои панорамӣ ба кӯҳҳо",
+          ru: "Жилой дом комплекса с магазинами на первом этаже",
+          tg: "Бинои истиқоматии маҷмаа бо мағозаҳо дар ошёнаи якум",
         },
       },
       {
-        src: "/renders/int2.jpg",
-        tag: { ru: "Кухня-столовая", tg: "Ошхона" },
-        alt: { ru: "Кухня с мраморным островом", tg: "Ошхона бо ҷазираи мармарӣ" },
-      },
-      {
-        src: "/renders/int3.jpg",
-        tag: { ru: "Спальня", tg: "Ҳуҷраи хоб" },
-        alt: { ru: "Спальня с гардеробной системой", tg: "Ҳуҷраи хоб бо ҷевони либос" },
-      },
-      {
-        src: "/renders/int4.jpg",
-        tag: { ru: "Ванная", tg: "Ҳаммом" },
-        alt: { ru: "Ванная комната с видом на долину", tg: "Ҳаммом бо манзараи водӣ" },
-      },
-      {
-        src: "/renders/int5.jpg",
-        tag: { ru: "Кабинет", tg: "Утоқи корӣ" },
-        alt: { ru: "Кабинет с библиотекой", tg: "Утоқи корӣ бо китобхона" },
-      },
-      {
-        src: "/renders/int6.jpg",
-        tag: { ru: "Лобби", tg: "Толори даромад" },
-        alt: { ru: "Входная группа со стойкой ресепшен", tg: "Толори даромад бо мизи қабул" },
-      },
-      {
-        src: "/renders/show.jpg",
-        tag: { ru: "Гостиная", tg: "Меҳмонхона" },
-        alt: { ru: "Гостиная с выходом на террасу", tg: "Меҳмонхона бо баромад ба айвон" },
-      },
-      {
-        src: "/renders/terrace.jpg",
-        tag: { ru: "Терраса", tg: "Айвон" },
+        src: "/renders/gallery/02-corner-evening.jpg",
+        tag: { ru: "Вечер", tg: "Бегоҳ" },
         alt: {
-          ru: "Терраса на закате с видом на горы",
-          tg: "Айвон ҳангоми ғуруби офтоб бо манзараи кӯҳҳо",
+          ru: "Комплекс вечером с архитектурной подсветкой",
+          tg: "Маҷмаа бегоҳӣ бо равшании меъморӣ",
         },
       },
       {
-        src: "/renders/livingview.jpg",
-        tag: { ru: "Салон", tg: "Толор" },
-        alt: { ru: "Салон с камином и видом на горы", tg: "Толор бо оташдон ва манзараи кӯҳҳо" },
+        src: "/renders/gallery/03-facade-day.jpg",
+        tag: { ru: "Фасад", tg: "Намо" },
+        alt: { ru: "Главный фасад днём", tg: "Намои асосӣ дар рӯз" },
+      },
+      {
+        src: "/renders/gallery/04-facade-night.jpg",
+        tag: { ru: "Вечер", tg: "Бегоҳ" },
+        alt: { ru: "Главный фасад в сумерках", tg: "Намои асосӣ дар шом" },
+      },
+      {
+        src: "/renders/gallery/05-shops.jpg",
+        tag: { ru: "Магазины", tg: "Мағозаҳо" },
+        alt: {
+          ru: "Коммерческие помещения на первом этаже",
+          tg: "Биноҳои тиҷоратӣ дар ошёнаи якум",
+        },
+      },
+      {
+        src: "/renders/gallery/06-playground.jpg",
+        tag: { ru: "Двор", tg: "Ҳавлӣ" },
+        alt: {
+          ru: "Детская площадка, футбольное поле и парковка",
+          tg: "Майдончаи бачагона, майдони футбол ва таваққуфгоҳ",
+        },
+      },
+      {
+        src: "/renders/gallery/07-aerial.jpg",
+        tag: { ru: "Вид сверху", tg: "Намои болоӣ" },
+        alt: {
+          ru: "Два блока с солнечными панелями на крыше",
+          tg: "Ду блок бо панелҳои офтобӣ дар бом",
+        },
       },
     ] satisfies { src: string; tag: Localized; alt: Localized }[],
   },

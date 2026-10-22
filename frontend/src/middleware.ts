@@ -6,14 +6,14 @@ import { routing } from "./i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 const ADMIN_COOKIE = "sharora_admin_token";
-const ADMIN_PATH = /^\/(?:tg\/)?admin(?:\/(?!login).*)?$/;
+const ADMIN_PATH = /^\/(?:tg\/)?admin-dashboard(?:\/(?!login).*)?$/;
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Cheap presence check only — the API validates the JWT on every admin call.
   if (ADMIN_PATH.test(pathname) && !request.cookies.has(ADMIN_COOKIE)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
+    url.pathname = "/admin-dashboard/login";
     url.search = "";
     return NextResponse.redirect(url);
   }

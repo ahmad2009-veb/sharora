@@ -97,7 +97,7 @@ export function PaymentScheduleModal({
               Скачать Word
             </a>
             <Link
-              href={`/admin/schedule/${data.sale.id}?print=1`}
+              href={`/admin-dashboard/schedule/${data.sale.id}?print=1`}
               target="_blank"
               className={buttonClasses("secondary", "sm")}
             >
@@ -142,7 +142,7 @@ export function PaymentScheduleModal({
             Word
           </a>
           <Link
-            href={`/admin/schedule/${data.sale.id}?print=1`}
+            href={`/admin-dashboard/schedule/${data.sale.id}?print=1`}
             target="_blank"
             className={buttonClasses("secondary", "md")}
           >

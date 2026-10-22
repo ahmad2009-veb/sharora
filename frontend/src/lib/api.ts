@@ -1,5 +1,5 @@
 /**
- * FastAPI client — used only by /apartments and /admin. The home page is static.
+ * FastAPI client — used only by /apartments and /admin-dashboard. The home page is static.
  * By default requests go to the same origin and are proxied by Next rewrites
  * (see next.config.ts); set NEXT_PUBLIC_API_URL to call the API directly.
  */

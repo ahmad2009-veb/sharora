@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState, type CSSProperties } from "react";
 
 import { CountUp, RevealText } from "@/components/motion/Reveal";
-import { HeroBackdrop } from "@/components/sections/HeroBackdrop";
+import { HeroBackdrop, HeroSlideIndicator } from "@/components/sections/HeroBackdrop";
 import { buttonClasses } from "@/components/ui/Button";
 import { site, tr } from "@/content/site";
 import { cn } from "@/lib/cn";
@@ -61,6 +61,7 @@ export function Hero() {
         aria-hidden
         className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[560px] w-[1200px] -translate-x-1/2 rounded-full bg-gold/10 blur-[140px]"
       />
+      <HeroSlideIndicator />
 
       <m.div
         style={{ y: contentY, opacity: contentOpacity }}

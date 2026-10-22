@@ -14,13 +14,11 @@ type NavigatorExtras = Navigator & {
 };
 
 /**
- * Whether the device should get the WebGL scenes. Phones, low-memory devices,
- * data-saver users and reduced-motion users get static images instead — this keeps
- * mobile Lighthouse scores high and batteries happy.
+ * Whether the device should get the WebGL scenes (desktop and phones alike). Low-end
+ * devices, data-saver and reduced-motion users get static images instead.
  */
 export function canRender3D(): boolean {
   if (prefersReducedMotion()) return false;
-  if (window.innerWidth < 1024 || !hasFinePointer()) return false;
   const nav = navigator as NavigatorExtras;
   if (nav.connection?.saveData) return false;
   if (nav.connection?.effectiveType && /(^|-)2g$/.test(nav.connection.effectiveType)) return false;

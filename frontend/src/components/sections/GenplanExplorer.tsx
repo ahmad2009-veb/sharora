@@ -36,6 +36,8 @@ export function GenplanExplorer() {
   const [can3D, setCan3D] = useState(false);
   const [ready3D, setReady3D] = useState(false);
   const [inView, setInView] = useState(false);
+  // The 3D engine (three.js) is downloaded only once the section is within ~1.5 screens.
+  const [near, setNear] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setCan3D(canRender3D()), []);
@@ -45,8 +47,20 @@ export function GenplanExplorer() {
     const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), {
       rootMargin: "200px",
     });
+    const nearIo = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        setNear(true);
+        nearIo.disconnect();
+      },
+      { rootMargin: "150% 0px" },
+    );
     io.observe(el);
-    return () => io.disconnect();
+    nearIo.observe(el);
+    return () => {
+      io.disconnect();
+      nearIo.disconnect();
+    };
   }, []);
 
   const blocks = useQuery({
@@ -114,14 +128,16 @@ export function GenplanExplorer() {
                 aria-hidden
                 className="absolute inset-0 bg-[radial-gradient(120%_80%_at_70%_100%,#5b3f2a_0%,#2a2c40_45%,#0a0f1c_80%)]"
               />
-              <HeroScene
-                active={inView}
-                introDelay={0}
-                sceneLabel={t("sceneLabel")}
-                tooltip={tooltip}
-                onBlockSelect={setSelected}
-                onReady={() => setReady3D(true)}
-              />
+              {near && (
+                <HeroScene
+                  active={inView}
+                  introDelay={0}
+                  sceneLabel={t("sceneLabel")}
+                  tooltip={tooltip}
+                  onBlockSelect={setSelected}
+                  onReady={() => setReady3D(true)}
+                />
+              )}
               {!ready3D && (
                 <div
                   role="status"

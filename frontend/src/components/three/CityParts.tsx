@@ -1,6 +1,6 @@
 "use client";
 
-import { Center, Outlines, Text3D } from "@react-three/drei";
+import { Center, Text3D } from "@react-three/drei";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Suspense, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -205,9 +205,7 @@ export function Building({
         onPointerOver={onOver}
         onPointerOut={onOut}
         onClick={onClick}
-      >
-        {hovered && <Outlines thickness={3} screenspace color={GOLD} />}
-      </mesh>
+      />
       <group
         ref={roofItems}
         position={[0, growAt === null ? BUILDING.h : 0, 0]}

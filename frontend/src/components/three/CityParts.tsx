@@ -10,6 +10,7 @@ import {
   clamp01,
   easeOutBack,
   easeOutCubic,
+  LAWN,
   PLOT,
   treePositions,
   type BlockSpot,
@@ -30,13 +31,13 @@ export function Ground() {
         <planeGeometry args={[140, 140]} />
         <meshStandardMaterial color="#b9ac8e" roughness={1} />
       </mesh>
-      {/* Paved plot, courtyard lawn between the blocks */}
+      {/* Paved plot, lawn strip in front of the blocks */}
       <mesh rotation-x={-Math.PI / 2} position={[0, 0.003, 0]}>
         <planeGeometry args={[PLOT.x * 2, PLOT.z * 2]} />
         <meshStandardMaterial color="#d3c9b0" roughness={1} />
       </mesh>
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, 0]}>
-        <planeGeometry args={[BUILDING.w + 0.6, 1.5]} />
+      <mesh rotation-x={-Math.PI / 2} position={[0, 0.005, LAWN.z]}>
+        <planeGeometry args={[PLOT.x * 2 - 0.6, LAWN.d]} />
         <meshStandardMaterial color="#7d9858" roughness={1} />
       </mesh>
       {/* Perimeter streets */}

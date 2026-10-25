@@ -149,9 +149,9 @@ function City({
     if (f && controls.current) {
       f.t = Math.min(1, f.t + delta / 1.1);
       const k = 1 - Math.pow(1 - f.t, 3);
-      // Approach from the block's outer side so the other block never hides it.
-      const side = Math.sign(f.target.z) || 1;
-      const dest = new THREE.Vector3(f.target.x + 2.4, BUILDING.h + 3, f.target.z + side * 5.6);
+      // Approach from the block's outer end so the other block never hides it.
+      const side = Math.sign(f.target.x) || 1;
+      const dest = new THREE.Vector3(f.target.x + side * 2.4, BUILDING.h + 3, f.target.z + 5.6);
       camera.position.lerpVectors(f.from, dest, k);
       controls.current.target.lerpVectors(
         f.look,

@@ -1,18 +1,25 @@
 /**
- * World layout of the complex: two parallel 9-storey blocks (one entrance, 7 apartments per
- * floor) facing a shared courtyard at z = 0. Units are roughly 10 m.
+ * World layout of the complex: two 9-storey blocks (one entrance, 7 apartments per floor)
+ * standing side by side along x, end walls 5 m apart. Units are roughly 10 m.
  */
 export const BUILDING = { w: 3.6, d: 1.4, h: 2.9 } as const;
 
 export type BlockSpot = { letter: string; x: number; z: number; index: number };
 
+/** Gap between the end walls of the two blocks: 5 m. */
+const BLOCK_GAP = 0.5;
+const BLOCK_X = (BUILDING.w + BLOCK_GAP) / 2;
+
 export const BLOCKS: BlockSpot[] = [
-  { letter: "1", index: 0, x: 0, z: -1.65 },
-  { letter: "2", index: 1, x: 0, z: 1.65 },
+  { letter: "1", index: 0, x: -BLOCK_X, z: 0 },
+  { letter: "2", index: 1, x: BLOCK_X, z: 0 },
 ];
 
 /** Half-size of the paved plot around the two blocks. */
-export const PLOT = { x: 3.4, z: 3.1 } as const;
+export const PLOT = { x: 4.6, z: 2.6 } as const;
+
+/** Lawn strip in front of the blocks (z centre and depth). */
+export const LAWN = { z: 1.45, d: 1.1 } as const;
 
 /** Deterministic pseudo-random generator so tree placement is stable between renders. */
 function seeded(seed: number) {
@@ -26,12 +33,12 @@ function seeded(seed: number) {
 export function treePositions(count: number): [number, number, number][] {
   const rand = seeded(42);
   const out: [number, number, number][] = [];
-  // Rows along the long edges of the plot and a few in the courtyard corners
+  // Rows along the long edges of the plot and a few on the front lawn
   for (let x = -PLOT.x + 0.3; x <= PLOT.x - 0.3; x += 0.5) {
     out.push([x + (rand() - 0.5) * 0.1, 0, -PLOT.z + 0.25]);
     out.push([x + (rand() - 0.5) * 0.1, 0, PLOT.z - 0.25]);
   }
-  for (const x of [-2.4, -1.9, 1.9, 2.4]) out.push([x, 0, (rand() - 0.5) * 0.4]);
+  for (const x of [-3.6, -2.2, -0.6, 0.6, 2.2, 3.6]) out.push([x, 0, LAWN.z + (rand() - 0.5) * 0.3]);
   // Scattered groves outside the perimeter road
   while (out.length < count) {
     const x = (rand() - 0.5) * 30;

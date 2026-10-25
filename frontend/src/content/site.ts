@@ -28,7 +28,7 @@ export type FeatureIcon = "sun" | "flame" | "baby" | "mapPin" | "store" | "schoo
 export const site = {
   brand: {
     name: "Zarafshon Sokhtmon",
-    project: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
+    project: { ru: "ЖК «Зеравшан»", tg: "МИ «Зарафшон»" } satisfies Localized,
     logo: "/logo.png",
     // Header/footer logo text: wordmark (Latin in both languages) and the slogan under it.
     wordmark: "Vasli Tojik",
@@ -49,7 +49,7 @@ export const site = {
     telegram: "https://t.me/+992300000059",
     hours: { ru: "Пн–Сб, 9:00–18:00", tg: "Дш–Шн, 9:00–18:00" } satisfies Localized,
     greeting: {
-      ru: "Здравствуйте! Хочу узнать о квартирах в ЖК «Зарафшон».",
+      ru: "Здравствуйте! Хочу узнать о квартирах в ЖК «Зеравшан».",
       tg: "Ассалому алейкум! Мехоҳам дар бораи хонаҳои МИ «Зарафшон» маълумот гирам.",
     } satisfies Localized,
     /** `{unit}` → "Квартира 2, Блок 1, Этаж 2, 75.00 м²" */
@@ -87,7 +87,7 @@ export const site = {
 
   hero: {
     eyebrow: {
-      ru: "Zarafshon Sokhtmon · Зарафшон",
+      ru: "Zarafshon Sokhtmon · Зеравшан",
       tg: "Zarafshon Sokhtmon · Зарафшон",
     } satisfies Localized,
     badge: {
@@ -96,14 +96,14 @@ export const site = {
     } satisfies Localized,
     titleLines: [
       { ru: "Жилой комплекс", tg: "Маҷмааи истиқоматии" },
-      { ru: "«Зарафшон»", tg: "«Зарафшон»" },
+      { ru: "«Зеравшан»", tg: "«Зарафшон»" },
     ] satisfies Localized[],
     salesNote: {
       ru: "Открыты продажи — 2 блока",
       tg: "Фурӯш кушода аст — 2 блок",
     } satisfies Localized,
     title: {
-      ru: "Жилой комплекс «Зарафшон»",
+      ru: "Жилой комплекс «Зеравшан»",
       tg: "Маҷмааи истиқоматии «Зарафшон»",
     } satisfies Localized,
     subtitle: {
@@ -111,7 +111,7 @@ export const site = {
       tg: "Роҳҳои васеъ, мағозаҳо дар ошёнаи якум ва ҳама чизи зарурӣ барои зиндагии бароҳат ва муосир.",
     } satisfies Localized,
     imageAlt: {
-      ru: "Вид на жилой дом комплекса «Зарафшон» с коммерческими помещениями на первом этаже",
+      ru: "Вид на жилой дом комплекса «Зеравшан» с коммерческими помещениями на первом этаже",
       tg: "Намуди бинои истиқоматии маҷмааи «Зарафшон» бо биноҳои тиҷоратӣ дар ошёнаи якум",
     } satisfies Localized,
     facts: [
@@ -169,7 +169,7 @@ export const site = {
     ] satisfies Localized[],
     image: "/renders/about-aerial.jpg",
     imageAlt: {
-      ru: "Вид сверху на два 9-этажных блока комплекса «Зарафшон» с солнечными панелями на крыше",
+      ru: "Вид сверху на два 9-этажных блока комплекса «Зеравшан» с солнечными панелями на крыше",
       tg: "Намои болоӣ ба ду блоки 9-ошёнаи маҷмааи «Зарафшон» бо панелҳои офтобӣ дар бом",
     } satisfies Localized,
     developerLabel: { ru: "Застройщик", tg: "Сохтмончӣ" } satisfies Localized,
@@ -201,7 +201,7 @@ export const site = {
     // Phones and devices without WebGL get this render with two block buttons instead of 3D.
     fallbackImage: "/renders/gallery/07-aerial.jpg",
     fallbackAlt: {
-      ru: "Жилой комплекс «Зарафшон»: Блок 1 и Блок 2",
+      ru: "Жилой комплекс «Зеравшан»: Блок 1 и Блок 2",
       tg: "Маҷмааи истиқоматии «Зарафшон»: Блоки 1 ва Блоки 2",
     } satisfies Localized,
     blocks: [{ letter: "1" }, { letter: "2" }],
@@ -411,10 +411,10 @@ export const site = {
     } satisfies Localized,
     route: { ru: "Построить маршрут", tg: "Масир сохтан" } satisfies Localized,
     mapTitle: {
-      ru: "Карта расположения ЖК «Зарафшон»",
+      ru: "Карта расположения ЖК «Зеравшан»",
       tg: "Харитаи ҷойгиршавии МИ «Зарафшон»",
     } satisfies Localized,
-    pinLabel: { ru: "ЖК «Зарафшон»", tg: "МИ «Зарафшон»" } satisfies Localized,
+    pinLabel: { ru: "ЖК «Зеравшан»", tg: "МИ «Зарафшон»" } satisfies Localized,
     routeNote: {
       ru: "100 км от Душанбе",
       tg: "100 км аз Душанбе",
@@ -424,7 +424,7 @@ export const site = {
   cta: {
     badge: { ru: "Персональная консультация", tg: "Машварати шахсӣ" } satisfies Localized,
     title: {
-      ru: "Найдите свою квартиру в ЖК «Зарафшон»",
+      ru: "Найдите свою квартиру в ЖК «Зеравшан»",
       tg: "Хонаи худро дар МИ «Зарафшон» ёбед",
     } satisfies Localized,
     text: {
@@ -499,7 +499,7 @@ export const site = {
 
   seo: {
     title: {
-      ru: "Жилой комплекс «Зарафшон» — Айнинский район",
+      ru: "Жилой комплекс «Зеравшан» — Айнинский район",
       tg: "Маҷмааи истиқоматии «Зарафшон» — ноҳияи Айнӣ",
     } satisfies Localized,
     description: {

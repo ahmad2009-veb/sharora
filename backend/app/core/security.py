@@ -27,6 +27,18 @@ def verify_password(password: str, password_hash: str) -> bool:
         return False
 
 
+# Hash of a random throwaway password: lets unknown usernames cost one bcrypt check too.
+_DUMMY_HASH = bcrypt.hashpw(b"timing-equaliser-not-a-password", bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password_or_dummy(password: str, password_hash: str | None) -> bool:
+    """verify_password() that takes the same time when there is no such user."""
+    if password_hash is None:
+        verify_password(password, _DUMMY_HASH)
+        return False
+    return verify_password(password, password_hash)
+
+
 def create_access_token(admin_id: int, version: int) -> str:
     """The subject is the admin id (not the username, which can change) plus the token version."""
     expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)

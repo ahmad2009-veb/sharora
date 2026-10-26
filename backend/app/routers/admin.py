@@ -1,7 +1,7 @@
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -9,12 +9,15 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.deps import get_current_admin
+from app.core.rate_limit import client_ip, limiter, rate_limited
 from app.core.security import (
     ACCESS_TOKEN_COOKIE_NAME,
     create_access_token,
     hash_password,
     verify_password,
+    verify_password_or_dummy,
 )
+from app.core.security_log import security_event
 from app.models import (
     AdminUser,
     Block,
@@ -26,7 +29,6 @@ from app.models import (
     Unit,
     UnitStatus,
 )
-from app.routers.public import client_ip
 from app.schemas.auth import AdminMeOut, LoginRequest, PasswordChange, UsernameChange
 from app.schemas.block import BlockCreate, BlockOut, BlockUpdate
 from app.schemas.floor import FloorCreate, FloorOut, FloorUpdate
@@ -43,7 +45,7 @@ from app.schemas.sale import (
 )
 from app.schemas.settings import SettingsOut, SettingsUpdate
 from app.schemas.unit import UnitAdminOut, UnitCreate, UnitStatusUpdate, UnitUpdate
-from app.services import password_attempts
+from app.services import throttle
 from app.services.aggregates import BlockCounts, block_counts
 from app.services.converters import to_unit_detail
 from app.services.installments import (
@@ -204,7 +206,7 @@ def _set_session_cookie(response: Response, admin: AdminUser) -> None:
         key=ACCESS_TOKEN_COOKIE_NAME,
         value=create_access_token(admin.id, admin.token_version),
         httponly=True,
-        secure=settings.cookie_secure,
+        secure=settings.secure_cookies,
         samesite="lax",
         max_age=settings.access_token_expire_minutes * 60,
         path="/",
@@ -217,24 +219,44 @@ def _end_other_sessions(response: Response, admin: AdminUser) -> None:
     _set_session_cookie(response, admin)
 
 
-def _check_current_password(request: Request, admin: AdminUser, password: str) -> None:
-    keys = [f"admin:{admin.id}", f"ip:{client_ip(request)}"]
-    if password_attempts.is_blocked(keys):
-        raise HTTPException(
-            status_code=429, detail="Слишком много неверных попыток. Попробуйте через 15 минут"
-        )
+def _check_current_password(request: Request, db: Session, admin: AdminUser, password: str) -> None:
+    ip = client_ip(request)
+    rules = throttle.password_rules(admin.id, ip)
+    wait = throttle.retry_after(db, rules)
+    if wait is not None:
+        security_event("password_check_locked", key=f"{admin.id}:{ip}", admin_id=admin.id, ip=ip)
+        raise rate_limited(wait, "Слишком много неверных попыток. Попробуйте через 15 минут")
     if not verify_password(password, admin.password_hash):
-        password_attempts.record_failure(keys)
+        throttle.record(db, [r.key for r in rules])
+        db.commit()
+        security_event("password_check_failed", key=f"{admin.id}:{ip}", admin_id=admin.id, ip=ip)
         raise HTTPException(status_code=400, detail="Неверный текущий пароль")
 
 
 @router.post("/login", response_model=AdminMeOut)
-def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)) -> AdminMeOut:
+@limiter.limit("10/minute")
+def login(
+    request: Request, payload: LoginRequest, response: Response, db: Session = Depends(get_db)
+) -> AdminMeOut:
+    ip = client_ip(request)
+    rules = throttle.login_rules(ip, payload.username)
+    # Checked before bcrypt: a locked-out client costs one indexed query, not a hash.
+    wait = throttle.retry_after(db, rules)
+    if wait is not None:
+        security_event("login_locked", key=ip, ip=ip)
+        raise rate_limited(
+            wait, f"Слишком много неудачных попыток входа. Попробуйте через {-(-wait // 60)} мин."
+        )
     admin = db.execute(
         select(AdminUser).where(AdminUser.username == payload.username)
     ).scalar_one_or_none()
-    if admin is None or not verify_password(payload.password, admin.password_hash):
+    # Unknown logins still pay for one bcrypt check, so timing does not reveal valid logins.
+    if not verify_password_or_dummy(payload.password, admin.password_hash if admin else None):
+        throttle.record(db, [r.key for r in rules])
+        db.commit()
+        security_event("login_failed", key=ip, ip=ip)
         raise HTTPException(status_code=401, detail="Неверный логин или пароль")
+    assert admin is not None
 
     admin.last_login_at = datetime.now(UTC).replace(tzinfo=None)
     db.commit()
@@ -244,7 +266,9 @@ def login(payload: LoginRequest, response: Response, db: Session = Depends(get_d
 
 @router.post("/logout")
 def logout(response: Response) -> dict[str, bool]:
-    response.delete_cookie(ACCESS_TOKEN_COOKIE_NAME, path="/")
+    response.delete_cookie(
+        ACCESS_TOKEN_COOKIE_NAME, path="/", secure=settings.secure_cookies, httponly=True
+    )
     return {"ok": True}
 
 
@@ -260,7 +284,7 @@ def change_username(
     admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminMeOut:
-    _check_current_password(request, admin, payload.current_password)
+    _check_current_password(request, db, admin, payload.current_password)
     if payload.new_username == admin.username:
         raise HTTPException(status_code=422, detail="Новый логин совпадает с текущим")
     # Case-insensitive, so «Admin» and «admin» can't both exist.
@@ -289,7 +313,7 @@ def change_password(
     admin: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ) -> AdminMeOut:
-    _check_current_password(request, admin, payload.current_password)
+    _check_current_password(request, db, admin, payload.current_password)
     if payload.new_password == payload.current_password:
         raise HTTPException(status_code=422, detail="Новый пароль должен отличаться от текущего")
     admin.password_hash = hash_password(payload.new_password)
@@ -382,7 +406,7 @@ def delete_floor(floor_id: int, db: Session = Depends(get_db)) -> None:
 
 @protected.get("/units", response_model=list[UnitAdminOut])
 def list_units_admin(
-    block: str | None = None,
+    block: str | None = Query(default=None, max_length=8),
     floor: int | None = None,
     status: UnitStatus | None = None,
     db: Session = Depends(get_db),
@@ -598,20 +622,23 @@ def _export(db: Session, sale_id: int, ext: str) -> Response:
     )
 
 
+# Building a document is the most CPU-heavy thing the API does.
 @protected.get("/sales/{sale_id}/export.xlsx")
-def export_schedule_xlsx(sale_id: int, db: Session = Depends(get_db)) -> Response:
+@limiter.limit("30/minute")
+def export_schedule_xlsx(request: Request, sale_id: int, db: Session = Depends(get_db)) -> Response:
     return _export(db, sale_id, "xlsx")
 
 
 @protected.get("/sales/{sale_id}/export.docx")
-def export_schedule_docx(sale_id: int, db: Session = Depends(get_db)) -> Response:
+@limiter.limit("30/minute")
+def export_schedule_docx(request: Request, sale_id: int, db: Session = Depends(get_db)) -> Response:
     return _export(db, sale_id, "docx")
 
 
 @protected.get("/sales", response_model=list[SaleOut])
 def list_sales(
-    search: str | None = None,
-    block: str | None = None,
+    search: str | None = Query(default=None, max_length=100),
+    block: str | None = Query(default=None, max_length=8),
     date_from: date | None = None,
     date_to: date | None = None,
     archived: bool = False,
@@ -645,6 +672,7 @@ def list_sales(
 
 
 @protected.post("/upload")
+@limiter.limit("30/minute")
 def upload_image(
     request: Request, subdir: str = "units", file: UploadFile = File(...)
 ) -> dict[str, str]:

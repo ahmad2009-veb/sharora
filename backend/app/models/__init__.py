@@ -6,6 +6,7 @@ from app.models.installment import InstallmentPayment
 from app.models.lead import Lead
 from app.models.sale import Sale
 from app.models.settings import CalculatorSettings
+from app.models.throttle_event import ThrottleEvent
 from app.models.unit import Unit
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     "Sale",
     "InstallmentPayment",
     "CalculatorSettings",
+    "ThrottleEvent",
     "FloorKind",
     "UnitKind",
     "UnitStatus",

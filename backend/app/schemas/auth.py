@@ -12,8 +12,9 @@ PASSWORD_MAX_BYTES = 72
 
 
 class LoginRequest(ORMModel):
-    username: str
-    password: str
+    # Bounded so a login body stays tiny; real values are far shorter (see below).
+    username: str = Field(max_length=64)
+    password: str = Field(max_length=256)
 
 
 class TokenOut(ORMModel):

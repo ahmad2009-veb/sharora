@@ -20,9 +20,9 @@ database.engine = create_engine(
 )
 database.SessionLocal.configure(bind=database.engine)
 
+from app.core import security_log  # noqa: E402
+from app.core.rate_limit import counter, limiter  # noqa: E402
 from app.main import app  # noqa: E402
-from app.routers.public import limiter  # noqa: E402
-from app.services import password_attempts  # noqa: E402
 from seed import seed  # noqa: E402
 
 
@@ -33,7 +33,8 @@ def fresh_db() -> Iterator[None]:
     with database.SessionLocal() as db:
         seed(db, random.Random(1))
     limiter.reset()
-    password_attempts.reset()
+    counter.reset()
+    security_log.reset()
     yield
 
 

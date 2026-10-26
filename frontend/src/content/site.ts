@@ -59,7 +59,7 @@ export const site = {
     } satisfies Localized,
     // TODO(client): add the street once known.
     address: {
-      ru: "Согдийская область, Айнинский район, пос. Зарафшан",
+      ru: "Согдийская область, Айнинский район, пос. Зерафшан",
       tg: "Вилояти Суғд, ноҳияи Айнӣ, шаҳраки Зарафшон",
     } satisfies Localized,
     distance: { ru: "100 км от Душанбе", tg: "100 км аз Душанбе" } satisfies Localized,
@@ -87,7 +87,7 @@ export const site = {
 
   hero: {
     eyebrow: {
-      ru: "Zarafshon Sokhtmon · Зеравшан",
+      ru: "Zarafshon Sokhtmon · Зарафшон",
       tg: "Zarafshon Sokhtmon · Зарафшон",
     } satisfies Localized,
     badge: {
@@ -96,7 +96,7 @@ export const site = {
     } satisfies Localized,
     titleLines: [
       { ru: "Жилой комплекс", tg: "Маҷмааи истиқоматии" },
-      { ru: "«Зеравшан»", tg: "«Зарафшон»" },
+      { ru: "«Зарафшон»", tg: "«Зарафшон»" },
     ] satisfies Localized[],
     salesNote: {
       ru: "Открыты продажи — 2 блока",

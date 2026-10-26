@@ -16,6 +16,47 @@ const withBundleAnalyzer: (config: NextConfig) => NextConfig =
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";
 const proxyToBackend = !process.env.VERCEL;
 
+const isDev = process.env.NODE_ENV === "development";
+// Origin of NEXT_PUBLIC_API_URL when the browser calls FastAPI directly; empty = same origin.
+const apiOrigin = process.env.NEXT_PUBLIC_API_URL
+  ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+  : "";
+// Uploaded photos live in Vercel Blob (absolute URLs stored in the database).
+const BLOB_IMAGES = "https://*.public.blob.vercel-storage.com";
+
+// Next.js and the preloader inject inline scripts; nonces would make every page dynamic, so
+// scripts are limited to this origin + inline. Everything else is locked to what the site uses.
+const CSP = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${BLOB_IMAGES} ${apiOrigin}`,
+  "font-src 'self' data:",
+  `connect-src 'self' blob: data: ${apiOrigin}${isDev ? " ws: wss:" : ""}`,
+  "worker-src 'self' blob:",
+  // Location section: OpenStreetMap embed.
+  "frame-src https://www.openstreetmap.org",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+]
+  .map((d) => d.replace(/\s+/g, " ").trim())
+  .join("; ");
+
+const SECURITY_HEADERS = [
+  { key: "Content-Security-Policy", value: CSP },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // Browsers ignore HSTS over plain http, so localhost `next start` is unaffected.
+  ...(isDev
+    ? []
+    : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]),
+];
+
 const IMMUTABLE = "public, max-age=31536000, immutable";
 const DAY = "public, max-age=86400, stale-while-revalidate=604800";
 
@@ -34,6 +75,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
       // Resized copies are addressed with a content hash (?v=…): safe to keep for a year.
       { source: "/_img/:path*", headers: [{ key: "Cache-Control", value: IMMUTABLE }] },
       // Other public files keep their names when replaced: a day, then revalidate.

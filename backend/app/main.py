@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -10,10 +10,15 @@ from sqlalchemy import inspect
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal, engine
+from app.core.middleware import (
+    ApiRateLimitMiddleware,
+    BodySizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
+from app.core.rate_limit import limiter, rate_limit_handler
 from app.core.security import hash_password
 from app.models import AdminUser, CalculatorSettings
 from app.routers.admin import router as admin_router
-from app.routers.public import limiter
 from app.routers.public import router as public_router
 from app.services.media import ensure_media_dirs
 
@@ -51,17 +56,18 @@ app = FastAPI(
     version="1.0.0",
     description="API выбора квартир ЖК «Зарафшон» и админ-панели менеджеров.",
     lifespan=lifespan,
+    # Off on Vercel by default (DOCS_ENABLED): the schema maps every admin endpoint.
+    docs_url="/docs" if settings.docs_on else None,
+    redoc_url="/redoc" if settings.docs_on else None,
+    openapi_url="/openapi.json" if settings.docs_on else None,
 )
 app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)  # type: ignore[arg-type]
 
-
-@app.exception_handler(RateLimitExceeded)
-def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    return JSONResponse(
-        status_code=429, content={"detail": "Слишком много запросов, попробуйте позже"}
-    )
-
-
+# Last added runs first: CORS → security headers → per-IP API budget → body size → routes.
+app.add_middleware(BodySizeLimitMiddleware)
+app.add_middleware(ApiRateLimitMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -77,10 +83,12 @@ app.include_router(public_router)
 app.include_router(admin_router)
 
 
-@app.get("/", include_in_schema=False)
-def root() -> RedirectResponse:
+@app.get("/", include_in_schema=False, response_model=None)
+def root() -> RedirectResponse | JSONResponse:
     # The API has no page of its own; opening the backend address shows its docs.
-    return RedirectResponse("/docs")
+    if settings.docs_on:
+        return RedirectResponse("/docs")
+    return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
 
 @app.get("/api/health", tags=["system"])

@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from slowapi import Limiter
-from slowapi.util import get_remote_address
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import get_settings
 from app.core.database import get_db
+from app.core.rate_limit import client_ip, limiter, rate_limited
 from app.core.security import ACCESS_TOKEN_COOKIE_NAME
+from app.core.security_log import security_event
 from app.models import Block, CalculatorSettings, Floor, Lead, Unit, UnitStatus
 from app.schemas.block import BlockOut
 from app.schemas.floor import FloorOut, FloorWithUnits
@@ -14,6 +14,7 @@ from app.schemas.lead import LeadCreate, LeadOut
 from app.schemas.settings import SettingsOut
 from app.schemas.stats import StatsOut
 from app.schemas.unit import UnitDetail, UnitListItem
+from app.services import throttle
 from app.services.aggregates import (
     BlockCounts,
     block_counts,
@@ -42,18 +43,6 @@ def cache_headers(request: Request, response: Response) -> None:
 
 
 router = APIRouter(prefix="/api", tags=["public"], dependencies=[Depends(cache_headers)])
-
-
-def client_ip(request: Request) -> str:
-    # Behind Vercel's proxy the socket peer is shared; Vercel overwrites X-Forwarded-For.
-    if settings.vercel:
-        forwarded = request.headers.get("x-forwarded-for", "")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-    return get_remote_address(request)
-
-
-limiter = Limiter(key_func=client_ip)
 
 
 @router.get("/stats", response_model=StatsOut)
@@ -157,7 +146,7 @@ def get_unit(unit_id: int, db: Session = Depends(get_db)) -> UnitDetail:
 
 @router.get("/units", response_model=list[UnitDetail])
 def search_units(
-    block: str | None = None,
+    block: str | None = Query(default=None, max_length=8),
     floor: int | None = None,
     rooms: int | None = None,
     min_area: float | None = None,
@@ -195,6 +184,11 @@ def get_settings_public(db: Session = Depends(get_db)) -> SettingsOut:
 @router.post("/leads", response_model=LeadOut, status_code=201)
 @limiter.limit("5/minute")
 def create_lead(request: Request, payload: LeadCreate, db: Session = Depends(get_db)) -> LeadOut:
+    ip = client_ip(request)
+    wait = throttle.retry_after(db, throttle.lead_rules(ip))
+    if wait is not None:
+        security_event("lead_flood", key=ip, ip=ip)
+        raise rate_limited(wait)
     if payload.unit_id is not None and db.get(Unit, payload.unit_id) is None:
         raise HTTPException(status_code=404, detail="Квартира не найдена")
 
@@ -205,6 +199,7 @@ def create_lead(request: Request, payload: LeadCreate, db: Session = Depends(get
         message=payload.message,
     )
     db.add(lead)
+    throttle.record(db, [r.key for r in throttle.lead_rules(ip)])
     db.commit()
     db.refresh(lead)
     return LeadOut.model_validate(lead)

@@ -16,6 +16,8 @@ CONTENT_TYPES = {".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp
 BLOB_API_URL = "https://vercel.com/api/blob/"
 BLOB_API_VERSION = "13"
 UPLOAD_SUBDIRS = {"floors", "units", "blocks"}
+# A few-MB PNG can still declare a huge canvas that every visitor's browser must decode.
+MAX_IMAGE_PIXELS = 40_000_000
 
 
 def ensure_media_dirs() -> None:
@@ -39,8 +41,11 @@ def save_upload(file: UploadFile, subdir: str, oidc_token: str | None = None) ->
         with Image.open(BytesIO(data)) as img:
             img.verify()
             image_format = img.format or ""
-    except (UnidentifiedImageError, OSError) as exc:
+            width, height = img.size
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
         raise HTTPException(status_code=400, detail="Файл не является изображением") from exc
+    if width * height > MAX_IMAGE_PIXELS:
+        raise HTTPException(status_code=400, detail="Слишком большое разрешение изображения")
 
     ext = FORMAT_EXTENSIONS.get(image_format)
     if ext is None:

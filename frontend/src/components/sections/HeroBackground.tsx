@@ -91,6 +91,8 @@ export function HeroBackground() {
   preload(src(0, 1920), { as: "image", media: "(min-width: 768px)", fetchPriority: "high" });
 
   useEffect(() => {
+    // The store outlives the component: a return visit to the home page starts at hero-1 again.
+    slideStore.set(0);
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let timer: number | undefined;
     let hidden = document.hidden;

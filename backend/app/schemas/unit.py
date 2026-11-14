@@ -1,7 +1,7 @@
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.models.enums import UnitKind, UnitStatus
-from app.schemas.common import ORMModel, PolygonPoint, RoomDetail
+from app.schemas.common import ORMModel, PolygonPoint, RoomDetail, reject_null
 
 
 class UnitListItem(ORMModel):
@@ -47,11 +47,11 @@ class UnitCreate(ORMModel):
     number: int
     kind: UnitKind = UnitKind.apartment
     rooms: int | None = Field(default=None, ge=0, le=10)
-    area: float = Field(gt=0)
-    price_per_m2: float | None = Field(default=None, gt=0)
+    area: float = Field(gt=0, lt=100_000)  # Numeric(7, 2)
+    price_per_m2: float | None = Field(default=None, gt=0, lt=10**10)  # Numeric(12, 2)
     status: UnitStatus = UnitStatus.free
-    layout_image: str | None = None
-    blueprint_image: str | None = None
+    layout_image: str | None = Field(default=None, max_length=300)
+    blueprint_image: str | None = Field(default=None, max_length=300)
     polygon: list[PolygonPoint] | None = None
     rooms_detail: list[RoomDetail] | None = None
 
@@ -61,13 +61,15 @@ class UnitUpdate(ORMModel):
     number: int | None = None
     kind: UnitKind | None = None
     rooms: int | None = Field(default=None, ge=0, le=10)
-    area: float | None = Field(default=None, gt=0)
-    price_per_m2: float | None = Field(default=None, gt=0)
+    area: float | None = Field(default=None, gt=0, lt=100_000)
+    price_per_m2: float | None = Field(default=None, gt=0, lt=10**10)
     status: UnitStatus | None = None
-    layout_image: str | None = None
-    blueprint_image: str | None = None
+    layout_image: str | None = Field(default=None, max_length=300)
+    blueprint_image: str | None = Field(default=None, max_length=300)
     polygon: list[PolygonPoint] | None = None
     rooms_detail: list[RoomDetail] | None = None
+
+    _not_null = field_validator("name", "number", "kind", "area")(reject_null)
 
 
 class UnitStatusUpdate(ORMModel):

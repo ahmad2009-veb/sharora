@@ -261,7 +261,12 @@ function SaleForm({
           ? "Дата первого платежа не может быть раньше даты продажи"
           : null,
     markup:
-      installment && (!Number.isFinite(markupValue) || markupValue < 0 || markupValue > 100)
+      installment &&
+      (!Number.isFinite(markupValue) ||
+        markupValue < 0 ||
+        markupValue > 100 ||
+        // The API keeps two decimals and rejects more.
+        /[.,]\d{3}/.test(markup))
         ? "Наценка — число от 0 до 100%"
         : null,
     schedule:

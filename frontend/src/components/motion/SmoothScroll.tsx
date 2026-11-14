@@ -44,7 +44,8 @@ export function SmoothScroll() {
 
   // New page → start at the top and re-measure every trigger.
   useEffect(() => {
-    getLenis()?.scrollTo(0, { immediate: true, force: true });
+    // Links like /#about: Next has already scrolled to the section — keep it.
+    if (!window.location.hash) getLenis()?.scrollTo(0, { immediate: true, force: true });
     const id = window.setTimeout(() => ScrollTrigger.refresh(), 120);
     return () => window.clearTimeout(id);
   }, [pathname]);

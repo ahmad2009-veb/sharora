@@ -7,7 +7,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Tabs } from "@/components/ui/Tabs";
-import { adminApi } from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
+import { adminApi, ApiError } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatPhone } from "@/lib/format";
 
@@ -17,6 +18,7 @@ const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeS
 
 export function LeadsPanel() {
   const [filter, setFilter] = useState<Filter>("new");
+  const toast = useToast();
   const queryClient = useQueryClient();
   const processed = filter === "all" ? undefined : filter === "processed";
   const leads = useQuery({
@@ -26,6 +28,7 @@ export function LeadsPanel() {
   const toggle = useMutation({
     mutationFn: ({ id, value }: { id: number; value: boolean }) => adminApi.updateLead(id, value),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "leads"] }),
+    onError: (e) => toast(e instanceof ApiError ? e.message : "Ошибка сохранения", "error"),
   });
 
   return (

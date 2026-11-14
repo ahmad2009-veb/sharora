@@ -42,7 +42,14 @@ def save_upload(file: UploadFile, subdir: str, oidc_token: str | None = None) ->
             img.verify()
             image_format = img.format or ""
             width, height = img.size
-    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
+    # Pillow reports some corrupt files (bad PNG chunks/CRCs) as SyntaxError or ValueError.
+    except (
+        UnidentifiedImageError,
+        OSError,
+        SyntaxError,
+        ValueError,
+        Image.DecompressionBombError,
+    ) as exc:
         raise HTTPException(status_code=400, detail="Файл не является изображением") from exc
     if width * height > MAX_IMAGE_PIXELS:
         raise HTTPException(status_code=400, detail="Слишком большое разрешение изображения")

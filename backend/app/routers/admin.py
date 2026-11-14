@@ -340,7 +340,11 @@ def logout_all(
 def create_block(payload: BlockCreate, db: Session = Depends(get_db)) -> BlockOut:
     block = Block(**payload.model_dump())
     db.add(block)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Блок с такой буквой уже существует") from None
     db.refresh(block)
     return _block_out(db, block)
 
@@ -352,7 +356,11 @@ def update_block(block_id: int, payload: BlockUpdate, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="Блок не найден")
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(block, field, value)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Блок с такой буквой уже существует") from None
     db.refresh(block)
     return _block_out(db, block)
 
@@ -476,6 +484,8 @@ def sell_unit(
     db: Session = Depends(get_db),
     admin: AdminUser = Depends(get_current_admin),
 ) -> SaleOut:
+    # Row lock (Postgres): two concurrent sells must not both create an active sale.
+    db.execute(select(Unit.id).where(Unit.id == unit_id).with_for_update())
     unit = _load_unit(db, unit_id)
     if _active_sale(db, unit.id) is not None:
         raise HTTPException(status_code=409, detail="Квартира уже продана")
@@ -542,7 +552,7 @@ def get_schedule(sale_id: int, db: Session = Depends(get_db)) -> ScheduleOut:
 
 
 def _sale_payment(db: Session, payment_id: int) -> InstallmentPayment:
-    payment = db.get(InstallmentPayment, payment_id)
+    payment = db.get(InstallmentPayment, payment_id, with_for_update=True)
     if payment is None:
         raise HTTPException(status_code=404, detail="Платёж не найден")
     if payment.sale.is_archived:

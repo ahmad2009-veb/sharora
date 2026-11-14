@@ -284,8 +284,9 @@ export function UnitsPanel({
 
   // A floor with a different layout: add a unit (then edit it) or remove one.
   const create = useMutation({
-    mutationFn: (floor: Floor) => {
-      const onFloor = units.data?.filter((u) => u.floor_id === floor.id) ?? [];
+    mutationFn: async (floor: Floor) => {
+      // The table may be filtered by status: number against every unit on the floor.
+      const onFloor = await adminApi.units({ block, floor: floor.number });
       const number = Math.max(0, ...onFloor.map((u) => u.number)) + 1;
       const commercial = floor.kind === "commercial";
       return adminApi.createUnit({

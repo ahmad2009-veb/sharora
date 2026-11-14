@@ -15,6 +15,13 @@ def normalize_tj_phone(value: str) -> str:
     return normalized
 
 
+def reject_null(value: object) -> object:
+    """PATCH field of a non-nullable column: omitted means unchanged, explicit null is refused."""
+    if value is None:
+        raise ValueError("Поле не может быть пустым")
+    return value
+
+
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

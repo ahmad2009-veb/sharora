@@ -1,4 +1,6 @@
-from app.schemas.common import ORMModel
+from pydantic import Field, field_validator
+
+from app.schemas.common import ORMModel, reject_null
 
 
 class BlockOut(ORMModel):
@@ -14,14 +16,16 @@ class BlockOut(ORMModel):
 
 
 class BlockCreate(ORMModel):
-    letter: str
-    name: str
+    letter: str = Field(min_length=1, max_length=4)
+    name: str = Field(min_length=1, max_length=120)
     sort_order: int = 0
-    cover_image: str | None = None
+    cover_image: str | None = Field(default=None, max_length=300)
 
 
 class BlockUpdate(ORMModel):
-    letter: str | None = None
-    name: str | None = None
+    letter: str | None = Field(default=None, min_length=1, max_length=4)
+    name: str | None = Field(default=None, min_length=1, max_length=120)
     sort_order: int | None = None
-    cover_image: str | None = None
+    cover_image: str | None = Field(default=None, max_length=300)
+
+    _not_null = field_validator("letter", "name", "sort_order")(reject_null)

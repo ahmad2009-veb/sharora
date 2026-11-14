@@ -26,6 +26,7 @@ from app.models import (
     CalculatorSettings,
     Floor,
     FloorKind,
+    InstallmentPayment,
     Lead,
     Sale,
     Unit,
@@ -121,6 +122,9 @@ def build_block(index: int, letter: str, name: str, status: Callable[[], UnitSta
 
 def seed(db: Session, rng: random.Random | None = None) -> None:
     """Rebuild the catalogue. With `rng`, statuses are a random demo mix; otherwise all free."""
+    # SQLite does not enforce ON DELETE CASCADE: clear schedules too, or they would
+    # attach to new sales that reuse the ids.
+    db.execute(delete(InstallmentPayment))
     db.execute(delete(Sale))
     db.execute(delete(Lead))
     db.execute(delete(Unit))

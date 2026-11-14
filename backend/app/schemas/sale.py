@@ -11,6 +11,7 @@ from app.services.installments import (
     ScheduleError,
     check_terms,
     payment_status,
+    today_tj,
 )
 
 Money = Decimal
@@ -30,7 +31,7 @@ class SaleCreate(ORMModel):
     buyer_phone: str = Field(max_length=32)
     total_price: Money = Field(gt=0, max_digits=14, decimal_places=2)
     down_payment: Money = Field(gt=0, max_digits=14, decimal_places=2)
-    sale_date: date = Field(default_factory=date.today)
+    sale_date: date = Field(default_factory=today_tj)
     comment: str | None = Field(default=None, max_length=2000)
     payment_type: PaymentType = "full"
     term_months: int | None = Field(default=None, ge=1, le=MAX_TERM_MONTHS)

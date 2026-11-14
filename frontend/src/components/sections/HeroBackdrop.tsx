@@ -10,6 +10,7 @@ import {
 } from "framer-motion";
 import { useEffect, useState, type CSSProperties } from "react";
 
+import { useMounted } from "@/components/ui/useMounted";
 import { hasFinePointer } from "@/lib/capabilities";
 import { cn } from "@/lib/cn";
 
@@ -123,7 +124,10 @@ export function HeroBackdrop({ scrollYProgress }: { scrollYProgress: MotionValue
 export function HeroSlideIndicator() {
   const reduce = useReducedMotion();
   const active = useActiveSlide();
-  if (reduce || SLIDE_COUNT < 2) return null;
+  // useReducedMotion is null on the server but true on the first client render: wait for
+  // hydration before hiding, or reduced-motion visitors get a hydration mismatch.
+  const mounted = useMounted();
+  if ((mounted && reduce) || SLIDE_COUNT < 2) return null;
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <div

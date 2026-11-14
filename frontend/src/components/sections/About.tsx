@@ -23,7 +23,7 @@ export async function About() {
               src={about.image}
               alt={tr(about.imageAlt, locale)}
               fill
-              sizes="(min-width: 1024px) 760px, 100vw"
+              sizes="(min-width: 1024px) 760px, calc(100vw - 32px)"
               className="object-cover transition-transform duration-[1.6s] ease-out-soft group-hover:scale-[1.04]"
             />
             <div

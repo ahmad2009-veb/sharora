@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 
 import { prefersReducedMotion } from "@/lib/capabilities";
-import { gsap } from "@/lib/gsap";
+import { loadedGsap, loadGsap } from "@/lib/gsap";
 
 type Navigate = (href: string) => void;
 
@@ -31,22 +31,42 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
         return;
       }
       pending.current = true;
-      gsap.killTweensOf(el);
-      gsap.set(el, { display: "block", yPercent: 100 });
-      gsap.to(el, {
-        yPercent: 0,
-        duration: COVER,
-        ease: "power3.inOut",
-        onComplete: () => router.push(href),
-      });
+      const cover = ({ gsap }: Awaited<ReturnType<typeof loadGsap>>) => {
+        gsap.killTweensOf(el);
+        gsap.set(el, { display: "block", yPercent: 100 });
+        gsap.to(el, {
+          yPercent: 0,
+          duration: COVER,
+          ease: "power3.inOut",
+          onComplete: () => router.push(href),
+        });
+      };
+      // GSAP is prefetched on idle (below), so this is normally synchronous.
+      const loaded = loadedGsap();
+      if (loaded) cover(loaded);
+      else
+        loadGsap()
+          .then(cover)
+          .catch(() => {
+            pending.current = false;
+            router.push(href);
+          });
     },
     [router],
   );
 
+  // GSAP is not part of the first load; fetch it while the browser is idle so the first
+  // link click can cover the screen straight away.
+  useEffect(() => {
+    const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
+    idle(() => void loadGsap().catch(() => {}));
+  }, []);
+
   // Lift the curtain after the new route is rendered.
   useEffect(() => {
     const el = curtain.current;
-    if (!el || !pending.current) return;
+    const gsap = loadedGsap()?.gsap;
+    if (!el || !gsap || !pending.current) return;
     pending.current = false;
     gsap.to(el, {
       yPercent: -100,

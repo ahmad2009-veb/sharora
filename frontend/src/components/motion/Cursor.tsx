@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 import { hasFinePointer, prefersReducedMotion } from "@/lib/capabilities";
-import { gsap } from "@/lib/gsap";
+import { loadGsap } from "@/lib/gsap";
 
 /**
  * Lets non-DOM targets (the 3D scene) change the cursor: `setCursor("view")` shows the
@@ -21,8 +21,13 @@ export function Cursor() {
   useEffect(() => {
     if (!hasFinePointer() || prefersReducedMotion()) return;
     let magnet: HTMLElement | null = null;
+    let gsap: Awaited<ReturnType<typeof loadGsap>>["gsap"] | null = null;
+    void loadGsap()
+      .then((mod) => (gsap = mod.gsap))
+      .catch(() => {});
 
     function onMove(e: PointerEvent) {
+      if (!gsap) return;
       if (e.pointerType !== "mouse") return;
       const m = (e.target as Element).closest?.("[data-magnetic]") as HTMLElement | null;
       if (magnet && magnet !== m) {

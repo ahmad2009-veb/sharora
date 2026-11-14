@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { api } from "@/lib/api";
 
@@ -24,6 +25,22 @@ export const useFloors = (letter: string | null) =>
     queryFn: () => api.floors(letter!),
     enabled: !!letter,
   });
+
+/**
+ * Deep links (?block=…): starts the block's floors request alongside /api/blocks instead
+ * of after it. Same key and fetcher as useFloors, so that hook just picks the result up.
+ * Only while the blocks list is still loading; afterwards useFloors does the work.
+ */
+export function usePrefetchFloors(letter: string | null, blocksLoaded: boolean) {
+  const client = useQueryClient();
+  useEffect(() => {
+    if (!letter || blocksLoaded) return;
+    void client.prefetchQuery({
+      queryKey: queryKeys.floors(letter),
+      queryFn: () => api.floors(letter),
+    });
+  }, [client, letter, blocksLoaded]);
+}
 
 export const useFloorUnits = (floorId: number | null) =>
   useQuery({

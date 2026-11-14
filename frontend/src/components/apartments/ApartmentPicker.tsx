@@ -22,7 +22,7 @@ import { FloorList } from "./FloorList";
 import { FloorPicker } from "./FloorPicker";
 import { FloorPlan } from "./FloorPlan";
 import { unitTotal } from "./price";
-import { useBlocks, useFloors, useFloorUnits } from "./queries";
+import { useBlocks, useFloors, useFloorUnits, usePrefetchFloors } from "./queries";
 import { UnitCard } from "./UnitCard";
 import { UnitModal } from "./UnitModal";
 import { useApartmentParams } from "./useApartmentParams";
@@ -56,6 +56,7 @@ export function ApartmentPicker() {
   }, [searchParams]);
 
   const blocks = useBlocks();
+  usePrefetchFloors(params.block, blocks.data !== undefined);
   const blockLetter =
     blocks.data?.find((b) => b.letter === params.block)?.letter ??
     blocks.data?.find((b) => b.free_count > 0)?.letter ??

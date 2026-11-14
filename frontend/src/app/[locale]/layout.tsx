@@ -10,15 +10,19 @@ import { site, tr } from "@/content/site";
 import { routing, type Locale } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site-url";
 
+// `subsets` only picks which files are <link rel=preload>ed: the generated CSS still declares
+// every subset (unicode-range), so Tajik letters (ҳ ӣ ҷ ӯ қ ғ, cyrillic-ext) render the same and
+// their file loads on demand on /tg. The Russian first screen needs only latin + cyrillic, so
+// this saves two ~28 KB preloads competing with the hero before LCP.
 const inter = Inter({
-  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  subsets: ["latin", "cyrillic"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
   display: "swap",
 });
 
 const manrope = Manrope({
-  subsets: ["latin", "cyrillic", "cyrillic-ext"],
+  subsets: ["latin", "cyrillic"],
   weight: ["500", "600", "700", "800"],
   variable: "--font-manrope",
   display: "swap",

@@ -70,7 +70,7 @@ const nextConfig: NextConfig = {
     loader: "custom",
     loaderFile: "./src/lib/image-loader.ts",
     // Keep in sync with WIDTHS in scripts/build-images.mjs.
-    deviceSizes: [640, 828, 1080, 1280, 1920],
+    deviceSizes: [640, 720, 828, 1080, 1280, 1920],
     imageSizes: [64, 128, 256, 384],
   },
   async headers() {

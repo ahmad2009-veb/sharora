@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { CircleCheck, Loader2, Phone, User } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState, type FormEvent } from "react";
@@ -32,24 +31,33 @@ export function QuickLeadForm() {
   const phoneError = !isValidTjPhone(phone) ? t("phoneInvalid") : null;
   const roomLabel = cta.roomOptions.find((o) => o.value === rooms);
 
-  const mutation = useMutation({
-    mutationFn: () =>
-      api.createLead({
-        unit_id: null,
-        name: name.trim(),
-        phone: phone.replace(/\s/g, ""),
-        message: roomLabel ? `${cta.roomsLabel.ru}: ${roomLabel.label.ru}` : null,
-      }),
-    onSuccess: () => toast(t("success"), "success"),
-    onError: (err) =>
-      toast(err instanceof ApiError && err.status !== 500 ? err.message : t("error"), "error"),
-  });
+  // A plain request state instead of react-query's useMutation keeps that code out of the
+  // home page's first load (this form is far below the fold).
+  const [status, setStatus] = useState<"idle" | "pending" | "success">("idle");
+  const mutation = { isPending: status === "pending", isSuccess: status === "success" };
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     setTouched(true);
     if (nameError || phoneError || mutation.isPending) return;
-    mutation.mutate();
+    setStatus("pending");
+    api
+      .createLead({
+        unit_id: null,
+        name: name.trim(),
+        phone: phone.replace(/\s/g, ""),
+        message: roomLabel ? `${cta.roomsLabel.ru}: ${roomLabel.label.ru}` : null,
+      })
+      .then(
+        () => {
+          setStatus("success");
+          toast(t("success"), "success");
+        },
+        (err: unknown) => {
+          setStatus("idle");
+          toast(err instanceof ApiError && err.status !== 500 ? err.message : t("error"), "error");
+        },
+      );
   }
 
   return (

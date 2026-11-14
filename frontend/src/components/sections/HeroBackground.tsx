@@ -16,6 +16,12 @@ import { preload } from "react-dom";
 /** Time from one crossfade start to the next, ms. */
 export const SLIDE_MS = 6000;
 const MOBILE = "(max-width: 767px)";
+/** Portrait phones get hero-N-portrait.avif: the 960 px photo without the edges a tall hero
+ *  never shows (see scripts/build-hero.mjs), so the visible pixels are the same. */
+const PORTRAIT = `${MOBILE} and (max-aspect-ratio: 3/5)`;
+/** The other phones; 601/1000 keeps the two preloads from both matching at exactly 3:5. */
+const MOBILE_WIDE = `${MOBILE} and (min-aspect-ratio: 601/1000)`;
+const DESKTOP = "(min-width: 768px)";
 
 const SLIDES = [
   { n: 1, height: 1352, position: "50% 55%" },
@@ -27,7 +33,9 @@ const SLIDES = [
 ];
 export const SLIDE_COUNT = SLIDES.length;
 
-const src = (i: number, width: 960 | 1920) => `/hero/hero-${SLIDES[i].n}-${width}.webp`;
+/** AVIF (same look, ~25–50% fewer bytes) with the WebP set as the fallback. */
+const src = (i: number, variant: 960 | 1920 | "portrait", ext: "avif" | "webp" = "webp") =>
+  `/hero/hero-${SLIDES[i].n}-${variant}.${ext}`;
 
 /** 24 px hero-1, shown under the photo until it arrives. */
 const PLACEHOLDER =
@@ -86,9 +94,12 @@ export function HeroBackground() {
   const top = useRef(0);
   const schedule = useRef<() => void>(() => {});
 
-  // First photo: highest priority, and phones fetch only the 960 px file.
-  preload(src(0, 960), { as: "image", media: MOBILE, fetchPriority: "high" });
-  preload(src(0, 1920), { as: "image", media: "(min-width: 768px)", fetchPriority: "high" });
+  // First photo: highest priority, and phones fetch only a 960 px file. Only the AVIF files
+  // are preloaded (`type` makes other browsers skip them; they find the WebP in the markup).
+  const avif = { as: "image", type: "image/avif", fetchPriority: "high" } as const;
+  preload(src(0, "portrait", "avif"), { ...avif, media: PORTRAIT });
+  preload(src(0, 960, "avif"), { ...avif, media: MOBILE_WIDE });
+  preload(src(0, 1920, "avif"), { ...avif, media: DESKTOP });
 
   useEffect(() => {
     // The store outlives the component: a return visit to the home page starts at hero-1 again.
@@ -103,7 +114,13 @@ export function HeroBackground() {
     const advance = async () => {
       const next = (slideStore.get() + 1) % SLIDES.length;
       const pre = new Image();
-      pre.src = src(next, matchMedia(MOBILE).matches ? 960 : 1920);
+      // The same variant and format the <picture> picked for the photo on screen.
+      const shown = rootRef.current?.querySelector<HTMLImageElement>(
+        '.hbg-layer[data-state="top"] img',
+      )?.currentSrc;
+      pre.src = shown
+        ? shown.replace(/hero-\d+-/, `hero-${SLIDES[next].n}-`)
+        : src(next, matchMedia(MOBILE).matches ? 960 : 1920);
       try {
         await pre.decode();
       } catch {
@@ -176,7 +193,14 @@ export function HeroBackground() {
         <div key={i} className="hbg-layer" data-state={layer.state}>
           {layer.slide !== null && (
             <picture>
+              <source
+                media={PORTRAIT}
+                type="image/avif"
+                srcSet={src(layer.slide, "portrait", "avif")}
+              />
+              <source media={MOBILE} type="image/avif" srcSet={src(layer.slide, 960, "avif")} />
               <source media={MOBILE} srcSet={src(layer.slide, 960)} />
+              <source type="image/avif" srcSet={src(layer.slide, 1920, "avif")} />
               <img
                 ref={imgRefs[i]}
                 src={src(layer.slide, 1920)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { ArrowRight, Box } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -18,6 +18,44 @@ import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/format";
 
 const HeroScene = dynamic(() => import("@/components/three/HeroScene"), { ssr: false });
+
+/**
+ * A minimal `useQuery` (data + isError) on the shared react-query cache, so /apartments still
+ * reuses what this section loaded, without shipping react-query's observer code in the home
+ * page's first load. Like `useQuery`, a cached result for the current key shows at once.
+ */
+function useLiveQuery<T>(
+  queryKey: readonly unknown[],
+  queryFn: () => Promise<T>,
+  { enabled, retry }: { enabled: boolean; retry: number },
+) {
+  const client = useQueryClient();
+  const hash = JSON.stringify(queryKey);
+  const [result, setResult] = useState<{ hash: string; data?: T; isError: boolean }>({
+    hash: "",
+    isError: false,
+  });
+
+  useEffect(() => {
+    if (!enabled) return;
+    let active = true;
+    client.fetchQuery({ queryKey, queryFn, retry, staleTime: 60_000 }).then(
+      (data) => active && setResult({ hash, data, isError: false }),
+      () => active && setResult({ hash, data: client.getQueryData<T>(queryKey), isError: true }),
+    );
+    return () => {
+      active = false;
+    };
+    // `hash` stands for `queryKey`; `queryFn` and `retry` are fixed per key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, hash, enabled]);
+
+  const current = result.hash === hash;
+  return {
+    data: current ? result.data : client.getQueryData<T>(queryKey),
+    isError: current && result.isError,
+  };
+}
 
 /**
  * Block picker for the two blocks. Capable desktops get the interactive 3D model (click a
@@ -63,26 +101,14 @@ export function GenplanExplorer() {
     };
   }, []);
 
-  const blocks = useQuery({
-    queryKey: ["blocks"],
-    queryFn: api.blocks,
-    enabled: inView,
-    retry: 1,
-    staleTime: 60_000,
-  });
-  const floors = useQuery({
-    queryKey: ["floors", selected],
-    queryFn: () => api.floors(selected),
+  const blocks = useLiveQuery(["blocks"], api.blocks, { enabled: inView, retry: 1 });
+  const floors = useLiveQuery(["floors", selected], () => api.floors(selected), {
     enabled: inView,
     retry: 0,
-    staleTime: 60_000,
   });
-  const units = useQuery({
-    queryKey: ["block-units", selected],
-    queryFn: () => api.blockUnits(selected),
+  const units = useLiveQuery(["block-units", selected], () => api.blockUnits(selected), {
     enabled: inView,
     retry: 0,
-    staleTime: 60_000,
   });
 
   const block = blocks.data?.find((b) => b.letter === selected);

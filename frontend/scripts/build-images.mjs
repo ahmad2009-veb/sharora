@@ -18,8 +18,9 @@ const PUBLIC = path.join(ROOT, "public");
 const OUT = path.join(PUBLIC, "_img");
 const MANIFEST = path.join(ROOT, "src", "generated", "images.json");
 
-// Must cover next.config.ts → images.deviceSizes + imageSizes.
-const WIDTHS = [64, 128, 256, 384, 640, 828, 1080, 1280, 1920];
+// Must cover next.config.ts → images.deviceSizes + imageSizes. 720 covers an image inside
+// the 16 px page gutters on the common 412 px × 1.75 DPR phone (665 px; else rounds up to 828).
+const WIDTHS = [64, 128, 256, 384, 640, 720, 828, 1080, 1280, 1920];
 const QUALITY = 76;
 // Pre-built elsewhere (hero <picture> set), only for social previews, or not images.
 const SKIP = [/^_img\//, /^hero\//, /^og\.jpg$/, /^fonts\//];

@@ -89,8 +89,8 @@ Backend при старте выполняет `alembic upgrade head` и `seed.p
 | `COOKIE_SECURE` | backend | `true` | вручную |
 | `BLOB_STORE_ID` (или `BLOB_READ_WRITE_TOKEN`) | backend | `store_…` | добавит Blob store; со `BLOB_STORE_ID` backend авторизуется OIDC-токеном Vercel |
 | `MAX_UPLOAD_MB` | backend | `4` | вручную (лимит тела запроса Vercel — 4,5 МБ) |
-| `CORS_ORIGINS` | backend | `https://sharora.tj` | вручную; при одном домене не обязателен |
-| `NEXT_PUBLIC_SITE_URL` | frontend | `https://sharora.tj` (или `https://<project>.vercel.app`) | вручную |
+| `CORS_ORIGINS` | backend | `https://zarafshon.tj` | вручную; при одном домене не обязателен |
+| `NEXT_PUBLIC_SITE_URL` | frontend | `https://zarafshon.tj` (или `https://<project>.vercel.app`) | вручную |
 | `NEXT_PUBLIC_API_URL` | frontend | — | **не задавать**: пусто = относительные `/api` |
 
 `DEFAULT_ADMIN_USERNAME` / `DEFAULT_ADMIN_PASSWORD` (Secret) нужны только сборке для первого сида. `BACKEND_URL` задаёт binding, `MEDIA_DIR` в Vercel не нужен.

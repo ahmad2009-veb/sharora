@@ -4,7 +4,13 @@ import { SITE_URL } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/admin-dashboard", "/tg/admin-dashboard", "/api"] },
+    rules: {
+      userAgent: "*",
+      allow: ["/", "/media/"],
+      disallow: ["/admin-dashboard", "/tg/admin-dashboard", "/api/"],
+    },
     sitemap: `${SITE_URL}/sitemap.xml`,
+    // Yandex reads Host as the preferred mirror (zarafshon.tj vs www.zarafshon.tj).
+    host: SITE_URL,
   };
 }

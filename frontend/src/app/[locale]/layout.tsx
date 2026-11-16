@@ -6,6 +6,7 @@ import { setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/components/Providers";
+import { SiteStructuredData } from "@/components/seo/StructuredData";
 import { site, tr } from "@/content/site";
 import { routing, type Locale } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site-url";
@@ -47,24 +48,53 @@ export async function generateMetadata({
   const l = (hasLocale(routing.locales, locale) ? locale : "ru") as Locale;
   const title = tr(site.seo.title, l);
   const description = tr(site.seo.description, l);
+  const canonical = l === "ru" ? "/" : `/${l}`;
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: title, template: `%s · ${site.brand.name}` },
+    // Home uses the full title; subpages get "<page title> · Zarafshon".
+    title: { default: title, template: `%s · ${site.seo.siteName}` },
     description,
-    applicationName: site.brand.name,
+    keywords: tr(site.seo.keywords, l),
+    applicationName: site.seo.siteName,
+    authors: [{ name: site.brand.name, url: SITE_URL }],
+    creator: site.brand.name,
+    publisher: site.brand.name,
+    category: "real estate",
     alternates: {
-      canonical: l === "ru" ? "/" : `/${l}`,
-      languages: { ru: "/", tg: "/tg" },
+      canonical,
+      languages: { ru: "/", tg: "/tg", "x-default": "/" },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+    },
+    // Search Console / Yandex Webmaster ownership tags: set the codes at build time if needed.
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+      yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
     },
     openGraph: {
       type: "website",
-      siteName: site.brand.name,
+      siteName: site.seo.siteName,
+      url: canonical,
       title,
       description,
       locale: l === "ru" ? "ru_RU" : "tg_TJ",
+      alternateLocale: l === "ru" ? ["tg_TJ"] : ["ru_RU"],
       images: [{ url: "/og.jpg", width: 1200, height: 630, alt: title }],
     },
     twitter: { card: "summary_large_image", title, description, images: ["/og.jpg"] },
+    // /favicon.ico (16/32/48) and /apple-icon.png come from app/ file conventions; Google
+    // Search wants a square icon whose size is a multiple of 48 px.
+    icons: {
+      icon: [
+        { url: "/icon-48.png", sizes: "48x48", type: "image/png" },
+        { url: "/icon-96.png", sizes: "96x96", type: "image/png" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+    },
     formatDetection: { telephone: false },
   };
 }
@@ -87,6 +117,7 @@ export default async function LocaleLayout({
       suppressHydrationWarning
     >
       <body>
+        <SiteStructuredData locale={locale} />
         <NextIntlClientProvider>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>

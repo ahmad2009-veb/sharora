@@ -331,12 +331,12 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTranslations("mobileNav");
 
   const links: { href: string; label: string; Icon: LucideIcon }[] = [
-    { href: "/#about", label: t("about"), Icon: Info },
+    { href: "/about", label: t("about"), Icon: Info },
     { href: "/#features", label: t("features"), Icon: Sparkles },
     { href: "/#interior", label: t("interior"), Icon: Sofa },
     { href: "/#documents", label: t("documents"), Icon: FileText },
     { href: "/apartments?calc=1", label: t("calculator"), Icon: Calculator },
-    { href: "/#location", label: t("location"), Icon: MapPin },
+    { href: "/contacts", label: t("location"), Icon: MapPin },
   ];
 
   const row =

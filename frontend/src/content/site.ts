@@ -69,12 +69,12 @@ export const site = {
 
   nav: [
     { href: "/", label: { ru: "Главная", tg: "Асосӣ" } },
-    { href: "/#about", label: { ru: "О проекте", tg: "Дар бораи лоиҳа" } },
+    { href: "/about", label: { ru: "О проекте", tg: "Дар бораи лоиҳа" } },
     { href: "/#features", label: { ru: "Преимущества", tg: "Бартариятҳо" } },
     { href: "/#interior", label: { ru: "Архитектура", tg: "Меъморӣ" } },
     { href: "/#documents", label: { ru: "Документы", tg: "Ҳуҷҷатҳо" } },
     { href: "/apartments", label: { ru: "Квартиры", tg: "Хонаҳо" }, highlight: true },
-    { href: "/#contacts", label: { ru: "Контакты", tg: "Тамос" } },
+    { href: "/contacts", label: { ru: "Контакты", tg: "Тамос" } },
   ] satisfies { href: string; label: Localized; highlight?: boolean }[],
 
   actions: {
@@ -498,13 +498,73 @@ export const site = {
   },
 
   seo: {
+    /** Site name for Google (WebSite JSON-LD, og:site_name, title suffix). */
+    siteName: "Zarafshon",
+    siteAlternateNames: ["Зарафшон", "Zarafshon.tj"],
+    // Home <title>, used as is (no suffix). Both spellings people type: Latin and Cyrillic.
     title: {
-      ru: "Жилой комплекс «Зеравшан» — Айнинский район",
-      tg: "Маҷмааи истиқоматии «Зарафшон» — ноҳияи Айнӣ",
+      ru: "Zarafshon — продажа квартир в новостройке от застройщика | ЖК «Зарафшон»",
+      tg: "Zarafshon — фурӯши хонаҳо дар биноҳои нав аз сохтмончӣ | МИ «Зарафшон»",
     } satisfies Localized,
+    // ~155 characters: Google cuts longer snippets.
     description: {
-      ru: "2 жилых блока по 9 этажей в Айнинском районе Согдийской области, 100 км от Душанбе: квартиры от 42 до 103 м², магазины на первом этаже, детский сад рядом, солнечные панели и собственная котельная. Выбор квартиры онлайн.",
-      tg: "2 блоки истиқоматии 9-ошёна дар ноҳияи Айнии вилояти Суғд, 100 км аз Душанбе: хонаҳо аз 42 то 103 м², мағозаҳо дар ошёнаи якум, боғчаи бачагона дар наздикӣ, панелҳои офтобӣ ва дегхонаи худӣ. Интихоби хона онлайн.",
+      ru: "Zarafshon (Зарафшон) — новые квартиры от застройщика: 42–103 м², рассрочка, магазины на 1-м этаже. ЖК «Зарафшон», Айнинский район, 100 км от Душанбе.",
+      tg: "Zarafshon (Зарафшон) — хонаҳои нав аз сохтмончӣ: 42–103 м², насия, мағозаҳо дар ошёнаи 1. МИ «Зарафшон», ноҳияи Айнӣ, 100 км аз Душанбе. Интихоби хона онлайн.",
     } satisfies Localized,
+    /** Search phrasing for <meta name="keywords"> (Yandex/Bing still read it; Google ignores it). */
+    keywords: {
+      ru: "Зарафшон, Zarafshon, ЖК Зарафшон, Зеравшан, Zarafshon Sokhtmon, квартиры Зарафшон, купить квартиру Таджикистан, новостройки Айни, квартиры от застройщика, квартира в рассрочку, Душанбе",
+      tg: "Зарафшон, Zarafshon, МИ Зарафшон, Zarafshon Sokhtmon, хона дар Зарафшон, харидани хона, хонаҳои нав Айнӣ, хона аз сохтмончӣ, хона ба насия, Тоҷикистон, Душанбе",
+    } satisfies Localized,
+    /** Alternative names search engines should tie to the project (JSON-LD alternateName). */
+    alternateNames: ["Зарафшон", "Zarafshon", "Зеравшан", "ЖК «Зарафшон»", "МИ «Зарафшон»"],
+  },
+
+  /** Subpages with their own URL, <title>, description and <h1> (Google Sitelinks). */
+  pages: {
+    about: {
+      path: "/about",
+      title: {
+        ru: "О проекте ЖК «Зарафшон» — дома, инженерия, документы",
+        tg: "Дар бораи МИ «Зарафшон» — биноҳо, муҳандисӣ, ҳуҷҷатҳо",
+      } satisfies Localized,
+      description: {
+        ru: "ЖК «Зарафшон»: 2 блока по 9 этажей, солнечные панели, своя котельная, детский сад рядом. Архитектура, разрешительные документы и ход строительства.",
+        tg: "МИ «Зарафшон»: 2 блоки 9-ошёна, панелҳои офтобӣ, дегхонаи худӣ, боғча дар наздикӣ. Меъморӣ, ҳуҷҷатҳои иҷозатдиҳӣ ва рафти сохтмон.",
+      } satisfies Localized,
+      eyebrow: { ru: "О проекте", tg: "Дар бораи лоиҳа" } satisfies Localized,
+      h1: {
+        ru: "Жилой комплекс «Зарафшон»: о проекте",
+        tg: "Маҷмааи истиқоматии «Зарафшон»: дар бораи лоиҳа",
+      } satisfies Localized,
+      lead: {
+        ru: "Два 9-этажных блока с магазинами на первом этаже, собственной энергией и теплом. Ниже — всё о домах, инженерии и документах застройщика.",
+        tg: "Ду блоки 9-ошёна бо мағозаҳо дар ошёнаи якум, барқ ва гармии худӣ. Дар поён — ҳама дар бораи биноҳо, муҳандисӣ ва ҳуҷҷатҳои сохтмончӣ.",
+      } satisfies Localized,
+    },
+    contacts: {
+      path: "/contacts",
+      title: {
+        ru: "Контакты отдела продаж — телефон, адрес, WhatsApp",
+        tg: "Тамос бо шӯъбаи фурӯш — телефон, суроға, WhatsApp",
+      } satisfies Localized,
+      description: {
+        ru: "Отдел продаж ЖК «Зарафшон»: +992 300 00 00 59, WhatsApp и Telegram, Пн–Сб 9:00–18:00. Адрес объекта, схема проезда и запись на просмотр квартир.",
+        tg: "Шӯъбаи фурӯши МИ «Зарафшон»: +992 300 00 00 59, WhatsApp ва Telegram, Дш–Шн 9:00–18:00. Суроғаи объект, харитаи роҳ ва сабт барои дидани хонаҳо.",
+      } satisfies Localized,
+      eyebrow: { ru: "Контакты", tg: "Тамос" } satisfies Localized,
+      h1: {
+        ru: "Контакты Zarafshon",
+        tg: "Тамос бо Zarafshon",
+      } satisfies Localized,
+      lead: {
+        ru: "Позвоните или напишите — расскажем о свободных квартирах, ценах и рассрочке и запишем на просмотр.",
+        tg: "Занг занед ё нависед — дар бораи хонаҳои озод, нарх ва насия мегӯем ва барои дидан сабт мекунем.",
+      } satisfies Localized,
+      phone: { ru: "Телефон", tg: "Телефон" } satisfies Localized,
+      messengers: { ru: "Мессенджеры", tg: "Паёмрасонҳо" } satisfies Localized,
+      hours: { ru: "Часы работы", tg: "Соатҳои корӣ" } satisfies Localized,
+      address: { ru: "Адрес объекта", tg: "Суроғаи объект" } satisfies Localized,
+    },
   },
 } as const;

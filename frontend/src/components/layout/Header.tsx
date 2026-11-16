@@ -60,7 +60,7 @@ export function Header({ overlay = false }: { overlay?: boolean }) {
   }, [pathname]);
 
   const isActive = (href: string) => {
-    if (href === "/apartments") return pathname.startsWith("/apartments");
+    if (href !== "/" && !href.includes("#")) return pathname.startsWith(href);
     if (href === "/") return pathname === "/" && section === null;
     const id = href.split("#")[1];
     return pathname === "/" && !!id && id === section;

@@ -69,9 +69,9 @@ export async function generateMetadata({
       follow: true,
       googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
     },
-    // Search Console / Yandex Webmaster ownership tags: set the codes at build time if needed.
+    // Search Console / Yandex Webmaster ownership tags (the env vars override the built-in code).
     verification: {
-      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || site.seo.googleSiteVerification,
       yandex: process.env.NEXT_PUBLIC_YANDEX_VERIFICATION || undefined,
     },
     openGraph: {

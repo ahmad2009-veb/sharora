@@ -501,6 +501,8 @@ export const site = {
     /** Site name for Google (WebSite JSON-LD, og:site_name, title suffix). */
     siteName: "Zarafshon",
     siteAlternateNames: ["Зарафшон", "Zarafshon.tj"],
+    /** Google Search Console ownership code for zarafshon.tj (public by design: it is in the HTML). */
+    googleSiteVerification: "_5eBB1k-DF9rkQ1LxOZUkhK5Up3mlwJbQuYTHdBzBmo",
     // Home <title>, used as is (no suffix). Both spellings people type: Latin and Cyrillic.
     title: {
       ru: "Zarafshon — продажа квартир в новостройке от застройщика | ЖК «Зарафшон»",
